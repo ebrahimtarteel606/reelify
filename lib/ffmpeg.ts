@@ -1,7 +1,9 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
+import ffmpegStatic from "ffmpeg-static";
 
 const execFileAsync = promisify(execFile);
+const ffmpegPath = process.env.FFMPEG_PATH || ffmpegStatic || "ffmpeg";
 
 type ClipOptions = {
   inputPath: string;
@@ -12,7 +14,7 @@ type ClipOptions = {
 
 export async function extractAudio(inputPath: string, outputPath: string) {
   await execFileAsync(
-    "ffmpeg",
+    ffmpegPath,
     [
       "-y",
       "-i",
@@ -34,7 +36,7 @@ export async function clipVideo({ inputPath, outputPath, start, end }: ClipOptio
   const safeStart = Math.max(0, start);
   const safeEnd = Math.max(safeStart, end);
   await execFileAsync(
-    "ffmpeg",
+    ffmpegPath,
     [
       "-y",
       "-ss",

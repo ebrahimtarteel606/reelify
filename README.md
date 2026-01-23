@@ -5,7 +5,7 @@
 ## المتطلبات
 
 - Node.js 18+
-- FFmpeg مثبت على الجهاز ومتاح في PATH
+- FFmpeg مثبت على الجهاز ومتاح في PATH (أو استخدام ffmpeg-static في الإنتاج)
 
 ## الإعداد
 
@@ -19,6 +19,8 @@
    GEMINI_API_KEY=YOUR_KEY
    GEMINI_MODEL=gemini-2.5-flash
    BLOB_READ_WRITE_TOKEN=YOUR_KEY
+   # اختياري: مسار FFmpeg
+   FFMPEG_PATH=/path/to/ffmpeg
    ```
 
 ## التشغيل
@@ -39,4 +41,5 @@ npm run dev
 - واجهة البرمجة تعمل على Node.js عبر `runtime = "nodejs"`.
 - في حال وجود خطأ، ستظهر رسالة واضحة مثل: `Missing GEMINI_API_KEY` أو `Transcript was empty`.
 - في الإنتاج يتم رفع الفيديو إلى Vercel Blob لتجنب قيود حجم الطلبات.
+- في بيئات لا يتوفر فيها FFmpeg على PATH، يتم استخدام `ffmpeg-static`.
 
