@@ -5,7 +5,7 @@
 ## المتطلبات
 
 - Node.js 18+
-- FFmpeg مثبت على الجهاز ومتاح في PATH (أو استخدام ffmpeg-static في الإنتاج)
+- FFmpeg مثبت على الجهاز ومتاح في PATH (أو استخدام حزم ffmpeg المدمجة في الإنتاج)
 
 ## الإعداد
 
@@ -41,5 +41,5 @@ npm run dev
 - واجهة البرمجة تعمل على Node.js عبر `runtime = "nodejs"`.
 - في حال وجود خطأ، ستظهر رسالة واضحة مثل: `Missing GEMINI_API_KEY` أو `Transcript was empty`.
 - في الإنتاج يتم رفع الفيديو إلى Vercel Blob لتجنب قيود حجم الطلبات.
-- في بيئات لا يتوفر فيها FFmpeg على PATH، يتم استخدام `ffmpeg-static`.
+- في بيئات لا يتوفر فيها FFmpeg على PATH، يتم استخدام `ffmpeg-static` أو `@ffmpeg-installer/ffmpeg`.
 

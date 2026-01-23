@@ -1,9 +1,14 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
 import ffmpegStatic from "ffmpeg-static";
+import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 
 const execFileAsync = promisify(execFile);
-const ffmpegPath = process.env.FFMPEG_PATH || ffmpegStatic || "ffmpeg";
+const ffmpegPath =
+  process.env.FFMPEG_PATH ||
+  ffmpegInstaller?.path ||
+  ffmpegStatic ||
+  "ffmpeg";
 
 type ClipOptions = {
   inputPath: string;
