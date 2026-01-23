@@ -285,7 +285,7 @@ export default function HomePage() {
     }
   };
 
-  const totalSteps = 7;
+  const totalSteps = 5;
 
   const questionTitles: Record<number, string> = {
     1: "على أي منصة ستنشر الفيديو؟",
@@ -293,8 +293,6 @@ export default function HomePage() {
     3: "من هو الجمهور المستهدف؟",
     4: "ما النبرة الأنسب للمقطع؟",
     5: "ما أسلوب الافتتاح (الهوك)؟",
-    6: "ما أهم المحاور التي تريد التركيز عليها؟",
-    7: "هل تريد دعوة للفعل محددة؟",
   };
 
   return (
@@ -541,75 +539,6 @@ export default function HomePage() {
                     >
                       <span className="text-2xl">{option.icon}</span>
                       <span className="font-medium">{option.label || option.value}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Step 6: Key Topics */}
-              {step === 6 && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    { value: "التحفيز الذاتي", icon: "💪" },
-                    { value: "إدارة الوقت", icon: "⏰" },
-                    { value: "التركيز والإنتاجية", icon: "🎯" },
-                    { value: "القيادة والعمل الجماعي", icon: "👥" },
-                    { value: "التجارب والقصص الواقعية", icon: "📝" },
-                    { value: "النصائح العملية", icon: "💡" },
-                    { value: "التسويق والمبيعات", icon: "📈" },
-                    { value: "الصحة النفسية", icon: "🧠" },
-                  ].map((topic) => (
-                    <button
-                      key={topic.value}
-                      type="button"
-                      onClick={() => {
-                        const next = keyTopics.includes(topic.value)
-                          ? keyTopics.filter((item) => item !== topic.value)
-                          : [...keyTopics, topic.value];
-                        setKeyTopics(next);
-                        void persistPreferences({ keyTopics: next.join(", ") });
-                      }}
-                      className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-right ${
-                        keyTopics.includes(topic.value)
-                          ? "border-primary bg-primary/5"
-                          : "border-gray-100 hover:border-gray-200 bg-gray-50/50"
-                      }`}
-                    >
-                      <span className="text-xl">{topic.icon}</span>
-                      <span className="font-medium text-sm">{topic.value}</span>
-                      {keyTopics.includes(topic.value) && (
-                        <span className="mr-auto text-primary">✓</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Step 7: Call to Action */}
-              {step === 7 && (
-                <div className="grid gap-3">
-                  {[
-                    { value: "شارك مع صديق", icon: "🔗" },
-                    { value: "احفظ المقطع للعودة له", icon: "🔖" },
-                    { value: "اكتب رأيك في التعليقات", icon: "💬" },
-                    { value: "تابعنا للمزيد", icon: "➕" },
-                    { value: "طبّق النصيحة اليوم", icon: "✅" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setCallToAction(option.value);
-                        void persistPreferences({ callToAction: option.value });
-                      }}
-                      className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-right ${
-                        callToAction === option.value
-                          ? "border-primary bg-primary/5"
-                          : "border-gray-100 hover:border-gray-200 bg-gray-50/50"
-                      }`}
-                    >
-                      <span className="text-2xl">{option.icon}</span>
-                      <span className="font-medium">{option.value}</span>
                     </button>
                   ))}
                 </div>
