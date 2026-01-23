@@ -71,7 +71,6 @@ export default function HomePage() {
       setStatus("جارٍ رفع الفيديو...");
       const blob = await upload(file.name, file, {
         access: "public",
-        addRandomSuffix: true,
         handleUploadUrl: "/api/upload"
       });
       setVideoUrl(blob.url);

@@ -18,6 +18,7 @@ export async function POST(request: Request) {
             "video/*"
           ],
           maximumSizeInBytes: 2_000_000_000,
+          addRandomSuffix: true,
           tokenPayload: JSON.stringify({})
         };
       },
