@@ -114,6 +114,16 @@ export async function generateClipCandidates(
 - قصيرة وجذابة ومناسبة لريلز.
 - لا تترجم إلى الإنجليزية.
 
+معايير اختيار المقاطع (الترتيب حسب الأهمية):
+1) خطّاف قوي في أول 3-5 ثوانٍ (سؤال جذاب، وعد واضح، رقم قوي، أو مفاجأة).
+2) بداية ونهاية بجملة مكتملة (تجنب القطع وسط الكلام).
+3) قيمة أو نتيجة واضحة خلال المقطع (فائدة، فكرة قوية، أو لحظة مؤثرة).
+4) وضوح وسلاسة السرد (بدون تشويش أو قفزات مفاجئة).
+
+التقييم الداخلي:
+- قيّم كل مقطع بدرجة من 1 إلى 10 لخطّاف البداية (Hook Score).
+- اختر أعلى 3 مقاطع حسب درجة الخطّاف ثم الجودة العامة.
+
 التصنيف (category):
 اختر تصنيفاً واحداً لكل مقطع من: تعليمي، ترفيهي، تحفيزي، إخباري، ديني، رياضي، تقني، اجتماعي
 
@@ -129,22 +139,62 @@ ${transcript}
   const text = result.response.text();
   const parsed = parseGeminiJson(text);
 
-  return parsed
-    .map((clip) => ({
+  const snapStartToSegment = (time: number) => {
+    for (let i = segments.length - 1; i >= 0; i -= 1) {
+      const seg = segments[i];
+      if (seg.start <= time) {
+        if (time - seg.start <= 3) {
+          return seg.start;
+        }
+        break;
+      }
+    }
+    return time;
+  };
+
+  const snapEndToSegment = (time: number) => {
+    for (let i = 0; i < segments.length; i += 1) {
+      const seg = segments[i];
+      if (seg.end >= time) {
+        if (seg.end - time <= 3) {
+          return seg.end;
+        }
+        break;
+      }
+    }
+    return time;
+  };
+
+  const normalized = parsed.map((clip) => {
+    const rawStart = Number(clip.start);
+    const rawEnd = Number(clip.end);
+    const start = Number.isFinite(rawStart) ? snapStartToSegment(rawStart) : rawStart;
+    const end = Number.isFinite(rawEnd) ? snapEndToSegment(rawEnd) : rawEnd;
+    const safeEnd = end > start ? end : rawEnd;
+    return {
       title: String(clip.title ?? "").trim(),
-      start: Number(clip.start),
-      end: Number(clip.end),
+      start,
+      end: safeEnd,
       category: String(clip.category ?? "عام").trim(),
       tags: Array.isArray(clip.tags)
         ? clip.tags.map((tag: unknown) => String(tag).trim()).filter(Boolean)
         : []
-    }))
-    .filter(
-      (clip) =>
-        clip.title &&
-        Number.isFinite(clip.start) &&
-        Number.isFinite(clip.end) &&
-        clip.end > clip.start
-    )
-    .slice(0, 3); // Limit to 3 clips
+    };
+  });
+
+  const isBasicValid = (clip: ClipCandidate) =>
+    clip.title &&
+    Number.isFinite(clip.start) &&
+    Number.isFinite(clip.end) &&
+    clip.end > clip.start;
+
+  const isDurationValid = (clip: ClipCandidate) => {
+    const duration = clip.end - clip.start;
+    return duration >= 30 && duration <= 90;
+  };
+
+  const withDuration = normalized.filter((clip) => isBasicValid(clip) && isDurationValid(clip));
+  const fallback = normalized.filter(isBasicValid);
+
+  return (withDuration.length >= 3 ? withDuration : fallback).slice(0, 3);
 }

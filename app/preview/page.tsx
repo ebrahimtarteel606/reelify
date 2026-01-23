@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -15,6 +15,7 @@ function PreviewContent() {
   const tagsParam = searchParams.get("tags") || "";
   const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
   const transcript = searchParams.get("transcript") || "";
+  const [isPortrait, setIsPortrait] = useState<boolean | null>(null);
 
   if (!url) {
     return (
@@ -87,19 +88,30 @@ function PreviewContent() {
     URL.revokeObjectURL(downloadUrl);
   };
 
+  const videoFitClass = isPortrait === false ? "object-contain" : "object-cover";
+  const videoWrapperClass = `aspect-[9/16] relative ${
+    isPortrait === false ? "bg-black" : "bg-gray-900"
+  }`;
+
   return (
     <div className="min-h-screen bg-gradient-warm py-10 px-4" dir="rtl">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Video Player - 9:16 Vertical Format */}
         <div className="flex justify-center">
           <Card className="shadow-card border-0 bg-gradient-card overflow-hidden animate-fade-in hover:shadow-card-hover transition-all duration-500 w-full max-w-md">
-            <div className="aspect-[9/16] bg-gray-900 relative">
+            <div className={videoWrapperClass}>
               <video
                 src={url}
                 poster={thumbnail || undefined}
                 controls
                 autoPlay
-                className="w-full h-full object-cover"
+                onLoadedMetadata={(event) => {
+                  const { videoWidth, videoHeight } = event.currentTarget;
+                  if (videoWidth && videoHeight) {
+                    setIsPortrait(videoHeight >= videoWidth);
+                  }
+                }}
+                className={`w-full h-full ${videoFitClass}`}
                 playsInline
               />
             </div>

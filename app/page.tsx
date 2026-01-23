@@ -50,6 +50,8 @@ export default function HomePage() {
   const [hookStyle, setHookStyle] = useState("سؤال مباشر");
   const [keyTopics, setKeyTopics] = useState<string[]>([]);
   const [callToAction, setCallToAction] = useState("شارك مع صديق");
+  const [skipQuestions, setSkipQuestions] = useState(false);
+  const [thumbnailPortraitMap, setThumbnailPortraitMap] = useState<Record<string, boolean>>({});
 
   // Background processing state
   const [backgroundResult, setBackgroundResult] = useState<{
@@ -285,6 +287,24 @@ export default function HomePage() {
     }
   };
 
+  const handleThumbnailLoad =
+    (clipUrl: string) => (event: React.SyntheticEvent<HTMLImageElement>) => {
+      const { naturalWidth, naturalHeight } = event.currentTarget;
+      if (!naturalWidth || !naturalHeight) return;
+      const isPortrait = naturalHeight >= naturalWidth;
+      setThumbnailPortraitMap((prev) =>
+        prev[clipUrl] === isPortrait ? prev : { ...prev, [clipUrl]: isPortrait }
+      );
+    };
+
+  const handleSkipQuestions = async () => {
+    setError("");
+    setStatus("");
+    // Persist a minimal preference set so the model can infer defaults
+    await persistPreferences({ platform });
+    void onStartProcessing();
+  };
+
   const totalSteps = 5;
 
   const questionTitles: Record<number, string> = {
@@ -392,6 +412,30 @@ export default function HomePage() {
                 </div>
               )}
 
+              {/* Skip Questions Toggle */}
+              <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-xl bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="skip-questions"
+                    checked={skipQuestions}
+                    onCheckedChange={(checked) => setSkipQuestions(Boolean(checked))}
+                  />
+                  <label htmlFor="skip-questions" className="text-sm font-medium text-foreground">
+                    تخطي الأسئلة، دع الذكاء يقرر
+                  </label>
+                </div>
+                {skipQuestions && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSkipQuestions}
+                    className="bg-gradient-teal text-white hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  >
+                    ابدأ بدون أسئلة
+                  </Button>
+                )}
+              </div>
+
               {backgroundResult && !backgroundProcessing && (
                 <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200 animate-fade-in">
                   <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -412,15 +456,17 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Question Title */}
-              <h2 className="text-2xl font-bold text-center text-foreground animate-fade-in">
-                {questionTitles[step]}
-              </h2>
+              {!skipQuestions && (
+                <>
+                  {/* Question Title */}
+                  <h2 className="text-2xl font-bold text-center text-foreground animate-fade-in">
+                    {questionTitles[step]}
+                  </h2>
 
-              {error && <p className="text-sm text-destructive text-center animate-fade-in">{error}</p>}
+                  {error && <p className="text-sm text-destructive text-center animate-fade-in">{error}</p>}
 
-              {/* Step 1: Platform */}
-              {step === 1 && (
+                  {/* Step 1: Platform */}
+                  {step === 1 && (
                 <div className="grid gap-4 animate-fade-in">
                   {[
                     { 
@@ -506,10 +552,10 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              )}
+                  )}
 
-              {/* Step 2: Duration */}
-              {step === 2 && (
+                  {/* Step 2: Duration */}
+                  {step === 2 && (
                 <div className="grid grid-cols-3 gap-4 animate-fade-in">
                   {[30, 45, 60, 75, 90].map((duration, index) => (
                     <button
@@ -530,10 +576,10 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              )}
+                  )}
 
-              {/* Step 3: Audience */}
-              {step === 3 && (
+                  {/* Step 3: Audience */}
+                  {step === 3 && (
                 <div className="grid gap-4 animate-fade-in">
                   {[
                     { value: "شباب 18-30", icon: "👥" },
@@ -565,10 +611,10 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              )}
+                  )}
 
-              {/* Step 4: Tone */}
-              {step === 4 && (
+                  {/* Step 4: Tone */}
+                  {step === 4 && (
                 <div className="grid gap-4 animate-fade-in">
                   {[
                     { value: "ملهم", icon: "✨" },
@@ -600,10 +646,10 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              )}
+                  )}
 
-              {/* Step 5: Hook Style */}
-              {step === 5 && (
+                  {/* Step 5: Hook Style */}
+                  {step === 5 && (
                 <div className="grid gap-4 animate-fade-in">
                   {[
                     { value: "سؤال مباشر", icon: "❓" },
@@ -635,41 +681,43 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              )}
+                  )}
 
-              {/* Navigation */}
-              <div className="flex items-center justify-between pt-6">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => setStep((current) => Math.max(1, current - 1))}
-                  disabled={step === 1}
-                  className={`text-base px-6 ${step === 1 ? "invisible" : "hover:bg-muted"}`}
-                >
-                  السابق
-                </Button>
-                {step < totalSteps ? (
-                  <Button
-                    type="button"
-                    size="lg"
-                    onClick={() => setStep((current) => Math.min(totalSteps, current + 1))}
-                    className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                  >
-                    التالي
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    size="lg"
-                    onClick={onStartProcessing}
-                    disabled={isProcessing}
-                    className="text-base text-white px-8 bg-gradient-coral hover:shadow-warm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                  >
-                    {isProcessing ? "جارٍ التحويل..." : "ابدأ التحويل"}
-                  </Button>
-                )}
-              </div>
+                  {/* Navigation */}
+                  <div className="flex items-center justify-between pt-6">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="lg"
+                      onClick={() => setStep((current) => Math.max(1, current - 1))}
+                      disabled={step === 1}
+                      className={`text-base px-6 ${step === 1 ? "invisible" : "hover:bg-muted"}`}
+                    >
+                      السابق
+                    </Button>
+                    {step < totalSteps ? (
+                      <Button
+                        type="button"
+                        size="lg"
+                        onClick={() => setStep((current) => Math.min(totalSteps, current + 1))}
+                        className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                      >
+                        التالي
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="lg"
+                        onClick={onStartProcessing}
+                        disabled={isProcessing}
+                        className="text-base text-white px-8 bg-gradient-coral hover:shadow-warm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                      >
+                        {isProcessing ? "جارٍ التحويل..." : "ابدأ التحويل"}
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
@@ -749,17 +797,25 @@ export default function HomePage() {
                     transcript: clip.transcript,
                   });
                   const previewUrl = `/preview?${previewParams.toString()}`;
+                  const isPortrait = thumbnailPortraitMap[clip.url];
+                  const wrapperClass = `aspect-[9/16] relative overflow-hidden ${
+                    isPortrait === false ? "bg-black" : "bg-muted"
+                  }`;
+                  const imageClass = `w-full h-full transition-transform duration-500 group-hover:scale-110 ${
+                    isPortrait === false ? "object-contain" : "object-cover"
+                  }`;
                   return (
                     <Card
                       key={clip.url}
                       className="overflow-hidden shadow-card border-0 bg-gradient-card group hover:shadow-card-hover hover:scale-[1.03] transition-all duration-500 animate-fade-in"
                       style={{ animationDelay: `${index * 0.15}s` }}
                     >
-                      <div className="aspect-[9/16] bg-muted relative overflow-hidden">
+                      <div className={wrapperClass}>
                         <img
                           src={clip.thumbnail}
                           alt={clip.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onLoad={handleThumbnailLoad(clip.url)}
+                          className={imageClass}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex items-center justify-center">
