@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { upload } from "@vercel/blob/client";
+import { getFfmpeg, writeInputFile, extractAudioWav, clipVideoSegment } from "@/lib/ffmpegWasm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,7 +24,6 @@ type ClipItem = {
 
 export default function HomePage() {
   const [file, setFile] = useState<File | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [clips, setClips] = useState<ClipItem[]>([]);
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -32,7 +31,7 @@ export default function HomePage() {
     "upload"
   );
   const [step, setStep] = useState(1);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [platform, setPlatform] = useState("instagram");
   const [preferredDuration, setPreferredDuration] = useState(45);
   const [audience, setAudience] = useState("شباب 18-30");
@@ -55,7 +54,7 @@ export default function HomePage() {
     }
   };
 
-  const onUploadSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const onUploadSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setStatus("");
@@ -66,50 +65,78 @@ export default function HomePage() {
       return;
     }
 
-    try {
-      setIsUploading(true);
-      setStatus("جارٍ رفع الفيديو...");
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload"
-      });
-      setVideoUrl(blob.url);
-      setStep(1);
-      setScreen("form");
-      setStatus("");
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "تعذر رفع الفيديو، حاول مرة أخرى.";
-      setError(message);
-      setStatus("");
-    } finally {
-      setIsUploading(false);
-    }
+    setStep(1);
+    setScreen("form");
   };
 
   const onStartProcessing = async () => {
     try {
-      if (!videoUrl) {
+      if (!file) {
         throw new Error("يرجى رفع الفيديو أولاً.");
       }
       setScreen("loading");
-      setStatus("نجهّز الفيديو الآن...");
-      const requestBody = { videoUrl };
+      setIsProcessing(true);
+      setStatus("نجهّز الصوت للتفريغ...");
+      const ffmpeg = await getFfmpeg();
+      const inputName = `input-${Date.now()}.mp4`;
+      await writeInputFile(ffmpeg, inputName, file);
+
+      const audioName = `audio-${Date.now()}.wav`;
+      const audioBlob = await extractAudioWav(ffmpeg, inputName, audioName);
+
+      setStatus("نحلل النص ونختار أفضل المقاطع...");
+      const audioForm = new FormData();
+      audioForm.append("audio", audioBlob, "audio.wav");
       const response = await fetch("/api/process", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
+        body: audioForm
       });
 
       const payload = await response.json();
-
       if (!response.ok) {
         throw new Error(payload?.error || "حدث خطأ غير متوقع أثناء المعالجة.");
       }
 
-      setClips(payload.clips || []);
+      const candidates = Array.isArray(payload?.clips) ? payload.clips : [];
+      if (candidates.length === 0) {
+        throw new Error("لم يتم العثور على مقاطع مناسبة.");
+      }
+
+      setStatus("نقوم بتجهيز المقاطع الآن...");
+      const uploadedClips: ClipItem[] = [];
+
+      for (const candidate of candidates) {
+        const clipName = `clip-${crypto.randomUUID()}.mp4`;
+        const clipBlob = await clipVideoSegment(
+          ffmpeg,
+          inputName,
+          clipName,
+          candidate.start,
+          candidate.end
+        );
+        const clipForm = new FormData();
+        clipForm.append("clip", clipBlob, clipName);
+        clipForm.append("title", candidate.title);
+        clipForm.append("start", String(candidate.start));
+        clipForm.append("end", String(candidate.end));
+        const clipResponse = await fetch("/api/clip", {
+          method: "POST",
+          body: clipForm
+        });
+        const clipPayload = await clipResponse.json();
+        if (!clipResponse.ok) {
+          throw new Error(clipPayload?.error || "تعذر حفظ المقطع.");
+        }
+        uploadedClips.push({
+          title: clipPayload.title,
+          start: clipPayload.start,
+          end: clipPayload.end,
+          duration: clipPayload.duration,
+          url: clipPayload.url
+        });
+      }
+
+      setClips(uploadedClips);
       setStatus("");
       setScreen("results");
     } catch (err) {
@@ -117,6 +144,8 @@ export default function HomePage() {
       setError(message);
       setStatus("");
       setScreen("form");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -150,10 +179,9 @@ export default function HomePage() {
                   onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                   className="file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground file:transition hover:file:opacity-90"
                 />
-                <Button type="submit" disabled={!file || isUploading}>
-                  {isUploading ? "جارٍ الرفع..." : "التالي"}
+                <Button type="submit" disabled={!file}>
+                  التالي
                 </Button>
-                {status ? <p className="text-sm text-primary">{status}</p> : null}
                 {error ? <p className="text-sm text-destructive">{error}</p> : null}
               </form>
             </CardContent>
@@ -382,8 +410,8 @@ export default function HomePage() {
                     التالي
                   </Button>
                 ) : (
-                  <Button type="button" onClick={onStartProcessing}>
-                    ابدأ التحويل
+                  <Button type="button" onClick={onStartProcessing} disabled={isProcessing}>
+                    {isProcessing ? "جارٍ التحويل..." : "ابدأ التحويل"}
                   </Button>
                 )}
               </div>

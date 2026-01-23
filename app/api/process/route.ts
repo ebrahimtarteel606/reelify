@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { createWriteStream } from "fs";
-import { mkdir, mkdtemp, rm } from "fs/promises";
+import { mkdtemp, rm } from "fs/promises";
 import os from "os";
 import path from "path";
 import { Readable } from "stream";
-import { pipeline } from "stream/promises";
-import crypto from "crypto";
 import Busboy from "busboy";
-import { extractAudio, clipVideo } from "../../../lib/ffmpeg";
 import { transcribeAudio } from "../../../lib/elevenlabs";
 import { generateClipCandidates } from "../../../lib/gemini";
 import { loadPreferences, savePreferences, type QAPreferences } from "../../../lib/qaStore";
@@ -16,30 +13,8 @@ export const runtime = "nodejs";
 
 type UploadedFile = {
   filePath: string;
-  filename: string;
   tempDir: string;
   fields: Record<string, string>;
-};
-
-const parseJsonUpload = async (request: Request): Promise<UploadedFile> => {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), "realify-"));
-  const body = await request.json();
-  const videoUrl = body?.videoUrl;
-  if (!videoUrl) {
-    throw new Error("Missing videoUrl");
-  }
-
-  const sourceUrl = new URL(videoUrl);
-  const filename = path.basename(sourceUrl.pathname) || `upload-${Date.now()}.mp4`;
-  const filePath = path.join(tempDir, filename);
-
-  const response = await fetch(videoUrl);
-  if (!response.ok || !response.body) {
-    throw new Error("Failed to download video");
-  }
-
-  await pipeline(Readable.fromWeb(response.body as any), createWriteStream(filePath));
-  return { filePath, filename, tempDir, fields: {} };
 };
 
 const parseUpload = async (request: Request): Promise<UploadedFile> => {
@@ -62,7 +37,6 @@ const parseUpload = async (request: Request): Promise<UploadedFile> => {
     });
 
     let filePath = "";
-    let filename = "";
     let fileSaved: Promise<void> | null = null;
     const fields: Record<string, string> = {};
 
@@ -71,8 +45,8 @@ const parseUpload = async (request: Request): Promise<UploadedFile> => {
         file.resume();
         return;
       }
-      filename = info.filename || `upload-${Date.now()}.mp4`;
-      const safeName = filename.replace(/[^\w.-]/g, "_");
+      const incomingName = info.filename || `audio-${Date.now()}.wav`;
+      const safeName = incomingName.replace(/[^\w.-]/g, "_");
       filePath = path.join(tempDir, safeName);
 
       const writeStream = createWriteStream(filePath);
@@ -97,7 +71,7 @@ const parseUpload = async (request: Request): Promise<UploadedFile> => {
       }
       try {
         await fileSaved;
-        resolve({ filePath, filename, tempDir, fields });
+        resolve({ filePath, tempDir, fields });
       } catch (error) {
         reject(error);
       }
@@ -110,16 +84,10 @@ const parseUpload = async (request: Request): Promise<UploadedFile> => {
 export async function POST(request: Request) {
   let tempDir = "";
   try {
-    const contentType = request.headers.get("content-type") || "";
-    const upload = contentType.includes("application/json")
-      ? await parseJsonUpload(request)
-      : await parseUpload(request);
+    const upload = await parseUpload(request);
     tempDir = upload.tempDir;
 
-    const audioPath = path.join(tempDir, "audio.wav");
-    await extractAudio(upload.filePath, audioPath);
-
-    const segments = await transcribeAudio(audioPath);
+    const segments = await transcribeAudio(upload.filePath);
     if (segments.length === 0) {
       return NextResponse.json({ error: "Transcript was empty" }, { status: 400 });
     }
@@ -151,54 +119,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    const clipsDir = path.join(process.cwd(), "public", "clips");
-    await mkdir(clipsDir, { recursive: true });
-
-    const maxEnd = Math.max(...segments.map((segment) => segment.end));
-    const clips = [];
-
-    for (const candidate of clipCandidates) {
-      const start = Math.max(0, candidate.start);
-      const end = Math.min(candidate.end, maxEnd);
-      const duration = end - start;
-      if (duration < 30 || duration > 90) {
-        continue;
-      }
-      const filename = `clip-${crypto.randomUUID()}.mp4`;
-      const outputPath = path.join(clipsDir, filename);
-
-      await clipVideo({
-        inputPath: upload.filePath,
-        outputPath,
-        start,
-        end
-      });
-
-      clips.push({
-        title: candidate.title,
-        start,
-        end,
-        duration,
-        url: `/clips/${filename}`
-      });
-    }
-
-    if (clips.length === 0) {
-      return NextResponse.json(
-        { error: "No valid clips were generated" },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json({ clips });
+    return NextResponse.json({ clips: clipCandidates });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Processing failed";
     const clientErrorMessages = [
       "Missing ELEVENLABS_API_KEY",
       "Missing GEMINI_API_KEY",
-      "Missing videoUrl",
-      "Failed to download video",
       "Expected multipart/form-data",
       "Request body was empty",
       "No video file uploaded"
