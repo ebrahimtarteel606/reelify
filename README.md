@@ -37,3 +37,4 @@ npm run dev
 - يتم حفظ المقاطع الناتجة داخل `public/clips/`.
 - واجهة البرمجة تعمل على Node.js عبر `runtime = "nodejs"`.
 - في حال وجود خطأ، ستظهر رسالة واضحة مثل: `Missing GEMINI_API_KEY` أو `Transcript was empty`.
+
