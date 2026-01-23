@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    return NextResponse.json({ clips: clipCandidates });
+    return NextResponse.json({ clips: clipCandidates, segments });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Processing failed";
     const clientErrorMessages = [

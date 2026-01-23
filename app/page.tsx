@@ -22,6 +22,15 @@ type ClipItem = {
   start: number;
   end: number;
   thumbnail: string;
+  category: string;
+  tags: string[];
+  transcript: string;
+};
+
+type TranscriptSegment = {
+  start: number;
+  end: number;
+  text: string;
 };
 
 export default function HomePage() {
@@ -109,9 +118,18 @@ export default function HomePage() {
       }
 
       const candidates = Array.isArray(payload?.clips) ? payload.clips : [];
+      const segments: TranscriptSegment[] = Array.isArray(payload?.segments) ? payload.segments : [];
       if (candidates.length === 0) {
         throw new Error("لم يتم العثور على مقاطع مناسبة.");
       }
+
+      // Helper to extract transcript for a specific time range
+      const getClipTranscript = (start: number, end: number): string => {
+        return segments
+          .filter((seg) => seg.end > start && seg.start < end)
+          .map((seg) => seg.text)
+          .join(" ");
+      };
 
       setStatus("نقوم بتجهيز المقاطع الآن...");
       const uploadedClips: ClipItem[] = [];
@@ -153,6 +171,8 @@ export default function HomePage() {
         });
 
         const duration = Math.max(0, candidate.end - candidate.start);
+        const clipTranscript = getClipTranscript(candidate.start, candidate.end);
+        
         uploadedClips.push({
           title: candidate.title,
           start: candidate.start,
@@ -160,6 +180,9 @@ export default function HomePage() {
           duration,
           url: clipUpload.url,
           thumbnail: thumbUpload.url,
+          category: candidate.category || "عام",
+          tags: Array.isArray(candidate.tags) ? candidate.tags : [],
+          transcript: clipTranscript,
         });
       }
 
@@ -549,7 +572,16 @@ export default function HomePage() {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {clips.map((clip) => {
-                  const previewUrl = `/preview?url=${encodeURIComponent(clip.url)}&title=${encodeURIComponent(clip.title)}&duration=${Math.round(clip.duration)}&thumbnail=${encodeURIComponent(clip.thumbnail)}`;
+                  const previewParams = new URLSearchParams({
+                    url: clip.url,
+                    title: clip.title,
+                    duration: String(Math.round(clip.duration)),
+                    thumbnail: clip.thumbnail,
+                    category: clip.category,
+                    tags: clip.tags.join(","),
+                    transcript: clip.transcript,
+                  });
+                  const previewUrl = `/preview?${previewParams.toString()}`;
                   return (
                     <Card key={clip.url} className="overflow-hidden shadow-lg border-0 bg-white group">
                       <div className="aspect-video bg-gray-100 relative overflow-hidden">
@@ -568,6 +600,9 @@ export default function HomePage() {
                       </div>
                       <CardContent className="p-4 space-y-3">
                         <div>
+                          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full mb-2">
+                            {clip.category}
+                          </span>
                           <h3 className="font-semibold text-gray-900 line-clamp-2">{clip.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
                             {Math.round(clip.duration)} ثانية

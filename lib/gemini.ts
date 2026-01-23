@@ -6,6 +6,8 @@ export type ClipCandidate = {
   title: string;
   start: number;
   end: number;
+  category: string;
+  tags: string[];
 };
 
 const cleanJsonText = (raw: string) => {
@@ -104,13 +106,19 @@ export async function generateClipCandidates(
 أنت محرر فيديو محترف متخصص في المقاطع القصيرة.
 المحتوى التالي تفريغ عربي مع الطوابع الزمنية. اختر أفضل 3 مقاطع فقط بطول 30 إلى 90 ثانية.
 أعد النتيجة بصيغة JSON فقط، بدون أي شرح إضافي.
-الشكل المطلوب: [{"title":"...","start":0,"end":0}]
+الشكل المطلوب: [{"title":"...","start":0,"end":0,"category":"...","tags":["...","..."]}]
 يجب أن تكون النتيجة 3 مقاطع بالضبط.
 
 شروط العناوين:
 - عربية فصيحة وطبيعية (لغة عربية معيارية).
 - قصيرة وجذابة ومناسبة لريلز.
 - لا تترجم إلى الإنجليزية.
+
+التصنيف (category):
+اختر تصنيفاً واحداً لكل مقطع من: تعليمي، ترفيهي، تحفيزي، إخباري، ديني، رياضي، تقني، اجتماعي
+
+الوسوم (tags):
+أضف 3-5 وسوم عربية مناسبة لكل مقطع تصف المحتوى.
 
 ${preferenceBlock}
 النص المفروغ:
@@ -125,7 +133,11 @@ ${transcript}
     .map((clip) => ({
       title: String(clip.title ?? "").trim(),
       start: Number(clip.start),
-      end: Number(clip.end)
+      end: Number(clip.end),
+      category: String(clip.category ?? "عام").trim(),
+      tags: Array.isArray(clip.tags)
+        ? clip.tags.map((tag: unknown) => String(tag).trim()).filter(Boolean)
+        : []
     }))
     .filter(
       (clip) =>
