@@ -358,9 +358,26 @@ export default function HomePage() {
                       type="file"
                       accept="video/*"
                       className="hidden"
-                      onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                      onChange={(event) => {
+                        const selectedFile = event.target.files?.[0] ?? null;
+                        if (!selectedFile) {
+                          setFile(null);
+                          return;
+                        }
+                        const maxSize = 50 * 1024 * 1024;
+                        if (selectedFile.size > maxSize) {
+                          setFile(null);
+                          setError("حجم الفيديو أكبر من 50 ميجابايت. يرجى اختيار ملف أصغر.");
+                          return;
+                        }
+                        setError("");
+                        setFile(selectedFile);
+                      }}
                     />
                   </label>
+                  <p className="mt-2 text-xs text-muted-foreground text-center">
+                    الحد الأقصى لحجم الفيديو 50MB
+                  </p>
                   {file && (
                     <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
                       <p className="text-sm text-center text-primary font-medium flex items-center justify-center gap-2">
