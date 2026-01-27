@@ -79,7 +79,11 @@ export class ReelExportService {
 
       // Read output file
       const data = await ffmpeg.readFile('output.mp4');
-      const blob = new Blob([data], { type: 'video/mp4' });
+      // ffmpeg.readFile returns FileData (string | Uint8Array<ArrayBufferLike>).
+      // Normalize to Uint8Array so it's always Blob-compatible.
+      const uint8Data =
+        typeof data === "string" ? new TextEncoder().encode(data) : new Uint8Array(data);
+      const blob = new Blob([uint8Data], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
 
       // Cleanup
