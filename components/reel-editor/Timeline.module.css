@@ -1,8 +1,25 @@
 .container {
-  padding: 20px;
+  padding: 12px;
   background: #fff;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  max-height: 200px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 14px;
+    max-height: 220px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 16px;
+    max-height: 240px;
+  }
 }
 
 .timeLabels {
@@ -25,10 +42,16 @@
 
 .track {
   position: relative;
-  height: 60px;
+  height: 50px;
   background: #f0f0f0;
   border-radius: 6px;
   overflow: visible;
+}
+
+@media (min-width: 1024px) {
+  .track {
+    height: 55px;
+  }
 }
 
 .fullTrack {
@@ -96,8 +119,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 60px;
+  width: 20px;
+  height: 50px;
   background: #4a90e2;
   border: 2px solid #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -108,6 +131,13 @@
   transform: translateX(-50%);
   pointer-events: auto; /* Enable pointer events only on thumb */
   touch-action: none; /* Prevent touch scrolling while dragging */
+}
+
+@media (min-width: 1024px) {
+  .markerThumb {
+    width: 22px;
+    height: 55px;
+  }
 }
 
 .markerThumb:hover {

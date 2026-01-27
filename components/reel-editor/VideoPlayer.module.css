@@ -1,7 +1,7 @@
 .container {
   position: relative;
   width: 100%;
-  max-width: 1080px;
+  max-width: 100%;
   background: #000000;
   border-radius: 16px;
   overflow: hidden;
@@ -9,6 +9,7 @@
   flex-direction: column;
   min-height: 0;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  height: 100%;
 }
 
 .videoWrapper {
@@ -18,11 +19,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  min-height: 0;
   aspect-ratio: 9 / 16;
   overflow: hidden;
   background: #000;
   border-radius: 16px 16px 0 0;
+  width: 100%;
 }
 
 .video {

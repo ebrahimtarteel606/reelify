@@ -47,6 +47,7 @@ export function ExportButton({
     setExportProgress(0);
 
     try {
+      console.log('Export button clicked, starting export...');
       const result = await ReelExportService.exportVideo(
         currentClip.videoSourceUrl,
         trimPoints.startTime,
@@ -57,11 +58,17 @@ export function ExportButton({
         (progress) => setExportProgress(progress)
       );
 
+      console.log('Export successful:', result);
       setIsExporting(false);
       onExportSuccess?.(result);
     } catch (error) {
+      console.error('Export failed:', error);
       setIsExporting(false);
-      onExportError?.(error instanceof Error ? error : new Error('Export failed'));
+      const errorMessage = error instanceof Error ? error.message : 'Export failed';
+      onExportError?.(new Error(errorMessage));
+      
+      // Also show alert for user feedback
+      alert(`Export failed: ${errorMessage}`);
     }
   };
 
