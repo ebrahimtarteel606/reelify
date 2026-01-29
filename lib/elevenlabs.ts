@@ -65,18 +65,15 @@ const buildSegmentsFromWords = (
   return segments;
 };
 
-// Transcribe from local file path
-export async function transcribeAudioFromUrl(
-  filePath: string,
-  originalUrl: string,
+// Transcribe audio from Buffer (no file system needed)
+export async function transcribeAudioFromBuffer(
+  audioBuffer: Buffer,
 ): Promise<TranscriptSegment[]> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     throw new Error("Missing ELEVENLABS_API_KEY");
   }
 
-  // Read file into Buffer
-  const audioBuffer = await readFile(filePath);
   const fileSizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
   
   // Use scribe_v2 for faster transcription (newer and faster than scribe_v1)
@@ -85,8 +82,10 @@ export async function transcribeAudioFromUrl(
   console.log(`[ElevenLabs] Using model: ${modelId}`);
   
   // Create FormData compatible with fetch API
-  // Convert Buffer to Blob for FormData
-  const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
+  // Convert Buffer to Uint8Array then to Blob for FormData
+  // Buffer is a subclass of Uint8Array, but we need to ensure compatibility
+  const uint8Array = Uint8Array.from(audioBuffer);
+  const audioBlob = new Blob([uint8Array], { type: "audio/mpeg" });
   const formData = new FormData();
   
   formData.append("model_id", modelId);
@@ -94,7 +93,7 @@ export async function transcribeAudioFromUrl(
   formData.append("file", audioBlob, "audio.mp3");
 
   const requestStart = Date.now();
-  console.log(`[ElevenLabs] Starting transcription request from local file (${fileSizeMB}MB)`);
+  console.log(`[ElevenLabs] Starting transcription request from buffer (${fileSizeMB}MB)`);
   
   const response = await fetch(API_URL, {
     method: "POST",
@@ -130,6 +129,16 @@ export async function transcribeAudioFromUrl(
     : buildSegmentsFromWords(words);
 
   return segments.filter((segment) => segment.text);
+}
+
+// Transcribe from local file path (for backward compatibility)
+export async function transcribeAudioFromUrl(
+  filePath: string,
+  originalUrl: string,
+): Promise<TranscriptSegment[]> {
+  // Read file into Buffer and use the buffer-based function
+  const audioBuffer = await readFile(filePath);
+  return transcribeAudioFromBuffer(audioBuffer);
 }
 
 // Keep original function for backward compatibility

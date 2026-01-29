@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
-import { transcribeAudioFromUrl } from "../../../lib/elevenlabs";
+import { transcribeAudioFromBuffer } from "../../../lib/elevenlabs";
 import { generateClipCandidates } from "../../../lib/gemini";
 import { loadPreferences, type QAPreferences } from "../../../lib/qaStore";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
-import path from "node:path";
 
 export const runtime = "nodejs";
-
-const tempAudioDir = path.join(process.cwd(), "data", "temp-audio");
 
 // Accept FormData with audio file (client-side storage)
 export async function POST(request: Request) {
@@ -34,16 +30,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Convert File to Buffer and save temporarily for ElevenLabs
+    // Convert File to Buffer (no file system needed!)
     const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
     const audioSizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
     console.log(`[API] Audio received: ${audioSizeMB}MB`);
-
-    // Save to temporary file for ElevenLabs API
-    await mkdir(tempAudioDir, { recursive: true });
-    const tempAudioPath = path.join(tempAudioDir, `audio-${Date.now()}-${Math.random().toString(36).substring(7)}.mp3`);
-    await writeFile(tempAudioPath, audioBuffer);
-    console.log(`[API] Audio saved temporarily: ${tempAudioPath}`);
 
     // Load preferences in parallel with transcription (optimization)
     const preferencesPromise = (async () => {
@@ -59,22 +49,11 @@ export async function POST(request: Request) {
       return mergedPreferences;
     })();
 
-    // Transcribe from local file (ElevenLabs will read it directly)
+    // Transcribe directly from Buffer (no temp file needed!)
     const transcriptionStart = Date.now();
-    let segments;
-    try {
-      segments = await transcribeAudioFromUrl(tempAudioPath, "");
-      const transcriptionTime = Date.now() - transcriptionStart;
-      console.log(`[API] Transcription: ${transcriptionTime}ms (${segments.length} segments)`);
-    } finally {
-      // Always delete the temporary file after transcription
-      try {
-        await unlink(tempAudioPath);
-        console.log(`[API] Temporary audio file deleted: ${tempAudioPath}`);
-      } catch (deleteError) {
-        console.warn(`[API] Failed to delete temporary file:`, deleteError);
-      }
-    }
+    const segments = await transcribeAudioFromBuffer(audioBuffer);
+    const transcriptionTime = Date.now() - transcriptionStart;
+    console.log(`[API] Transcription: ${transcriptionTime}ms (${segments.length} segments)`);
     
     if (segments.length === 0) {
       return NextResponse.json(
