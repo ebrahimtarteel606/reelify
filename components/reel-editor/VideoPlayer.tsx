@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { useVideoPlayer } from '@/lib/hooks/useVideoPlayer';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { secondsToTimecode } from '@/lib/utils/timecodeUtils';
@@ -12,6 +13,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ videoUrl, className }: VideoPlayerProps) {
+  const t = useTranslations('videoPlayer');
   const { videoRef, isReady, error, togglePlayPause, seekTo, play } = useVideoPlayer(videoUrl);
   const { isPlaying, trimPoints, currentPlayheadTime } = useReelEditorStore();
 
@@ -36,20 +38,20 @@ export function VideoPlayer({ videoUrl, className }: VideoPlayerProps) {
           onError={(e) => {
             console.error('Video loading error:', e);
             const video = e.currentTarget;
-            const error = video.error;
-            if (error) {
-              let errorMessage = 'Error loading video';
-              switch (error.code) {
-                case error.MEDIA_ERR_ABORTED:
+            const videoError = video.error;
+            if (videoError) {
+              let errorMessage = t('errorLoading');
+              switch (videoError.code) {
+                case videoError.MEDIA_ERR_ABORTED:
                   errorMessage = 'Video loading aborted';
                   break;
-                case error.MEDIA_ERR_NETWORK:
+                case videoError.MEDIA_ERR_NETWORK:
                   errorMessage = 'Network error loading video';
                   break;
-                case error.MEDIA_ERR_DECODE:
+                case videoError.MEDIA_ERR_DECODE:
                   errorMessage = 'Video decode error';
                   break;
-                case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                case videoError.MEDIA_ERR_SRC_NOT_SUPPORTED:
                   errorMessage = 'Video format not supported';
                   break;
               }
@@ -59,12 +61,12 @@ export function VideoPlayer({ videoUrl, className }: VideoPlayerProps) {
         />
         {!isReady && (
           <div className={styles.loading}>
-            <p>Loading video...</p>
+            <p>{t('loadingVideo')}</p>
           </div>
         )}
         {error && (
           <div className={styles.error}>
-            <p>{error.message || 'Error loading video'}</p>
+            <p>{error.message || t('errorLoading')}</p>
             {videoUrl && (
               <p className={styles.errorUrl} style={{ fontSize: '11px', marginTop: '8px', opacity: 0.8 }}>
                 URL: {videoUrl.length > 60 ? videoUrl.substring(0, 60) + '...' : videoUrl}
@@ -78,8 +80,8 @@ export function VideoPlayer({ videoUrl, className }: VideoPlayerProps) {
         <button
           className={`${styles.controlButton} ${styles.playButton}`}
           onClick={handlePlayPause}
-          aria-label={isPlaying ? "Pause" : "Play"}
-          title={isPlaying ? "Pause" : "Play"}
+          aria-label={isPlaying ? t('pause') : t('play')}
+          title={isPlaying ? t('pause') : t('play')}
         >
           {isPlaying ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -95,8 +97,8 @@ export function VideoPlayer({ videoUrl, className }: VideoPlayerProps) {
         <button
           className={styles.controlButton}
           onClick={handleReplay}
-          aria-label="Replay"
-          title="إعادة التشغيل"
+          aria-label={t('replay')}
+          title={t('replay')}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

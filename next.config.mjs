@@ -1,3 +1,7 @@
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Use Babel instead of SWC if SWC fails
@@ -30,4 +34,4 @@ const nextConfig = {
   // Turbopack doesn't support webpack fallbacks yet
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

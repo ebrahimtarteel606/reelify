@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useCaptionRenderer } from '@/lib/hooks/useCaptionRenderer';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { DEFAULT_SAFE_AREAS } from '@/types';
@@ -17,6 +18,7 @@ export function CaptionCanvas({
   videoHeight = 1920,
   className,
 }: CaptionCanvasProps) {
+  const t = useTranslations('captionCanvas');
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 540, height: 960 });
   const canvasRef = useCaptionRenderer(videoWidth, videoHeight);
@@ -68,12 +70,12 @@ export function CaptionCanvas({
       {showSafeAreas && (
         <div className={styles.safeAreaOverlay}>
           <div className={styles.safeAreaBorder} style={safeAreaStyle} />
-          <div className={styles.safeAreaLabel}>Safe Area</div>
+          <div className={styles.safeAreaLabel}>{t('safeArea')}</div>
         </div>
       )}
       {showSafeAreas && isOutsideSafeArea && (
         <div className={styles.warningIndicator}>
-          ⚠️ Caption outside safe area
+          {t('outsideSafeArea')}
         </div>
       )}
     </div>

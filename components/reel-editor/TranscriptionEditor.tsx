@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import styles from './TranscriptionEditor.module.css';
 
 export function TranscriptionEditor() {
+  const t = useTranslations('transcriptionEditor');
   const { captions, currentClip, setCaptions, trimPoints } = useReelEditorStore();
   const [transcriptionText, setTranscriptionText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -41,7 +43,7 @@ export function TranscriptionEditor() {
 
   const handleSave = () => {
     if (!transcriptionText.trim()) {
-      alert('Transcription cannot be empty');
+      alert(t('emptyError'));
       return;
     }
 
@@ -120,18 +122,18 @@ export function TranscriptionEditor() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Full Transcription</h3>
+        <h3 className={styles.title}>{t('fullTranscription')}</h3>
         {!isEditing ? (
           <button onClick={() => setIsEditing(true)} className={styles.editButton}>
-            Edit Text
+            {t('editText')}
           </button>
         ) : (
           <div className={styles.buttonGroup}>
             <button onClick={handleSave} className={styles.saveButton}>
-              Save
+              {t('save')}
             </button>
             <button onClick={handleCancel} className={styles.cancelButton}>
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         )}
@@ -143,26 +145,26 @@ export function TranscriptionEditor() {
             value={transcriptionText}
             onChange={(e) => setTranscriptionText(e.target.value)}
             className={styles.textarea}
-            placeholder="Enter your transcription here... (Supports Arabic and English)"
+            placeholder={t('placeholder')}
             rows={10}
             dir="auto"
           />
         ) : (
           <div className={styles.textDisplay} dir="auto">
-            {transcriptionText || 'No transcription available. Click "Edit Text" to add one.'}
+            {transcriptionText || t('noTranscription')}
           </div>
         )}
       </div>
 
       <div className={styles.info}>
         <p className={styles.infoText}>
-          {captions.filter(c => c.isVisible).length} visible segments • {transcriptionText.split(' ').filter(w => w.length > 0).length} words
+          {captions.filter(c => c.isVisible).length} {t('visibleSegments')} • {transcriptionText.split(' ').filter(w => w.length > 0).length} {t('words')}
           {captions.length > 0 && captions[0].language && (
-            <span> • Language: {captions[0].language === 'ar' ? 'Arabic' : 'English'}</span>
+            <span> • {t('language')}: {captions[0].language === 'ar' ? t('languageArabic') : t('languageEnglish')}</span>
           )}
         </p>
         <p className={styles.infoText} style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>
-          Trim range: {trimPoints.startTime.toFixed(1)}s - {trimPoints.endTime.toFixed(1)}s
+          {t('trimRange')}: {trimPoints.startTime.toFixed(1)}s - {trimPoints.endTime.toFixed(1)}s
         </p>
       </div>
     </div>

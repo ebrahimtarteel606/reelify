@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { ReelExportService } from '@/lib/services/ReelExportService';
 import { ReelExportResult } from '@/types';
@@ -31,6 +32,7 @@ export function ExportButton({
   onExportError,
   quality = 'medium',
 }: ExportButtonProps) {
+  const t = useTranslations('exportButton');
   const {
     currentClip,
     trimPoints,
@@ -93,9 +95,7 @@ export function ExportButton({
 
     // Warn about animations if present
     if (hasAnimations) {
-      const confirmed = window.confirm(
-        'Note: Caption animations are preview-only and will NOT be included in the exported video.\n\nContinue with export?'
-      );
+      const confirmed = window.confirm(t('animationConfirm'));
       if (!confirmed) return null;
     }
 
@@ -123,7 +123,7 @@ export function ExportButton({
       setIsExporting(false);
       const errorMessage = error instanceof Error ? error.message : 'Export failed';
       onExportError?.(new Error(errorMessage));
-      alert(`Export failed: ${errorMessage}`);
+      alert(t('exportFailed', { error: errorMessage }));
       return null;
     }
   };
@@ -201,7 +201,7 @@ export function ExportButton({
       const platformLabel = PLATFORM_LABELS[platform];
       const postUrl = data.videoUrl || data.postUrl;
       
-      alert(`Video published successfully to ${platformLabel}!\n\nView it here: ${postUrl}`);
+      alert(t('publishSuccess', { platform: platformLabel, url: postUrl }));
       
       // Open in new tab
       if (postUrl) {
@@ -212,7 +212,7 @@ export function ExportButton({
       console.error('Publish failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Publishing failed';
       onExportError?.(new Error(errorMessage));
-      alert(`Publishing failed: ${errorMessage}`);
+      alert(t('publishFailed', { error: errorMessage }));
     } finally {
       setIsPublishing(false);
       setPublishProgress(0);
@@ -233,9 +233,9 @@ export function ExportButton({
   const isProcessing = isExporting || isPublishing;
   const progressValue = isExporting ? exportProgress : publishProgress;
   const statusText = isExporting 
-    ? `Exporting... ${exportProgress}%` 
+    ? t('exporting', { progress: exportProgress })
     : isPublishing 
-      ? `Publishing... ${publishProgress}%`
+      ? t('publishing', { progress: publishProgress })
       : null;
 
   // For non-publishable platforms, show simple export button
@@ -244,7 +244,7 @@ export function ExportButton({
       <div className={styles.container}>
         {hasAnimations && !isProcessing && (
           <div className={styles.warning}>
-            ⚠️ Animations are preview-only and won't be exported
+            {t('animationWarning')}
           </div>
         )}
         <button
@@ -258,7 +258,7 @@ export function ExportButton({
               {statusText}
             </>
           ) : (
-            'Export Reel'
+            t('exportReel')
           )}
         </button>
         {isProcessing && (
@@ -280,7 +280,7 @@ export function ExportButton({
     <div className={styles.container} ref={dropdownRef}>
       {hasAnimations && !isProcessing && (
         <div className={styles.warning}>
-          ⚠️ Animations are preview-only and won't be exported
+          {t('animationWarning')}
         </div>
       )}
       
@@ -297,7 +297,7 @@ export function ExportButton({
             </>
           ) : (
             <>
-              Export Reel
+              {t('exportReel')}
               <span className={styles.dropdownArrow}>▼</span>
             </>
           )}
@@ -310,7 +310,7 @@ export function ExportButton({
               onClick={handleDownload}
             >
               <span className={styles.dropdownIcon}>⬇️</span>
-              Download
+              {t('download')}
             </button>
             
             <div className={styles.dropdownDivider} />
@@ -323,8 +323,8 @@ export function ExportButton({
                 {platform === 'youtube' ? '🎬' : '📘'}
               </span>
               {isAuthenticated 
-                ? `Publish to ${platformLabel}` 
-                : `Connect ${platformLabel}`}
+                ? t('publishTo', { platform: platformLabel })
+                : t('connect', { platform: platformLabel })}
             </button>
 
             {isAuthenticated && (
@@ -335,7 +335,7 @@ export function ExportButton({
                   onClick={handleLogout}
                 >
                   <span className={styles.dropdownIcon}>🚪</span>
-                  Disconnect {platformLabel}
+                  {t('disconnect', { platform: platformLabel })}
                 </button>
               </>
             )}
@@ -346,7 +346,7 @@ export function ExportButton({
       {/* Auth status indicator */}
       {!isAuthLoading && isAuthenticated && (
         <div className={styles.authStatus}>
-          ✓ Connected to {platformLabel}
+          ✓ {t('connectedTo', { platform: platformLabel })}
         </div>
       )}
 

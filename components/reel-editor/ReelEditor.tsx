@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ReelEditorProps } from '@/types';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { ReelClipDataProcessor } from '@/lib/services/ReelClipDataProcessor';
@@ -22,6 +23,7 @@ export function ReelEditor({
   onExportSuccess,
   onExportError,
 }: ReelEditorProps) {
+  const t = useTranslations('editor');
   const { setCurrentClip, currentClip, transcriptionState, setTranscriptionState } = useReelEditorStore();
   const [processedClipData, setProcessedClipData] = useState<typeof clipData | null>(null);
 
@@ -101,7 +103,7 @@ export function ReelEditor({
       <>
         <div className={`${styles.container} ${styles[theme]}`}>
           <div className={styles.editor}>
-            <div className={styles.loadingMessage}>Preparing editor...</div>
+            <div className={styles.loadingMessage}>{t('preparingEditor')}</div>
           </div>
         </div>
         <TranscriptionLoader
@@ -116,7 +118,7 @@ export function ReelEditor({
   if (!currentClip) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>Loading editor...</div>
+        <div className={styles.loading}>{t('loadingEditor')}</div>
       </div>
     );
   }
@@ -136,7 +138,7 @@ export function ReelEditor({
         
         <div className={styles.sidebar}>
           <div className={styles.sidebarHeader}>
-            <h2 className={styles.sidebarTitle}>Transcription</h2>
+            <h2 className={styles.sidebarTitle}>{t('transcription')}</h2>
             <ExportButton 
               onExportSuccess={onExportSuccess}
               onExportError={onExportError}

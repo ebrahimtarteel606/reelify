@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { transcribeAudioFromBuffer } from "../../../lib/elevenlabs";
-import { generateClipCandidates } from "../../../lib/gemini";
+import { generateClipCandidates, type OutputLanguage } from "../../../lib/gemini";
 import { loadPreferences, type QAPreferences } from "../../../lib/qaStore";
 
 export const runtime = "nodejs";
@@ -15,6 +16,12 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const audioFile = formData.get("audio") as File | null;
     const preferencesStr = formData.get("preferences") as string | null;
+
+    // Get locale from cookie for output language
+    const cookieStore = await cookies();
+    const locale = cookieStore.get("NEXT_LOCALE")?.value;
+    const outputLanguage: OutputLanguage = locale === "en" ? "en" : "ar";
+    console.log(`[API] Output language: ${outputLanguage}`);
 
     if (!audioFile) {
       return NextResponse.json({ error: "Missing audio file" }, { status: 400 });
@@ -70,6 +77,7 @@ export async function POST(request: Request) {
     const clipCandidates = await generateClipCandidates(
       segments,
       mergedPreferences,
+      outputLanguage,
     );
     const geminiTime = Date.now() - geminiStart;
     console.log(`[API] Gemini analysis: ${geminiTime}ms (${clipCandidates.length} clips)`);

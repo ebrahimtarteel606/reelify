@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState, useMemo, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReelEditor } from "@/components/reel-editor/ReelEditor";
@@ -10,8 +11,10 @@ import { getVideoBlobUrl } from "@/lib/videoStorage";
 
 function EditorContent() {
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const t = useTranslations('editor');
   
-  // Check synchronously if we need to restore URL (prevents component from loading)
+  // Check synchronously if we need to restore URL
   const needsUrlRestore = useMemo(() => {
     if (typeof window === "undefined") return false;
     const authSuccess = searchParams.get("auth_success");
@@ -22,7 +25,6 @@ function EditorContent() {
 
   const [isRestoringUrl, setIsRestoringUrl] = useState(needsUrlRestore);
 
-  // Perform the URL restore in an effect
   useEffect(() => {
     if (!needsUrlRestore) return;
     
@@ -36,7 +38,6 @@ function EditorContent() {
       
       try {
         const returnUrl = new URL(savedReturnUrl);
-        // Add auth_success to the URL
         returnUrl.searchParams.set("auth_success", authSuccess);
         console.log("[Editor] Redirecting to:", returnUrl.toString());
         window.location.href = returnUrl.toString();
@@ -47,7 +48,6 @@ function EditorContent() {
     }
   }, [needsUrlRestore, searchParams]);
 
-  // Show loading while restoring URL - this blocks the rest of the component from rendering
   if (isRestoringUrl || needsUrlRestore) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
@@ -55,34 +55,30 @@ function EditorContent() {
           <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
             <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-lg text-muted-foreground">جاري استعادة الجلسة...</p>
+          <p className="text-lg text-muted-foreground">{t('restoringSession')}</p>
         </div>
       </div>
     );
   }
+
   const videoUrlParam = searchParams.get("videoUrl");
   const startTimeParam = searchParams.get("startTime");
   const endTimeParam = searchParams.get("endTime");
-  const title = searchParams.get("title") || "مقطع فيديو";
-  const category = searchParams.get("category") || "عام";
+  const title = searchParams.get("title") || t('defaultTitle');
+  const category = searchParams.get("category") || t('defaultCategory');
   const transcript = searchParams.get("transcript") || "";
   const [videoUrl, setVideoUrl] = useState<string | null>(videoUrlParam);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [isLoadingDuration, setIsLoadingDuration] = useState(true);
 
-  // Validate video URL and recreate from IndexedDB if needed
   useEffect(() => {
     const validateAndLoadVideo = async () => {
-      // Always try to get video from IndexedDB first (most reliable)
-      // If no videoUrlParam or it's a blob URL, get from IndexedDB
       const shouldUseIndexedDB = !videoUrlParam || videoUrlParam.startsWith('blob:');
       
       if (shouldUseIndexedDB) {
-        // Get fresh blob URL from IndexedDB
         const newBlobUrl = await getVideoBlobUrl();
         if (newBlobUrl) {
           setVideoUrl(newBlobUrl);
-          // Load duration from the new blob URL
           const video = document.createElement("video");
           video.preload = "metadata";
           video.src = newBlobUrl;
@@ -94,24 +90,21 @@ function EditorContent() {
           
           video.onerror = () => {
             setIsLoadingDuration(false);
-            // Try to estimate duration from endTime if available
             if (endTimeParam) {
               const endTime = Number.parseFloat(endTimeParam);
-              setVideoDuration(Math.max(endTime + 10, 60)); // Add buffer, min 60s
+              setVideoDuration(Math.max(endTime + 10, 60));
             }
           };
           
           video.load();
         } else {
           setIsLoadingDuration(false);
-          // Try to estimate duration from endTime if available
           if (endTimeParam) {
             const endTime = Number.parseFloat(endTimeParam);
-            setVideoDuration(Math.max(endTime + 10, 60)); // Add buffer, min 60s
+            setVideoDuration(Math.max(endTime + 10, 60));
           }
         }
       } else {
-        // Non-blob URL (e.g., Vercel Blob URL), use it directly
         setVideoUrl(videoUrlParam);
         const video = document.createElement("video");
         video.preload = "metadata";
@@ -123,7 +116,6 @@ function EditorContent() {
         };
         
         video.onerror = async () => {
-          // If non-blob URL fails, try IndexedDB as fallback
           const newBlobUrl = await getVideoBlobUrl();
           if (newBlobUrl) {
             setVideoUrl(newBlobUrl);
@@ -161,7 +153,6 @@ function EditorContent() {
     void validateAndLoadVideo();
   }, [videoUrlParam, endTimeParam]);
 
-  // Get video duration (for the actual videoUrl state)
   useEffect(() => {
     if (!videoUrl) return;
 
@@ -176,10 +167,9 @@ function EditorContent() {
 
     video.onerror = () => {
       setIsLoadingDuration(false);
-      // Try to estimate duration from endTime if available
       if (endTimeParam) {
         const endTime = Number.parseFloat(endTimeParam);
-        setVideoDuration(Math.max(endTime + 10, 60)); // Add buffer, min 60s
+        setVideoDuration(Math.max(endTime + 10, 60));
       }
     };
 
@@ -188,7 +178,6 @@ function EditorContent() {
     };
   }, [videoUrl, endTimeParam]);
 
-  // Convert preview data to ReelClipInput format
   const clipData: ReelClipInput | null = useMemo(() => {
     if (!videoUrl) return null;
 
@@ -197,7 +186,6 @@ function EditorContent() {
       ? Number.parseFloat(endTimeParam)
       : Math.max(videoDuration, 60);
 
-    // Prefer full-video segments from sessionStorage (allows expanding reel to show new text)
     let segments: Array<{ text: string; start: number; end: number; language: "ar" | "en" }> = [];
     if (typeof window !== "undefined") {
       try {
@@ -236,7 +224,6 @@ function EditorContent() {
       }
     }
 
-    // Fallback: parse transcript string and distribute across initial clip duration
     if (segments.length === 0 && transcript) {
       segments = transcript
         .split(/[.!?،؛]+/)
@@ -304,12 +291,11 @@ function EditorContent() {
               </svg>
             </div>
             <p className="text-lg font-medium text-foreground">
-              رابط الفيديو غير موجود
+              {t('videoUrlMissing')}
             </p>
             <Button
               className="bg-gradient-teal hover:shadow-teal transition-all duration-200"
               onClick={() => {
-                // Set flag to indicate user is navigating back
                 if (typeof globalThis.window !== "undefined") {
                   globalThis.sessionStorage.setItem(
                     "reelify_navigation_back",
@@ -319,7 +305,7 @@ function EditorContent() {
                 globalThis.history.back();
               }}
             >
-              العودة
+              {t('back')}
             </Button>
           </CardContent>
         </Card>
@@ -334,14 +320,13 @@ function EditorContent() {
           <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
             <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-lg text-muted-foreground">جاري تحميل الفيديو...</p>
+          <p className="text-lg text-muted-foreground">{t('loadingVideo')}</p>
         </div>
       </div>
     );
   }
 
   const handleExportSuccess = (result: ReelExportResult) => {
-    // Download the exported video
     const a = document.createElement("a");
     a.href = result.videoUrl;
     a.download = `${title || "reel"}-edited.mp4`;
@@ -353,11 +338,11 @@ function EditorContent() {
 
   const handleExportError = (error: Error) => {
     console.error("Export error:", error);
-    alert(`فشل التصدير: ${error.message}`);
+    alert(`Export failed: ${error.message}`);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-warm" dir="rtl">
+    <div className="min-h-screen bg-gradient-warm">
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
@@ -370,13 +355,12 @@ function EditorContent() {
               <h1 className="text-sm font-semibold text-foreground">{title}</h1>
               <p className="text-xs text-muted-foreground">
                 {category} • {Math.round(clipData.endTime - clipData.startTime)}{" "}
-                ثانية
+                {locale === 'ar' ? 'ثانية' : 'seconds'}
               </p>
             </div>
           </div>
           <Button
             onClick={() => {
-              // Set flag to indicate user is navigating back
               if (typeof globalThis.window !== "undefined") {
                 globalThis.sessionStorage.setItem(
                   "reelify_navigation_back",
@@ -388,7 +372,7 @@ function EditorContent() {
             variant="outline"
             className="bg-gradient-coral text-white border-none hover:shadow-teal transition-all duration-200"
           >
-            العودة
+            {locale === 'ar' ? 'العودة' : 'Back'}
           </Button>
         </div>
       </div>
@@ -405,6 +389,8 @@ function EditorContent() {
 }
 
 export default function EditorPage() {
+  const t = useTranslations('common');
+  
   return (
     <Suspense
       fallback={
@@ -413,7 +399,7 @@ export default function EditorPage() {
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
               <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-            <p className="text-lg text-muted-foreground">جاري التحميل...</p>
+            <p className="text-lg text-muted-foreground">{t('loading')}</p>
           </div>
         </div>
       }

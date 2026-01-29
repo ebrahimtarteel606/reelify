@@ -2,11 +2,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as Slider from '@radix-ui/react-slider';
+import { useTranslations } from 'next-intl';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { secondsToTimecode } from '@/lib/utils/timecodeUtils';
 import styles from './Timeline.module.css';
 
 export function Timeline() {
+  const t = useTranslations('timeline');
   const {
     sourceVideoDuration,
     trimPoints,
@@ -115,7 +117,7 @@ export function Timeline() {
   };
 
   if (sourceVideoDuration === 0) {
-    return <div className={styles.container}>Loading timeline...</div>;
+    return <div className={styles.container}>{t('loadingTimeline')}</div>;
   }
 
   return (
@@ -155,14 +157,14 @@ export function Timeline() {
             </Slider.Track>
             <Slider.Thumb 
               className={`${styles.markerThumb} ${styles.endMarker}`} 
-              aria-label="End Marker"
+              aria-label={t('endMarker')}
               onPointerDown={() => {
                 draggingSliderRef.current = 'end';
                 setDraggingSlider('end');
               }}
             >
               <div className={styles.markerLine} />
-              <div className={styles.markerLabel}>END</div>
+              <div className={styles.markerLabel}>{t('endMarker')}</div>
             </Slider.Thumb>
           </Slider.Root>
 
@@ -180,14 +182,14 @@ export function Timeline() {
             </Slider.Track>
             <Slider.Thumb 
               className={`${styles.markerThumb} ${styles.startMarker}`} 
-              aria-label="Start Marker"
+              aria-label={t('startMarker')}
               onPointerDown={() => {
                 draggingSliderRef.current = 'start';
                 setDraggingSlider('start');
               }}
             >
               <div className={styles.markerLine} />
-              <div className={styles.markerLabel}>START</div>
+              <div className={styles.markerLabel}>{t('startMarker')}</div>
             </Slider.Thumb>
           </Slider.Root>
 
@@ -198,15 +200,15 @@ export function Timeline() {
       {/* ±1s trim controls */}
       <div className={styles.trimControls}>
         <div className={styles.trimControlGroup}>
-          <span className={styles.trimControlLabel}>Start</span>
+          <span className={styles.trimControlLabel}>{t('start')}</span>
           <div className={styles.trimControlButtons}>
             <button
               type="button"
               onClick={handleStartPlus}
               disabled={safeTrimPoints.startTime <= 0}
               className={styles.trimBtn}
-              title="بداية المقطع قبل ثانية (+1s)"
-              aria-label="بداية المقطع قبل ثانية"
+              title={t('startBefore')}
+              aria-label={t('startBefore')}
             >
               +1s
             </button>
@@ -215,23 +217,23 @@ export function Timeline() {
               onClick={handleStartMinus}
               disabled={safeTrimPoints.startTime >= safeTrimPoints.endTime - minDuration}
               className={styles.trimBtn}
-              title="بداية المقطع بعد ثانية (−1s)"
-              aria-label="بداية المقطع بعد ثانية"
+              title={t('startAfter')}
+              aria-label={t('startAfter')}
             >
               −1s
             </button>
           </div>
         </div>
         <div className={styles.trimControlGroup}>
-          <span className={styles.trimControlLabel}>End</span>
+          <span className={styles.trimControlLabel}>{t('end')}</span>
           <div className={styles.trimControlButtons}>
             <button
               type="button"
               onClick={handleEndMinus}
               disabled={safeTrimPoints.endTime <= safeTrimPoints.startTime + minDuration}
               className={styles.trimBtn}
-              title="نهاية المقطع قبل ثانية (−1s)"
-              aria-label="نهاية المقطع قبل ثانية"
+              title={t('endBefore')}
+              aria-label={t('endBefore')}
             >
               −1s
             </button>
@@ -240,8 +242,8 @@ export function Timeline() {
               onClick={handleEndPlus}
               disabled={safeTrimPoints.endTime >= sourceVideoDuration}
               className={styles.trimBtn}
-              title="نهاية المقطع بعد ثانية (+1s)"
-              aria-label="نهاية المقطع بعد ثانية"
+              title={t('endAfter')}
+              aria-label={t('endAfter')}
             >
               +1s
             </button>
@@ -252,19 +254,19 @@ export function Timeline() {
       {/* Info display */}
       <div className={styles.infoDisplay}>
         <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>Start:</span>
+          <span className={styles.infoLabel}>{t('start')}:</span>
           <span className={styles.infoValue}>{secondsToTimecode(safeTrimPoints.startTime)}</span>
         </div>
         <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>End:</span>
+          <span className={styles.infoLabel}>{t('end')}:</span>
           <span className={styles.infoValue}>{secondsToTimecode(safeTrimPoints.endTime)}</span>
         </div>
         <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>Duration:</span>
+          <span className={styles.infoLabel}>{t('duration')}:</span>
           <span className={styles.infoValue}>{secondsToTimecode(trimDuration)}</span>
         </div>
         <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>Current:</span>
+          <span className={styles.infoLabel}>{t('current')}:</span>
           <span className={styles.infoValue}>{secondsToTimecode(currentPlayheadTime)}</span>
         </div>
       </div>

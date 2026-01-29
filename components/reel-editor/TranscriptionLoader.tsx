@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { TranscriptionState } from '@/types';
 import styles from './TranscriptionLoader.module.css';
 
@@ -11,6 +12,8 @@ interface TranscriptionLoaderProps {
 }
 
 export function TranscriptionLoader({ state, onRetry, onSkip }: TranscriptionLoaderProps) {
+  const t = useTranslations('transcriptionLoader');
+
   if (state.status === 'idle') {
     return null;
   }
@@ -20,13 +23,13 @@ export function TranscriptionLoader({ state, onRetry, onSkip }: TranscriptionLoa
       <div className={styles.container}>
         <div className={styles.loadingCard}>
           <div className={styles.spinner} />
-          <h3 className={styles.title}>Transcribing Video...</h3>
+          <h3 className={styles.title}>{t('transcribing')}</h3>
           <p className={styles.message}>
-            This may take a few moments. We're generating captions for your video using AI.
+            {t('transcribingMessage')}
           </p>
           {onSkip && (
             <button onClick={onSkip} className={styles.skipButton}>
-              Skip and Continue Without Captions
+              {t('skipButton')}
             </button>
           )}
         </div>
@@ -39,19 +42,19 @@ export function TranscriptionLoader({ state, onRetry, onSkip }: TranscriptionLoa
       <div className={styles.container}>
         <div className={styles.errorCard}>
           <div className={styles.errorIcon}>⚠️</div>
-          <h3 className={styles.title}>Transcription Failed</h3>
+          <h3 className={styles.title}>{t('failed')}</h3>
           <p className={styles.errorMessage}>
-            {state.error || 'An error occurred while transcribing the video.'}
+            {state.error || t('errorDefault')}
           </p>
           <div className={styles.buttonGroup}>
             {onRetry && (
               <button onClick={onRetry} className={styles.retryButton}>
-                Retry Transcription
+                {t('retryButton')}
               </button>
             )}
             {onSkip && (
               <button onClick={onSkip} className={styles.skipButton}>
-                Continue Without Captions
+                {t('continueWithout')}
               </button>
             )}
           </div>

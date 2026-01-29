@@ -11,6 +11,9 @@ export type ClipCandidate = {
   score?: number; // Quality score from 0-100
 };
 
+// Supported output languages for titles/tags
+export type OutputLanguage = "ar" | "en";
+
 const cleanJsonText = (raw: string) => {
   return raw
     .replace(/```json/gi, "```")
@@ -68,7 +71,8 @@ const parseGeminiJson = (raw: string): ClipCandidate[] => {
 
 export async function generateClipCandidates(
   segments: TranscriptSegment[],
-  preferences?: QAPreferences
+  preferences?: QAPreferences,
+  outputLanguage: OutputLanguage = "ar"
 ): Promise<ClipCandidate[]> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -99,21 +103,45 @@ export async function generateClipCandidates(
     )
     .join("\n");
 
+  // Language-specific preference labels
+  const preferenceLabels = outputLanguage === "en" 
+    ? {
+        platform: "Target platform",
+        duration: "Preferred duration",
+        audience: "Target audience",
+        tone: "Content tone",
+        hookStyle: "Hook style",
+        keyTopics: "Key topics",
+        callToAction: "Call to action",
+        seconds: "seconds"
+      }
+    : {
+        platform: "المنصة المستهدفة",
+        duration: "المدة المفضلة",
+        audience: "الجمهور المستهدف",
+        tone: "نبرة المحتوى",
+        hookStyle: "أسلوب الخطّاف",
+        keyTopics: "محاور رئيسية",
+        callToAction: "دعوة للفعل",
+        seconds: "ثانية"
+      };
+
   const preferenceLines = [
-    preferences?.platform ? `المنصة المستهدفة: ${preferences.platform}` : null,
+    preferences?.platform ? `${preferenceLabels.platform}: ${preferences.platform}` : null,
     Number.isFinite(preferences?.preferredDuration)
-      ? `المدة المفضلة: ${preferences?.preferredDuration} ثانية`
+      ? `${preferenceLabels.duration}: ${preferences?.preferredDuration} ${preferenceLabels.seconds}`
       : null,
-    preferences?.audience ? `الجمهور المستهدف: ${preferences.audience}` : null,
-    preferences?.tone ? `نبرة المحتوى: ${preferences.tone}` : null,
-    preferences?.hookStyle ? `أسلوب الخطّاف: ${preferences.hookStyle}` : null,
-    preferences?.keyTopics ? `محاور رئيسية: ${preferences.keyTopics}` : null,
-    preferences?.callToAction ? `دعوة للفعل: ${preferences.callToAction}` : null
+    preferences?.audience ? `${preferenceLabels.audience}: ${preferences.audience}` : null,
+    preferences?.tone ? `${preferenceLabels.tone}: ${preferences.tone}` : null,
+    preferences?.hookStyle ? `${preferenceLabels.hookStyle}: ${preferences.hookStyle}` : null,
+    preferences?.keyTopics ? `${preferenceLabels.keyTopics}: ${preferences.keyTopics}` : null,
+    preferences?.callToAction ? `${preferenceLabels.callToAction}: ${preferences.callToAction}` : null
   ].filter(Boolean);
 
+  const userPreferencesLabel = outputLanguage === "en" ? "User preferences" : "تفضيلات المستخدم";
   const preferenceBlock =
     preferenceLines.length > 0
-      ? `\nتفضيلات المستخدم:\n${preferenceLines.join("\n")}\n`
+      ? `\n${userPreferencesLabel}:\n${preferenceLines.join("\n")}\n`
       : "";
 
   // Get platform-specific recommendations
@@ -129,6 +157,23 @@ export async function generateClipCandidates(
   const platform = preferences?.platform || "instagram";
   const platformRec = platformRecommendations[platform] || platformRecommendations.instagram;
 
+  // Language-specific instructions for titles and tags
+  const outputLangInstructions = outputLanguage === "en"
+    ? `
+OUTPUT LANGUAGE: English
+- Generate ALL titles, tags, and categories in ENGLISH.
+- Even if the transcript is in Arabic or another language, the output MUST be in English.
+- Use catchy, engaging English titles optimized for ${platform}.
+- Tags should be English keywords relevant to ${platform} discovery.
+`
+    : `
+OUTPUT LANGUAGE: Arabic
+- Generate ALL titles, tags, and categories in ARABIC.
+- Use SAME dialect/accent style as the transcript (e.g., Egyptian, Gulf, Levantine).
+- Keep titles natural, catchy, and reel-style optimized for ${platform}.
+- Do not translate or normalize style - match the speaker's dialect.
+`;
+
   // Optimized prompt asking for as many clips as possible with scores >= 65
   const prompt = `
 You are a professional short-form video editor specializing in ${platform} content.
@@ -136,6 +181,7 @@ The following text is a timestamped transcript. Auto-detect its language AND dia
 
 PLATFORM-SPECIFIC RECOMMENDATIONS:
 ${platformRec}
+${outputLangInstructions}
 
 Return ONLY valid JSON — no explanations.
 Format:
@@ -145,12 +191,6 @@ CRITICAL: Return ALL viable segments with score >= 65. Do NOT limit the number.
 Extract EVERY segment from the transcript that meets the quality threshold (score >= 65).
 There is NO maximum limit - return as many as you find.
 Sort descending by quality (best first, worst last).
-
-Titles & tags:
-- Use SAME language and SAME dialect/accent as transcript.
-- Short, natural, catchy, reel-style optimized for ${platform}.
-- Do not translate or normalize style.
-- Consider ${platform} audience preferences and trends.
 
 Selection priority:
 1) Strong hook in first 3–5 seconds (critical for ${platform}).
@@ -163,12 +203,6 @@ Scoring:
 - Score 0–100.
 - Internally rate hook (1–10) - especially important for ${platform}.
 - Rank by: hook → overall quality → value → ${platform} optimization.
-
-Category:
-Choose one relevant category in the SAME language, considering ${platform} content categories.
-
-Tags:
-Add 3–5 relevant tags in the SAME language and dialect, optimized for ${platform} discovery.
 
 ${preferenceBlock}
 Transcript:
@@ -268,6 +302,7 @@ ${transcript}
     return time;
   };
 
+  const defaultCategory = outputLanguage === "en" ? "General" : "عام";
   const normalized = parsed.map((clip) => {
     const rawStart = Number(clip.start);
     const rawEnd = Number(clip.end);
@@ -279,7 +314,7 @@ ${transcript}
       title: String(clip.title ?? "").trim(),
       start,
       end: safeEnd,
-      category: String(clip.category ?? "عام").trim(),
+      category: String(clip.category ?? defaultCategory).trim(),
       tags: Array.isArray(clip.tags)
         ? clip.tags.map((tag: unknown) => String(tag).trim()).filter(Boolean)
         : [],

@@ -1,0 +1,337 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "close": "Close",
+    "back": "Back",
+    "continue": "Continue",
+    "save": "Save",
+    "cancel": "Cancel",
+    "seconds": "seconds",
+    "home": "Home",
+    "privacyPolicy": "Privacy Policy",
+    "termsAndConditions": "Terms and Conditions"
+  },
+  "home": {
+    "title": "Create Professional Arabic Reels",
+    "subtitle": "Upload your video and answer simple questions to create the best clips",
+    "uploadLabel": "Click to upload video",
+    "uploadFormats": "MP4, MOV, AVI",
+    "maxFileSize": "Maximum file size: 100MB",
+    "fileSelected": "Selected: {filename}",
+    "selectVideoError": "Please select a video before continuing.",
+    "fileTooLarge": "Video file is larger than 100MB. Please select a smaller file.",
+    "questionOf": "Question {current} of {total}",
+    "questionSkipped": "This question was skipped",
+    "questionAnswered": "An answer was selected for this question",
+    "skipQuestion": "Skip this question",
+    "skipQuestionsLabel": "Skip questions, let AI decide",
+    "startWithoutQuestions": "Start without questions",
+    "analyzingInBackground": "Analyzing video in the background...",
+    "readyToConvert": "Ready to convert",
+    "previous": "Previous",
+    "next": "Next",
+    "startConversion": "Start Conversion",
+    "converting": "Converting...",
+    "questions": {
+      "platform": "Which platform will you publish to?",
+      "duration": "What is your preferred clip duration?",
+      "audience": "Who is your target audience?",
+      "tone": "What tone is most suitable for the clip?",
+      "hookStyle": "What opening style (hook) do you prefer?"
+    },
+    "platforms": {
+      "instagram": "Instagram Reels",
+      "tiktok": "TikTok",
+      "youtube": "YouTube Shorts",
+      "snapchat": "Snapchat Spotlight",
+      "facebook": "Facebook Reels",
+      "linkedin": "LinkedIn Reels"
+    },
+    "durationRecommendation": "We recommend {duration} seconds for {platform}.",
+    "audiences": {
+      "youth": "Youth 18-30",
+      "entrepreneurs": "Entrepreneurs",
+      "selfDevelopment": "Self-development enthusiasts",
+      "students": "University students",
+      "techProfessionals": "Tech professionals"
+    },
+    "audienceCustomLabel": "Or type your target audience",
+    "audienceCustomPlaceholder": "Example: Small business owners, content creators...",
+    "audienceCustomHint": "You can choose a preset option or write your own audience.",
+    "tones": {
+      "inspiring": "Inspiring",
+      "educational": "Educational",
+      "energetic": "Energetic",
+      "calm": "Calm",
+      "practical": "Practical and direct"
+    },
+    "toneCustomLabel": "Or type your preferred tone",
+    "toneCustomPlaceholder": "Example: Inspiring and casual, formal, storytelling...",
+    "toneCustomHint": "You can choose a preset option or write your own tone.",
+    "hookStyles": {
+      "directQuestion": "Direct question",
+      "strongNumber": "Strong number or statistic",
+      "quickPromise": "Promise of quick results",
+      "shortStory": "Short story",
+      "warning": "Alert or warning"
+    },
+    "hookStyleCustomLabel": "Or type your preferred opening style",
+    "hookStyleCustomPlaceholder": "Example: Quick personal story, shocking question, common problem...",
+    "hookStyleCustomHint": "You can choose a preset option or write your own opening style.",
+    "platformRecommendations": {
+      "instagram": [
+        "Keep text short and engaging with appropriate emojis 📸✨",
+        "Daily stories and quick interactions boost reach",
+        "Use two to three hashtags maximum for better results"
+      ],
+      "facebook": [
+        "Storytelling content achieves higher engagement on Facebook",
+        "Posts with questions encourage comments",
+        "Medium-length text works best here"
+      ],
+      "tiktok": [
+        "Start with a strong sentence that grabs attention within the first 3 seconds",
+        "A casual tone is better than formal",
+        "Follow trends but in your own style"
+      ],
+      "youtube": [
+        "Title and description are just as important as the video itself",
+        "Encourage viewers to engage at the end of the content",
+        "Educational or long-form entertainment content performs better"
+      ],
+      "snapchat": [
+        "Fast and engaging content achieves the best results",
+        "Use visual effects to grab attention",
+        "Daily and spontaneous content performs better"
+      ],
+      "linkedin": [
+        "Ensure a professional and clear style",
+        "Share an experience or practical value for the reader",
+        "Educational posts perform strongly"
+      ]
+    }
+  },
+  "loading": {
+    "preparingClips": "Preparing your clips now",
+    "pleaseWait": "Please wait a moment...",
+    "tipsFor": "Tips for {platform}",
+    "preparingVideo": "Preparing video...",
+    "loadingTools": "Loading processing tools...",
+    "readingFile": "Reading video file...",
+    "extractingAudio": "Extracting audio from video...",
+    "waitingAnalysis": "Waiting for analysis to complete...",
+    "analyzingContent": "Analyzing content and selecting the best clips...",
+    "preparingClipsShort": "Preparing clips...",
+    "videoNotReady": "Video is not ready yet. Please try again.",
+    "videoUrlMissing": "Video URL is missing.",
+    "audioNotFound": "Audio file not found. Please try again.",
+    "analysisError": "An error occurred during analysis.",
+    "noClipsFound": "No suitable clips found.",
+    "processingError": "An error occurred during processing.",
+    "processingFailed": "Processing could not be completed."
+  },
+  "results": {
+    "clipsReady": "Clips are ready!",
+    "selectClip": "Select the clip you like to preview and download",
+    "noClipsYet": "No clips have been created yet.",
+    "previewAndEdit": "Preview, edit and export",
+    "rank": "#{rank}"
+  },
+  "editor": {
+    "loadingVideo": "Loading video...",
+    "videoUrlMissing": "Video URL is missing",
+    "restoringSession": "Restoring session...",
+    "preparingEditor": "Preparing editor...",
+    "loadingEditor": "Loading editor...",
+    "transcription": "Transcription",
+    "defaultTitle": "Video clip",
+    "defaultCategory": "General"
+  },
+  "preview": {
+    "loadingVideo": "Loading video...",
+    "videoUrlMissing": "Video URL is missing",
+    "editVideo": "Edit Video",
+    "tags": "Tags",
+    "transcript": "Transcript",
+    "selectedClip": "Selected clip (reel)",
+    "downloads": "Downloads",
+    "downloadVideo": "Video",
+    "downloadImage": "Image",
+    "downloadText": "Text",
+    "seekBack": "10 seconds back",
+    "seekForward": "10 seconds forward",
+    "replay": "Replay",
+    "pause": "Pause",
+    "play": "Play"
+  },
+  "videoPlayer": {
+    "loadingVideo": "Loading video...",
+    "errorLoading": "Error loading video",
+    "pause": "Pause",
+    "play": "Play",
+    "replay": "Replay"
+  },
+  "timeline": {
+    "loadingTimeline": "Loading timeline...",
+    "start": "Start",
+    "end": "End",
+    "duration": "Duration",
+    "current": "Current",
+    "startMarker": "START",
+    "endMarker": "END",
+    "startBefore": "Move start 1 second earlier",
+    "startAfter": "Move start 1 second later",
+    "endBefore": "Move end 1 second earlier",
+    "endAfter": "Move end 1 second later"
+  },
+  "transcriptionEditor": {
+    "fullTranscription": "Full Transcription",
+    "editText": "Edit Text",
+    "save": "Save",
+    "cancel": "Cancel",
+    "placeholder": "Enter your transcription here... (Supports Arabic and English)",
+    "noTranscription": "No transcription available. Click \"Edit Text\" to add one.",
+    "visibleSegments": "visible segments",
+    "words": "words",
+    "languageArabic": "Arabic",
+    "languageEnglish": "English",
+    "language": "Language",
+    "trimRange": "Trim range",
+    "emptyError": "Transcription cannot be empty"
+  },
+  "transcriptionLoader": {
+    "transcribing": "Transcribing Video...",
+    "transcribingMessage": "This may take a few moments. We're generating captions for your video using AI.",
+    "skipButton": "Skip and Continue Without Captions",
+    "failed": "Transcription Failed",
+    "errorDefault": "An error occurred while transcribing the video.",
+    "retryButton": "Retry Transcription",
+    "continueWithout": "Continue Without Captions"
+  },
+  "exportButton": {
+    "exportReel": "Export Reel",
+    "download": "Download",
+    "publishTo": "Publish to {platform}",
+    "connect": "Connect {platform}",
+    "disconnect": "Disconnect {platform}",
+    "connectedTo": "Connected to {platform}",
+    "exporting": "Exporting... {progress}%",
+    "publishing": "Publishing... {progress}%",
+    "animationWarning": "Animations are preview-only and won't be exported",
+    "animationConfirm": "Note: Caption animations are preview-only and will NOT be included in the exported video.\n\nContinue with export?",
+    "exportFailed": "Export failed: {error}",
+    "publishFailed": "Publishing failed: {error}",
+    "publishSuccess": "Video published successfully to {platform}!\n\nView it here: {url}"
+  },
+  "captionCanvas": {
+    "safeArea": "Safe Area",
+    "outsideSafeArea": "Caption outside safe area"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: January 2026",
+    "introduction": "Introduction",
+    "introText": "Welcome to Realify. We value your trust and are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your personal information when you use our services.",
+    "dataCollection": "Information We Collect",
+    "videoInfo": "Video Information",
+    "videoInfoText": "When you upload a video, we process it locally on your device. Video content is not permanently stored on our servers and is automatically deleted after the processing session ends.",
+    "preferencesInfo": "Preferences Data",
+    "preferencesInfoText": "We collect your preferences related to target platform, clip duration, target audience, tone, and opening style. This information is only used to improve the quality of produced clips.",
+    "usageInfo": "Usage Data",
+    "usageInfoText": "We use anonymous analytics services (such as Vercel Analytics) to understand how the service is used and improve it. This data does not contain personally identifiable information.",
+    "dataUsage": "How We Use Your Information",
+    "dataUsageList": [
+      "Providing the video-to-short-clips conversion service",
+      "Improving service quality and features",
+      "Understanding usage patterns to develop the service",
+      "Communicating with you about important updates (if you subscribe to the mailing list)"
+    ],
+    "dataSecurity": "Data Security",
+    "dataSecurityText": "We take reasonable security measures to protect your information, including:",
+    "dataSecurityList": [
+      "Processing video locally on your device whenever possible",
+      "Encrypting data in transit using HTTPS",
+      "Automatically deleting temporary files after the session ends",
+      "Not storing sensitive personal information"
+    ],
+    "changes": "Changes to This Policy",
+    "changesText": "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the \"Last updated\" date.",
+    "contact": "Contact Us",
+    "contactText": "If you have any questions about this Privacy Policy, you can contact us via email."
+  },
+  "terms": {
+    "title": "Terms and Conditions",
+    "lastUpdated": "Last updated: January 2026",
+    "introduction": "Introduction",
+    "introText": "Welcome to Realify. By using our services, you agree to comply with these Terms and Conditions. Please read them carefully before using the service.",
+    "serviceDescription": "Service Description",
+    "serviceDescriptionText": "Realify is a service that allows you to convert long videos into short clips (reels) using artificial intelligence technologies. We analyze video content and suggest the best clips for publishing on various social media platforms.",
+    "acceptance": "Acceptance of Terms",
+    "acceptanceText": "By using our website or services, you acknowledge and agree that:",
+    "acceptanceList": [
+      "You have read and understood these Terms and Conditions",
+      "You are at least 13 years old",
+      "You have the legal authority to agree to these terms",
+      "You will use the service legally and in accordance with these terms"
+    ],
+    "userContent": "Your Content",
+    "ownership": "Ownership",
+    "ownershipText": "You retain all ownership rights to content you upload to our service. We do not claim ownership of any content you submit or upload.",
+    "license": "License",
+    "licenseText": "By uploading content to our service, you grant us a limited, non-exclusive, and temporary license to process this content for the purpose of providing the service to you. This license ends immediately after the processing session concludes.",
+    "contentResponsibility": "Content Responsibility",
+    "contentResponsibilityText": "You are solely responsible for the content you upload. You must ensure that you have all necessary rights to use this content.",
+    "prohibitedUses": "Prohibited Uses",
+    "prohibitedUsesText": "You are prohibited from using our service for the following purposes:",
+    "prohibitedUsesList": [
+      "Uploading or processing content that infringes on others' intellectual property rights",
+      "Uploading illegal, harmful, threatening, or offensive content",
+      "Attempting unauthorized access to our systems",
+      "Using the service to send spam",
+      "Uploading content containing malware or viruses",
+      "Impersonating any individual or entity",
+      "Using the service in a way that may harm or disrupt it"
+    ],
+    "intellectualProperty": "Intellectual Property",
+    "intellectualPropertyText": "All intellectual property rights related to the service (excluding user-provided content) are owned by us or our licensors. This includes, but is not limited to:",
+    "intellectualPropertyList": [
+      "Trademark and logo",
+      "User interface design",
+      "Algorithms and technologies used",
+      "Text, graphics, and images"
+    ],
+    "disclaimer": "Disclaimer",
+    "disclaimerText": "The service is provided \"as is\" and \"as available\" without any warranties of any kind, express or implied. We do not guarantee that:",
+    "disclaimerList": [
+      "The service will be continuously available or error-free",
+      "Results achieved will meet your expectations or requirements",
+      "Any defects or errors will be corrected"
+    ],
+    "limitationOfLiability": "Limitation of Liability",
+    "limitationOfLiabilityText": "To the maximum extent permitted by applicable law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, use, or business reputation.",
+    "indemnification": "Indemnification",
+    "indemnificationText": "You agree to indemnify, defend, and hold us harmless from any claims, damages, liabilities, or costs (including reasonable attorney fees) arising from:",
+    "indemnificationList": [
+      "Your use of the service",
+      "Your violation of these terms",
+      "Your violation of any third-party rights",
+      "Content you upload or share"
+    ],
+    "modifications": "Modifications",
+    "modificationsText": "We reserve the right to modify or update these terms at any time. We will notify you of any material changes by posting the new terms on this page. Your continued use of the service after any modifications constitutes your acceptance of the modified terms.",
+    "termination": "Service Termination",
+    "terminationText": "We may terminate or suspend your access to the service immediately, without prior notice or liability, for any reason, including but not limited to violation of these terms.",
+    "governingLaw": "Governing Law",
+    "governingLawText": "These terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law provisions.",
+    "severability": "Severability",
+    "severabilityText": "If any provision of these terms is found to be illegal, void, or unenforceable, that provision shall be deemed severable from these terms and shall not affect the validity and enforceability of the remaining provisions.",
+    "contact": "Contact Us",
+    "contactText": "If you have any questions about these Terms and Conditions, you can contact us via email."
+  },
+  "languageSwitcher": {
+    "language": "Language",
+    "arabic": "العربية",
+    "english": "English"
+  }
+}
