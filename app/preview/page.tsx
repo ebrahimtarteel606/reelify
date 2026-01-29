@@ -1,15 +1,15 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense, useState, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useState, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ReelEditor } from "@/components/reel-editor/ReelEditor";
-import { ReelClipInput, ReelExportResult } from "@/types";
+import { ReelClipInput } from "@/types";
+import { getVideoBlobUrl } from "@/lib/videoStorage";
 
 function PreviewContent() {
   const searchParams = useSearchParams();
-  const url = searchParams.get("url");
+  const urlParam = searchParams.get("url");
   const title = searchParams.get("title") || "مقطع فيديو";
   const duration = searchParams.get("duration");
   const thumbnail = searchParams.get("thumbnail");
@@ -17,14 +17,46 @@ function PreviewContent() {
   const tagsParam = searchParams.get("tags") || "";
   const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
   const transcript = searchParams.get("transcript") || "";
+  const startTimeParam = searchParams.get("startTime");
+  const endTimeParam = searchParams.get("endTime");
+  const fullTranscriptParam = searchParams.get("fullTranscript");
+  const segmentsParam = searchParams.get("segments");
+  const router = useRouter();
+  const [url, setUrl] = useState<string | null>(urlParam);
+  const [urlLoadDone, setUrlLoadDone] = useState(!!urlParam);
   const [isPortrait, setIsPortrait] = useState<boolean | null>(null);
-  const [mode, setMode] = useState<"preview" | "edit">("preview");
+  const firstReelSegmentRef = useRef<HTMLSpanElement | null>(null);
+
+  // When no URL in params (e.g. blob not passed), try IndexedDB
+  useEffect(() => {
+    if (urlParam) {
+      setUrl(urlParam);
+      setUrlLoadDone(true);
+      return;
+    }
+    let cancelled = false;
+    getVideoBlobUrl()
+      .then((blobUrl) => {
+        if (!cancelled) {
+          if (blobUrl) setUrl(blobUrl);
+          setUrlLoadDone(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setUrlLoadDone(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [urlParam]);
 
   // Convert preview data to ReelClipInput format
   const clipData: ReelClipInput | null = useMemo(() => {
     if (!url) return null;
 
     const durationNum = duration ? parseFloat(duration) : 0;
+    const startTime = startTimeParam != null ? parseFloat(startTimeParam) : 0;
+    const endTime = endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
 
     // Parse transcript into segments if available
     const segments = transcript
@@ -48,15 +80,104 @@ function PreviewContent() {
       clipId: `clip-${Date.now()}`,
       videoSourceUrl: url,
       sourceVideoDuration: durationNum || 60, // Default to 60 seconds if not provided
-      startTime: 0,
-      endTime: durationNum || 60,
+      startTime: Number.isFinite(startTime) ? startTime : 0,
+      endTime: Number.isFinite(endTime) ? endTime : durationNum || 60,
       transcription: segments.length > 0 ? { segments } : undefined,
       metadata: {
         title,
         description: transcript,
       },
     };
-  }, [url, duration, transcript, title]);
+  }, [url, duration, transcript, title, startTimeParam, endTimeParam]);
+
+  // Parse full-video segments for transcript with reel highlight (sessionStorage or base64 URL fallback)
+  const fullTranscriptSegments = useMemo(() => {
+    if (startTimeParam == null || endTimeParam == null) return null;
+    const startTime = parseFloat(startTimeParam);
+    const endTime = parseFloat(endTimeParam);
+    if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime)
+      return null;
+
+    let parsed: Array<{ text: string; start: number; end: number }> | null = null;
+
+    // Prefer sessionStorage when fullTranscript=1 (avoids URL length limits)
+    if (fullTranscriptParam === "1" && typeof window !== "undefined") {
+      try {
+        const raw = window.sessionStorage.getItem("reelify_segments");
+        if (raw) {
+          const data = JSON.parse(raw) as unknown;
+          if (Array.isArray(data) && data.length > 0) parsed = data;
+        }
+      } catch {
+        // Ignore invalid sessionStorage data
+      }
+    }
+
+    // Fallback: segments in URL (base64) for backward compatibility
+    if (!parsed && segmentsParam) {
+      try {
+        const decoded = atob(segmentsParam);
+        const data = JSON.parse(decoded) as unknown;
+        if (Array.isArray(data) && data.length > 0) parsed = data;
+      } catch {
+        // Ignore invalid base64/JSON
+      }
+    }
+
+    if (!parsed) return null;
+    return {
+      segments: parsed,
+      reelStart: startTime,
+      reelEnd: endTime,
+    };
+  }, [fullTranscriptParam, segmentsParam, startTimeParam, endTimeParam]);
+
+  // Reel-only text for the excerpt block when full transcript is shown
+  const reelExcerptText = useMemo(() => {
+    if (!fullTranscriptSegments) return "";
+    return fullTranscriptSegments.segments
+      .filter(
+        seg =>
+          seg.start < fullTranscriptSegments.reelEnd &&
+          seg.end > fullTranscriptSegments.reelStart,
+      )
+      .map(seg => seg.text)
+      .join(" ");
+  }, [fullTranscriptSegments]);
+
+  // Index of the first segment that is inside the reel range (for scroll-into-view ref)
+  const firstReelSegmentIndex = useMemo(() => {
+    if (!fullTranscriptSegments) return -1;
+    return fullTranscriptSegments.segments.findIndex(
+      seg =>
+        seg.start < fullTranscriptSegments.reelEnd &&
+        seg.end > fullTranscriptSegments.reelStart,
+    );
+  }, [fullTranscriptSegments]);
+
+  // Auto-scroll transcript so the first highlighted (reel) segment is in view
+  useEffect(() => {
+    if (!fullTranscriptSegments || firstReelSegmentIndex < 0) return;
+    const el = firstReelSegmentRef.current;
+    if (!el) return;
+    const id = requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [fullTranscriptSegments, firstReelSegmentIndex]);
+
+  if (!urlLoadDone) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-lg text-muted-foreground">جاري تحميل الفيديو...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!url) {
     return (
@@ -146,60 +267,23 @@ function PreviewContent() {
     URL.revokeObjectURL(downloadUrl);
   };
 
-  const handleExportSuccess = (result: ReelExportResult) => {
-    // Download the exported video
-    const a = document.createElement("a");
-    a.href = result.videoUrl;
-    a.download = `${title}-edited.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(result.videoUrl);
-  };
-
-  const handleExportError = (error: Error) => {
-    console.error("Export error:", error);
-    alert(`Export failed: ${error.message}`);
-  };
-
-  // Show editor mode
-  if (mode === "edit" && clipData) {
-    return (
-      <div className="min-h-screen bg-gradient-warm" dir="rtl">
-        <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img
-                src="/Transparent white1.png"
-                alt="Reelift logo"
-                className="h-8 w-auto"
-              />
-            </div>
-            <Button
-              onClick={() => setMode("preview")}
-              variant="outline"
-              className="bg-gradient-coral text-white border-none hover:shadow-teal transition-all duration-200">
-              العودة للمعاينة
-            </Button>
-          </div>
-        </div>
-        <ReelEditor
-          clipData={clipData}
-          theme="dark"
-          aspectRatio="9:16"
-          exportQuality="medium"
-          onExportSuccess={handleExportSuccess}
-          onExportError={handleExportError}
-        />
-      </div>
-    );
-  }
-
   const videoFitClass =
     isPortrait === false ? "object-contain" : "object-cover";
   const videoWrapperClass = `aspect-[9/16] relative ${
     isPortrait === false ? "bg-black" : "bg-neutral-900"
   }`;
+
+  // Reel-only playback: start/end in seconds (null = full video)
+  const reelStart =
+    startTimeParam != null && Number.isFinite(parseFloat(startTimeParam))
+      ? parseFloat(startTimeParam)
+      : null;
+  const reelEnd =
+    endTimeParam != null && Number.isFinite(parseFloat(endTimeParam))
+      ? parseFloat(endTimeParam)
+      : null;
+  const isReelOnly =
+    reelStart != null && reelEnd != null && reelEnd > reelStart;
 
   return (
     <div className="min-h-screen bg-gradient-warm py-10 px-4" dir="rtl">
@@ -240,10 +324,22 @@ function PreviewContent() {
                 </h1>
               </div>
 
-              {/* Edit Button */}
+              {/* Edit Button - navigates to editor page */}
               <div className="flex justify-start">
                 <Button
-                  onClick={() => setMode("edit")}
+                  onClick={() => {
+                    const editorParams = new URLSearchParams({
+                      ...(url && !url.startsWith("blob:") ? { videoUrl: url } : {}),
+                      startTime: startTimeParam ?? "0",
+                      endTime: endTimeParam ?? duration ?? "60",
+                      title,
+                      thumbnail: thumbnail ?? "",
+                      category,
+                      tags: tagsParam || "",
+                      transcript,
+                    });
+                    router.push(`/editor?${editorParams.toString()}`);
+                  }}
                   disabled={!clipData}
                   className="bg-gradient-teal text-white hover:shadow-teal transition-all duration-200">
                   <svg
@@ -292,8 +388,8 @@ function PreviewContent() {
                 </div>
               )}
 
-              {/* Transcript Preview */}
-              {transcript && (
+              {/* Transcript Preview - full video with reel highlighted, or reel-only */}
+              {(transcript || fullTranscriptSegments) && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <svg
@@ -310,8 +406,45 @@ function PreviewContent() {
                     </svg>
                     النص المفرّغ
                   </h3>
+                  {fullTranscriptSegments && reelExcerptText && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-semibold text-foreground/70">
+                        المقطع المحدد (الريل)
+                      </p>
+                      <div className="p-4 bg-amber-200/90 dark:bg-amber-400/40 rounded-2xl text-base text-foreground leading-relaxed border border-amber-300/50 dark:border-amber-500/30">
+                        {reelExcerptText}
+                      </div>
+                    </div>
+                  )}
                   <div className="p-5 bg-muted/50 rounded-2xl text-base text-foreground/80 leading-relaxed max-h-40 overflow-y-auto border border-border/50">
-                    {transcript}
+                    {fullTranscriptSegments ? (
+                      fullTranscriptSegments.segments.map((seg, i) => {
+                        const isReel =
+                          seg.start < fullTranscriptSegments.reelEnd &&
+                          seg.end > fullTranscriptSegments.reelStart;
+                        return (
+                          <span key={i}>
+                            {isReel ? (
+                              <span
+                                ref={
+                                  i === firstReelSegmentIndex
+                                    ? firstReelSegmentRef
+                                    : undefined
+                                }
+                                className="bg-amber-200/90 dark:bg-amber-400/40 text-foreground rounded px-1 py-0.5 font-medium"
+                                title="نص المقطع (الريل)">
+                                {seg.text}
+                              </span>
+                            ) : (
+                              seg.text
+                            )}
+                            {i < fullTranscriptSegments.segments.length - 1 ? " " : ""}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      transcript
+                    )}
                   </div>
                 </div>
               )}
@@ -411,9 +544,30 @@ function PreviewContent() {
                   controls
                   autoPlay
                   onLoadedMetadata={event => {
-                    const { videoWidth, videoHeight } = event.currentTarget;
+                    const video = event.currentTarget;
+                    const { videoWidth, videoHeight } = video;
                     if (videoWidth && videoHeight) {
                       setIsPortrait(videoHeight >= videoWidth);
+                    }
+                    if (isReelOnly && reelStart != null) {
+                      video.currentTime = reelStart;
+                    }
+                  }}
+                  onTimeUpdate={event => {
+                    if (!isReelOnly || reelEnd == null) return;
+                    const video = event.currentTarget;
+                    if (video.currentTime >= reelEnd) {
+                      video.pause();
+                      video.currentTime = reelEnd;
+                    }
+                  }}
+                  onSeeked={event => {
+                    if (!isReelOnly || reelStart == null || reelEnd == null) return;
+                    const video = event.currentTarget;
+                    if (video.currentTime < reelStart) {
+                      video.currentTime = reelStart;
+                    } else if (video.currentTime > reelEnd) {
+                      video.currentTime = reelEnd;
                     }
                   }}
                   className={`w-full h-full ${videoFitClass}`}

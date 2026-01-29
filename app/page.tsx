@@ -38,6 +38,7 @@ export default function HomePage() {
   const [file, setFile] = useState<File | null>(null);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
   const [clips, setClips] = useState<ClipItem[]>([]);
+  const [segments, setSegments] = useState<TranscriptSegment[]>([]);
   const [status, setStatus] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
   const [error, setError] = useState<string>("");
@@ -233,6 +234,17 @@ export default function HomePage() {
         try {
           const parsedClips = JSON.parse(storedClips);
           if (Array.isArray(parsedClips) && parsedClips.length > 0) {
+            const storedSegments = globalThis.sessionStorage.getItem(
+              "reelify_segments",
+            );
+            if (storedSegments) {
+              try {
+                const parsedSegments = JSON.parse(storedSegments) as TranscriptSegment[];
+                if (Array.isArray(parsedSegments)) setSegments(parsedSegments);
+              } catch {
+                // Ignore invalid segments
+              }
+            }
             // Restore thumbnails from IndexedDB
             // Always restore from IndexedDB when navigating back since blob URLs are revoked
             const restoreThumbnails = async () => {
@@ -442,6 +454,7 @@ export default function HomePage() {
     // Clear old sessionStorage when starting new upload
     if (typeof globalThis.window !== "undefined") {
       globalThis.sessionStorage.removeItem("reelify_clips");
+      globalThis.sessionStorage.removeItem("reelify_segments");
       globalThis.sessionStorage.removeItem("reelify_screen");
       globalThis.sessionStorage.removeItem("reelify_video_url");
       globalThis.sessionStorage.removeItem("reelify_video_name");
@@ -614,6 +627,7 @@ export default function HomePage() {
       setProgress(92);
       await new Promise(resolve => setTimeout(resolve, 150)); // Small delay to show progress
       setClips(uploadedClips);
+      setSegments(segments);
       setProgress(96);
       await new Promise(resolve => setTimeout(resolve, 150)); // Small delay to show progress
       setStatus("");
@@ -656,11 +670,15 @@ export default function HomePage() {
           void cleanupInputFile(ffmpeg, inputName);
         });
 
-      // Store clips data in sessionStorage for persistence
+      // Store clips and full-video segments in sessionStorage for persistence
       if (typeof globalThis.window !== "undefined") {
         globalThis.sessionStorage.setItem(
           "reelify_clips",
           JSON.stringify(uploadedClips),
+        );
+        globalThis.sessionStorage.setItem(
+          "reelify_segments",
+          JSON.stringify(segments),
         );
         globalThis.sessionStorage.setItem("reelify_screen", "results");
       }
@@ -1658,21 +1676,21 @@ export default function HomePage() {
             ) : (
               <div className="grid gap-8 grid-cols-2 lg:grid-cols-3">
                 {clips.map((clip, index) => {
-                  // Navigate to editor with pre-selected start/end times
-                  // Don't pass blob URLs in params - editor will get video from IndexedDB
-                  const editorParams = new URLSearchParams({
-                    // Only pass videoUrl if it's NOT a blob URL (e.g., Vercel Blob URL)
-                    // For blob URLs, editor will retrieve from IndexedDB
-                    ...(clip.url && !clip.url.startsWith('blob:') ? { videoUrl: clip.url } : {}),
+                  // Navigate to preview first; user can then click Edit to open editor
+                  // Don't pass blob URLs in params - preview will get video from IndexedDB
+                  const previewParams: Record<string, string> = {
+                    ...(clip.url && !clip.url.startsWith('blob:') ? { url: clip.url } : {}),
                     startTime: String(clip.start),
                     endTime: String(clip.end),
                     title: clip.title,
-                    thumbnail: clip.thumbnail,
+                    duration: String(clip.duration),
+                    thumbnail: clip.thumbnail ?? "",
                     category: clip.category,
                     tags: clip.tags.join(","),
                     transcript: clip.transcript,
-                  });
-                  const editorUrl = `/editor?${editorParams.toString()}`;
+                    ...(segments.length > 0 ? { fullTranscript: "1" } : {}),
+                  };
+                  const previewUrl = `/preview?${new URLSearchParams(previewParams).toString()}`;
                   const wrapperClass = `aspect-[9/16] relative overflow-hidden cursor-pointer bg-gradient-to-br from-primary/10 to-primary/5`;
                   return (
                     <Card
@@ -1684,9 +1702,9 @@ export default function HomePage() {
                         type="button"
                         className={wrapperClass}
                         onClick={() => {
-                          router.push(editorUrl);
+                          router.push(previewUrl);
                         }}
-                        aria-label={`تحرير المقطع: ${clip.title}`}
+                        aria-label={`معاينة المقطع: ${clip.title}`}
                       >
                         {/* Show thumbnail if available, otherwise show loading placeholder */}
                         {clip.thumbnail ? (
@@ -1744,7 +1762,7 @@ export default function HomePage() {
                         </div>
                         <Button
                           onClick={() => {
-                            router.push(editorUrl);
+                            router.push(previewUrl);
                           }}
                           className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
                         >
@@ -1758,10 +1776,16 @@ export default function HomePage() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                          تحرير وتصدير
+                          معاينة ثم تحرير وتصدير
                         </Button>
                       </CardContent>
                     </Card>
