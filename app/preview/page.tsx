@@ -25,7 +25,11 @@ function PreviewContent() {
   const [url, setUrl] = useState<string | null>(urlParam);
   const [urlLoadDone, setUrlLoadDone] = useState(!!urlParam);
   const [isPortrait, setIsPortrait] = useState<boolean | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
   const firstReelSegmentRef = useRef<HTMLSpanElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // When no URL in params (e.g. blob not passed), try IndexedDB
   useEffect(() => {
@@ -36,7 +40,7 @@ function PreviewContent() {
     }
     let cancelled = false;
     getVideoBlobUrl()
-      .then((blobUrl) => {
+      .then(blobUrl => {
         if (!cancelled) {
           if (blobUrl) setUrl(blobUrl);
           setUrlLoadDone(true);
@@ -56,7 +60,8 @@ function PreviewContent() {
 
     const durationNum = duration ? parseFloat(duration) : 0;
     const startTime = startTimeParam != null ? parseFloat(startTimeParam) : 0;
-    const endTime = endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
+    const endTime =
+      endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
 
     // Parse transcript into segments if available
     const segments = transcript
@@ -95,10 +100,15 @@ function PreviewContent() {
     if (startTimeParam == null || endTimeParam == null) return null;
     const startTime = parseFloat(startTimeParam);
     const endTime = parseFloat(endTimeParam);
-    if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime)
+    if (
+      !Number.isFinite(startTime) ||
+      !Number.isFinite(endTime) ||
+      endTime <= startTime
+    )
       return null;
 
-    let parsed: Array<{ text: string; start: number; end: number }> | null = null;
+    let parsed: Array<{ text: string; start: number; end: number }> | null =
+      null;
 
     // Prefer sessionStorage when fullTranscript=1 (avoids URL length limits)
     if (fullTranscriptParam === "1" && typeof window !== "undefined") {
@@ -285,6 +295,55 @@ function PreviewContent() {
   const isReelOnly =
     reelStart != null && reelEnd != null && reelEnd > reelStart;
 
+  const playbackStart = isReelOnly && reelStart != null ? reelStart : 0;
+  const playbackEnd =
+    isReelOnly && reelEnd != null ? reelEnd : videoDuration || 0;
+
+  const clampTime = (time: number): number => {
+    const min = playbackStart;
+    const max = playbackEnd > 0 ? playbackEnd : time;
+    return Math.max(min, Math.min(max, time));
+  };
+
+  const formatTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handlePlayPause = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) video.pause();
+    else video.play();
+  };
+
+  const handleSeekBack = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = clampTime(video.currentTime - 10);
+  };
+
+  const handleSeekForward = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = clampTime(video.currentTime + 10);
+  };
+
+  const handleReplay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = playbackStart;
+    video.play();
+  };
+
+  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const value = parseFloat(e.target.value);
+    video.currentTime = clampTime(value);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-warm py-10 px-4" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -329,7 +388,9 @@ function PreviewContent() {
                 <Button
                   onClick={() => {
                     const editorParams = new URLSearchParams({
-                      ...(url && !url.startsWith("blob:") ? { videoUrl: url } : {}),
+                      ...(url && !url.startsWith("blob:")
+                        ? { videoUrl: url }
+                        : {}),
                       startTime: startTimeParam ?? "0",
                       endTime: endTimeParam ?? duration ?? "60",
                       title,
@@ -417,34 +478,34 @@ function PreviewContent() {
                     </div>
                   )}
                   <div className="p-5 bg-muted/50 rounded-2xl text-base text-foreground/80 leading-relaxed max-h-40 overflow-y-auto border border-border/50">
-                    {fullTranscriptSegments ? (
-                      fullTranscriptSegments.segments.map((seg, i) => {
-                        const isReel =
-                          seg.start < fullTranscriptSegments.reelEnd &&
-                          seg.end > fullTranscriptSegments.reelStart;
-                        return (
-                          <span key={i}>
-                            {isReel ? (
-                              <span
-                                ref={
-                                  i === firstReelSegmentIndex
-                                    ? firstReelSegmentRef
-                                    : undefined
-                                }
-                                className="bg-amber-200/90 dark:bg-amber-400/40 text-foreground rounded px-1 py-0.5 font-medium"
-                                title="نص المقطع (الريل)">
-                                {seg.text}
-                              </span>
-                            ) : (
-                              seg.text
-                            )}
-                            {i < fullTranscriptSegments.segments.length - 1 ? " " : ""}
-                          </span>
-                        );
-                      })
-                    ) : (
-                      transcript
-                    )}
+                    {fullTranscriptSegments
+                      ? fullTranscriptSegments.segments.map((seg, i) => {
+                          const isReel =
+                            seg.start < fullTranscriptSegments.reelEnd &&
+                            seg.end > fullTranscriptSegments.reelStart;
+                          return (
+                            <span key={i}>
+                              {isReel ? (
+                                <span
+                                  ref={
+                                    i === firstReelSegmentIndex
+                                      ? firstReelSegmentRef
+                                      : undefined
+                                  }
+                                  className="bg-amber-200/90 dark:bg-amber-400/40 text-foreground rounded px-1 py-0.5 font-medium"
+                                  title="نص المقطع (الريل)">
+                                  {seg.text}
+                                </span>
+                              ) : (
+                                seg.text
+                              )}
+                              {i < fullTranscriptSegments.segments.length - 1
+                                ? " "
+                                : ""}
+                            </span>
+                          );
+                        })
+                      : transcript}
                   </div>
                 </div>
               )}
@@ -539,30 +600,36 @@ function PreviewContent() {
             <Card className="shadow-card border-0 bg-gradient-card overflow-hidden animate-fade-in hover:shadow-card-hover transition-all duration-500 w-full max-w-md rounded-2xl">
               <div className={videoWrapperClass}>
                 <video
+                  ref={videoRef}
                   src={url}
                   poster={thumbnail || undefined}
-                  controls
                   autoPlay
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
                   onLoadedMetadata={event => {
                     const video = event.currentTarget;
                     const { videoWidth, videoHeight } = video;
                     if (videoWidth && videoHeight) {
                       setIsPortrait(videoHeight >= videoWidth);
                     }
+                    setVideoDuration(video.duration);
                     if (isReelOnly && reelStart != null) {
                       video.currentTime = reelStart;
+                      setCurrentTime(reelStart);
                     }
                   }}
                   onTimeUpdate={event => {
-                    if (!isReelOnly || reelEnd == null) return;
                     const video = event.currentTarget;
+                    setCurrentTime(video.currentTime);
+                    if (!isReelOnly || reelEnd == null) return;
                     if (video.currentTime >= reelEnd) {
                       video.pause();
                       video.currentTime = reelEnd;
                     }
                   }}
                   onSeeked={event => {
-                    if (!isReelOnly || reelStart == null || reelEnd == null) return;
+                    if (!isReelOnly || reelStart == null || reelEnd == null)
+                      return;
                     const video = event.currentTarget;
                     if (video.currentTime < reelStart) {
                       video.currentTime = reelStart;
@@ -570,9 +637,110 @@ function PreviewContent() {
                       video.currentTime = reelEnd;
                     }
                   }}
-                  className={`w-full h-full ${videoFitClass}`}
+                  onClick={handlePlayPause}
+                  className={`w-full h-full ${videoFitClass} cursor-pointer`}
                   playsInline
                 />
+              </div>
+              {/* Custom control bar */}
+              <div className="flex flex-col gap-2 p-3 bg-neutral-900 rounded-b-2xl border-t border-border">
+                <input
+                  type="range"
+                  min={playbackStart}
+                  max={playbackEnd || 1}
+                  step={0.1}
+                  value={currentTime}
+                  onChange={handleProgressChange}
+                  className="w-full h-2 rounded-full appearance-none bg-muted accent-primary cursor-pointer"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground font-mono tabular-nums">
+                    {formatTime(currentTime)} /{" "}
+                    {formatTime(playbackEnd || videoDuration)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handleSeekBack}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="10 ثانية للخلف"
+                      aria-label="10 ثانية للخلف">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePlayPause}
+                      className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                      title={isPlaying ? "إيقاف" : "تشغيل"}
+                      aria-label={isPlaying ? "إيقاف" : "تشغيل"}>
+                      {isPlaying ? (
+                        <svg
+                          className="w-6 h-6"
+                          fill="currentColor"
+                          viewBox="0 0 24 24">
+                          <rect x="6" y="4" width="4" height="16" />
+                          <rect x="14" y="4" width="4" height="16" />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-6 h-6 mr-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSeekForward}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="10 ثانية للأمام"
+                      aria-label="10 ثانية للأمام">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11.934 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.334-4zM19.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.334-4z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReplay}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="إعادة التشغيل"
+                      aria-label="إعادة التشغيل">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </Card>
           </div>
