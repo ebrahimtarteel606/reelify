@@ -6,6 +6,7 @@ import { buildFFmpegCommand, getExportSettings } from '@/lib/utils/ffmpegUtils';
 export class ReelExportService {
   private static ffmpegInstance: FFmpeg | null = null;
   private static isLoaded = false;
+  private static ffmpegLogs: string[] = [];
 
   /**
    * Initialize FFmpeg instance
@@ -18,6 +19,16 @@ export class ReelExportService {
     try {
       const ffmpeg = new FFmpeg();
       
+      // Capture FFmpeg logs for debugging
+      ffmpeg.on('log', ({ message }) => {
+        console.log('[FFmpeg]', message);
+        this.ffmpegLogs.push(message);
+        // Keep only last 100 log lines
+        if (this.ffmpegLogs.length > 100) {
+          this.ffmpegLogs.shift();
+        }
+      });
+      
       // Use the library's default loading mechanism which handles version matching
       // This ensures compatibility with the installed @ffmpeg/ffmpeg version
       await ffmpeg.load();
@@ -29,6 +40,20 @@ export class ReelExportService {
       console.error('Failed to initialize FFmpeg:', error);
       throw new Error(`Failed to initialize FFmpeg: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+  
+  /**
+   * Get recent FFmpeg logs for debugging
+   */
+  static getRecentLogs(): string[] {
+    return [...this.ffmpegLogs];
+  }
+  
+  /**
+   * Clear FFmpeg logs
+   */
+  static clearLogs(): void {
+    this.ffmpegLogs = [];
   }
 
   /**
@@ -91,6 +116,9 @@ export class ReelExportService {
       });
     }
 
+    // Clear previous logs
+    this.clearLogs();
+    
     try {
       console.log('Starting export:', { videoUrl, startTime, endTime, duration, captionsCount: captions.length });
       
@@ -121,38 +149,100 @@ export class ReelExportService {
       await ffmpeg.writeFile('input.mp4', videoData);
       console.log('Video file written to FFmpeg filesystem');
 
-      // Build and execute FFmpeg command
-      const args = buildFFmpegCommand(startTime, duration, captions, settings);
-      console.log('FFmpeg command:', args.join(' '));
-      
-      console.log('Executing FFmpeg...');
-      try {
-        await ffmpeg.exec(args);
-        console.log('FFmpeg execution completed');
-      } catch (execError) {
-        console.error('FFmpeg execution failed:', execError);
-        throw new Error(`FFmpeg processing failed: ${execError instanceof Error ? execError.message : String(execError)}. Check the console for details.`);
-      }
+      // Helper function to execute FFmpeg and check result
+      const executeAndCheck = async (args: string[]): Promise<Uint8Array | null> => {
+        console.log('FFmpeg command:', args.join(' '));
+        
+        try {
+          await ffmpeg.exec(args);
+          console.log('FFmpeg execution completed');
+        } catch (execError) {
+          console.error('FFmpeg execution failed:', execError);
+          console.error('FFmpeg logs:', this.getRecentLogs().join('\n'));
+          return null;
+        }
 
-      // Read output file
-      console.log('Reading output file...');
-      let data: Uint8Array | string;
-      try {
-        data = await ffmpeg.readFile('output.mp4');
-      } catch (readError) {
-        console.error('Failed to read output file:', readError);
-        throw new Error(`Failed to read exported video file. FFmpeg may have failed to create the output. Error: ${readError instanceof Error ? readError.message : String(readError)}`);
+        // Read output file
+        try {
+          const data = await ffmpeg.readFile('output.mp4');
+          const uint8Data =
+            typeof data === "string" ? new TextEncoder().encode(data) : new Uint8Array(data);
+          
+          if (uint8Data && uint8Data.length > 0) {
+            return uint8Data;
+          }
+        } catch (readError) {
+          console.error('Failed to read output file:', readError);
+        }
+        
+        return null;
+      };
+
+      // Determine if we can use stream copy (no re-encoding) for faster export
+      // Stream copy is nearly instant but can only be used when no filters are needed
+      const visibleCaptions = captions.filter(c => c.isVisible);
+      const canUseStreamCopy = visibleCaptions.length === 0;
+      
+      if (canUseStreamCopy) {
+        console.log('No captions detected - using stream copy mode for faster export');
       }
-      // ffmpeg.readFile returns FileData (string | Uint8Array<ArrayBufferLike>).
-      // Normalize to Uint8Array so it's always Blob-compatible.
-      const uint8Data =
-        typeof data === "string" ? new TextEncoder().encode(data) : new Uint8Array(data);
+      
+      // Try with captions first (or stream copy if no captions)
+      let args = buildFFmpegCommand(startTime, duration, captions, settings, 'input.mp4', 'output.mp4', canUseStreamCopy);
+      let uint8Data = await executeAndCheck(args);
+      
+      // If stream copy failed, fall back to re-encoding
+      if (!uint8Data && canUseStreamCopy) {
+        console.warn('Stream copy failed, falling back to re-encoding...');
+        
+        // Clean up failed output
+        try {
+          await ffmpeg.deleteFile('output.mp4');
+        } catch { /* ignore */ }
+        
+        // Retry without stream copy
+        args = buildFFmpegCommand(startTime, duration, captions, settings, 'input.mp4', 'output.mp4', false);
+        uint8Data = await executeAndCheck(args);
+      }
+      
+      // If failed and we had captions, try without captions as fallback
+      if (!uint8Data && captions.length > 0) {
+        console.warn('Export with captions failed. FFmpeg logs:', this.getRecentLogs().join('\n'));
+        console.warn('Attempting export without captions...');
+        
+        // Clean up failed output
+        try {
+          await ffmpeg.deleteFile('output.mp4');
+        } catch { /* ignore */ }
+        
+        // Rebuild command without captions (try stream copy first)
+        args = buildFFmpegCommand(startTime, duration, [], settings, 'input.mp4', 'output.mp4', true);
+        uint8Data = await executeAndCheck(args);
+        
+        // If stream copy failed, try re-encoding without captions
+        if (!uint8Data) {
+          try {
+            await ffmpeg.deleteFile('output.mp4');
+          } catch { /* ignore */ }
+          
+          args = buildFFmpegCommand(startTime, duration, [], settings, 'input.mp4', 'output.mp4', false);
+          uint8Data = await executeAndCheck(args);
+        }
+        
+        if (uint8Data) {
+          console.warn('Export succeeded without captions. Captions may contain unsupported characters or require font files not available in the browser.');
+        }
+      }
       
       if (!uint8Data || uint8Data.length === 0) {
-        throw new Error('Exported video file is empty. FFmpeg may have failed silently.');
+        const logs = this.getRecentLogs();
+        console.error('FFmpeg logs:', logs.join('\n'));
+        throw new Error(`Exported video file is empty. FFmpeg may have failed silently. Check console for FFmpeg logs.`);
       }
       
-      const blob = new Blob([uint8Data], { type: "video/mp4" });
+      // Create a copy of the data to ensure a proper ArrayBuffer for Blob constructor
+      const blobData = new Uint8Array(uint8Data);
+      const blob = new Blob([blobData], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
       console.log('Export completed successfully, file size:', blob.size, 'bytes');
 
@@ -178,6 +268,7 @@ export class ReelExportService {
       };
     } catch (error) {
       console.error('Export error:', error);
+      console.error('FFmpeg logs:', this.getRecentLogs().join('\n'));
       
       // Cleanup on error
       try {

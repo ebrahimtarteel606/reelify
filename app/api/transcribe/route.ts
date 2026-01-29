@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
+    // Use server-side env var (ELEVENLABS_API_KEY) with fallback to NEXT_PUBLIC version
+    const apiKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
     
     if (!apiKey) {
       return NextResponse.json(

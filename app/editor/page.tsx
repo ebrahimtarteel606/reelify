@@ -10,6 +10,56 @@ import { getVideoBlobUrl } from "@/lib/videoStorage";
 
 function EditorContent() {
   const searchParams = useSearchParams();
+  
+  // Check synchronously if we need to restore URL (prevents component from loading)
+  const needsUrlRestore = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const authSuccess = searchParams.get("auth_success");
+    const startTime = searchParams.get("startTime");
+    const savedReturnUrl = sessionStorage.getItem("auth_return_url");
+    return !!(authSuccess && !startTime && savedReturnUrl);
+  }, [searchParams]);
+
+  const [isRestoringUrl, setIsRestoringUrl] = useState(needsUrlRestore);
+
+  // Perform the URL restore in an effect
+  useEffect(() => {
+    if (!needsUrlRestore) return;
+    
+    const authSuccess = searchParams.get("auth_success");
+    const savedReturnUrl = sessionStorage.getItem("auth_return_url");
+    
+    if (authSuccess && savedReturnUrl) {
+      console.log("[Editor] Restoring URL from sessionStorage after OAuth");
+      setIsRestoringUrl(true);
+      sessionStorage.removeItem("auth_return_url");
+      
+      try {
+        const returnUrl = new URL(savedReturnUrl);
+        // Add auth_success to the URL
+        returnUrl.searchParams.set("auth_success", authSuccess);
+        console.log("[Editor] Redirecting to:", returnUrl.toString());
+        window.location.href = returnUrl.toString();
+      } catch (e) {
+        console.error("[Editor] Failed to restore URL:", e);
+        setIsRestoringUrl(false);
+      }
+    }
+  }, [needsUrlRestore, searchParams]);
+
+  // Show loading while restoring URL - this blocks the rest of the component from rendering
+  if (isRestoringUrl || needsUrlRestore) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-lg text-muted-foreground">جاري استعادة الجلسة...</p>
+        </div>
+      </div>
+    );
+  }
   const videoUrlParam = searchParams.get("videoUrl");
   const startTimeParam = searchParams.get("startTime");
   const endTimeParam = searchParams.get("endTime");

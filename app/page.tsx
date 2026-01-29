@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   getFfmpeg,
   writeInputFile,
@@ -459,6 +460,7 @@ export default function HomePage() {
       globalThis.sessionStorage.removeItem("reelify_video_url");
       globalThis.sessionStorage.removeItem("reelify_video_name");
       globalThis.sessionStorage.removeItem("reelify_navigation_back");
+      globalThis.sessionStorage.removeItem("reelify_platform");
       // Store blob URL in sessionStorage as backup
       globalThis.sessionStorage.setItem("reelify_video_blob_url", blobUrl);
     }
@@ -505,7 +507,7 @@ export default function HomePage() {
       }
       const originalVideoUrl = videoBlobUrl;
 
-      // Store video blob URL in sessionStorage for persistence
+      // Store video blob URL and platform in sessionStorage for persistence
       if (typeof globalThis.window !== "undefined") {
         globalThis.sessionStorage.setItem(
           "reelify_video_url",
@@ -514,6 +516,10 @@ export default function HomePage() {
         globalThis.sessionStorage.setItem(
           "reelify_video_name",
           file?.name || "video.mp4",
+        );
+        globalThis.sessionStorage.setItem(
+          "reelify_platform",
+          platform,
         );
       }
 
@@ -1795,6 +1801,19 @@ export default function HomePage() {
             )}
           </section>
         )}
+
+        {/* Footer Links */}
+        <footer className="mt-12 pt-8 border-t border-border/30 animate-fade-in">
+          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
+            <Link href="/privacy" className="hover:text-primary transition-colors">
+              سياسة الخصوصية
+            </Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-primary transition-colors">
+              الشروط والأحكام
+            </Link>
+          </div>
+        </footer>
       </section>
     </main>
   );
