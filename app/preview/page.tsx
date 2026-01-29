@@ -29,6 +29,7 @@ function PreviewContent() {
   const [currentTime, setCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const firstReelSegmentRef = useRef<HTMLSpanElement | null>(null);
+  const transcriptScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // When no URL in params (e.g. blob not passed), try IndexedDB
@@ -165,15 +166,29 @@ function PreviewContent() {
     );
   }, [fullTranscriptSegments]);
 
-  // Auto-scroll transcript so the first highlighted (reel) segment is in view
+  // Auto-scroll transcript so the first highlighted (reel) segment is at the top
   useEffect(() => {
     if (!fullTranscriptSegments || firstReelSegmentIndex < 0) return;
-    const el = firstReelSegmentRef.current;
-    if (!el) return;
-    const id = requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-    return () => cancelAnimationFrame(id);
+    const scrollToReelSegment = () => {
+      const el = firstReelSegmentRef.current;
+      const container = transcriptScrollContainerRef.current;
+      if (el && container) {
+        const containerRect = container.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const offsetFromVisibleTop = elRect.top - containerRect.top;
+        const padding = 8;
+        const newScrollTop =
+          container.scrollTop + offsetFromVisibleTop - padding;
+        container.scrollTo({
+          top: Math.max(0, newScrollTop),
+          behavior: "smooth",
+        });
+      } else if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    const t = setTimeout(scrollToReelSegment, 150);
+    return () => clearTimeout(t);
   }, [fullTranscriptSegments, firstReelSegmentIndex]);
 
   if (!urlLoadDone) {
@@ -474,7 +489,9 @@ function PreviewContent() {
                       </p>
                     </div>
                   )}
-                  <div className="p-5 bg-muted/50 rounded-2xl text-base text-foreground/80 leading-relaxed max-h-[300px] overflow-y-auto border border-border/50">
+                  <div
+                    ref={transcriptScrollContainerRef}
+                    className="p-5 bg-muted/50 rounded-2xl text-base text-foreground/80 leading-relaxed max-h-[300px] overflow-y-auto border border-border/50">
                     {fullTranscriptSegments
                       ? fullTranscriptSegments.segments.map((seg, i) => {
                           const isReel =
