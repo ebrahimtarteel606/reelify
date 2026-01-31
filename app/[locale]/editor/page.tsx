@@ -345,20 +345,20 @@ function EditorContent() {
   return (
     <div className="min-h-screen bg-gradient-warm">
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
+        <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <img
               src="/Transparent white1.png"
               alt="Reelify logo"
-              className="h-8 w-auto"
+              className="h-8 w-auto shrink-0"
             />
-            <div className="flex flex-col min-w-0 flex-1 w-full">
+            <div className="flex flex-col min-w-[12rem] sm:min-w-[18rem] md:min-w-[24rem] flex-1 w-full">
               <label title={t('titleEditHint')} className="group flex items-center gap-2 sm:gap-3 rounded-lg md:rounded-xl border border-transparent bg-muted/30 px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-4 transition-colors hover:border-border hover:bg-muted/50 focus-within:border-primary/50 focus-within:bg-muted/50 focus-within:ring-2 focus-within:ring-primary/20 cursor-text min-h-[2.75rem] sm:min-h-[3.25rem] md:min-h-[3.5rem]">
                 <input
                   type="text"
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
-                  className="flex-1 min-w-0 text-base sm:text-lg font-semibold text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground py-0.5"
+                  className="flex-1 min-w-[8rem] w-full text-base sm:text-lg font-semibold text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground py-0.5"
                   placeholder={t('defaultTitle')}
                   aria-label={t('titleLabel')}
                 />
