@@ -588,12 +588,6 @@ function PreviewContent() {
                       {t('downloadText')}
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    onClick={() => window.close()}
-                    className="w-full h-12 text-primary hover:bg-primary/10 hover:text-primary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-                    {tCommon('close')}
-                  </Button>
                 </div>
               </div>
             </CardContent>
