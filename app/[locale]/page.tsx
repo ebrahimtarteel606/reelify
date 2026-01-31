@@ -1550,12 +1550,11 @@ export default function HomePage() {
                       className="overflow-hidden shadow-card border-0 bg-gradient-card group hover:shadow-card-hover hover:scale-[1.03] transition-all duration-500 animate-fade-in"
                       style={{ animationDelay: `${index * 0.15}s` }}
                     >
-                      <button
-                        type="button"
-                        className={wrapperClass}
-                        onClick={() => {
-                          router.push(previewUrl);
-                        }}
+                      <a
+                        href={previewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${wrapperClass} block`}
                         aria-label={`${tResults('previewAndEdit')}: ${clip.title}`}
                       >
                         {clip.thumbnail ? (
@@ -1597,7 +1596,7 @@ export default function HomePage() {
                         <div className="absolute top-3 end-3 px-2.5 py-1 rounded-lg bg-primary/90 text-white text-xs font-bold backdrop-blur-sm">
                           {tResults('rank', { rank: index + 1 })}
                         </div>
-                      </button>
+                      </a>
                       <CardContent className="p-5 space-y-4">
                         <div className="space-y-2">
                           <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full">
@@ -1608,31 +1607,35 @@ export default function HomePage() {
                           </h3>
                         </div>
                         <Button
-                          onClick={() => {
-                            router.push(previewUrl);
-                          }}
+                          asChild
                           className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
                         >
-                          <svg
-                            className="w-5 h-5 me-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                          <a
+                            href={previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          {tResults('previewAndEdit')}
+                            <svg
+                              className="w-5 h-5 me-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            {tResults('previewAndEdit')}
+                          </a>
                         </Button>
                       </CardContent>
                     </Card>
