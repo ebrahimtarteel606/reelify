@@ -45,26 +45,13 @@ export function ExportButton({
 
   const { authStatus, isLoading: isAuthLoading, authenticate, logout } = useAuthStatus();
 
-  // Platform from sessionStorage
-  const [platform, setPlatform] = useState<SelectedPlatform | null>(null);
-  
-  // UI state
+  // UI state — export/publish options are independent of CTA platform selection
   const [showDropdown, setShowDropdown] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState(0);
   const [exportedResult, setExportedResult] = useState<ReelExportResult | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Load platform from sessionStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedPlatform = sessionStorage.getItem('reelify_platform') as SelectedPlatform | null;
-      if (storedPlatform) {
-        setPlatform(storedPlatform);
-      }
-    }
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -78,9 +65,9 @@ export function ExportButton({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Check if platform supports direct publishing
-  const canPublish = platform && PUBLISHABLE_PLATFORMS.includes(platform);
-  const isAuthenticated = platform === 'youtube' ? authStatus.youtube : platform === 'facebook' ? authStatus.facebook : false;
+  // Auth helpers per publishable platform (user can export/publish to any platform)
+  const isAuthenticatedFor = (p: typeof PUBLISHABLE_PLATFORMS[number]) =>
+    p === 'youtube' ? authStatus.youtube : authStatus.facebook;
 
   // Check if any captions have animations
   const hasAnimations = captions.some(
@@ -140,16 +127,14 @@ export function ExportButton({
   };
 
   /**
-   * Handle publish action
+   * Handle publish action for a specific platform (user chooses at export time)
    */
-  const handlePublish = async () => {
+  const handlePublish = async (targetPlatform: typeof PUBLISHABLE_PLATFORMS[number]) => {
     setShowDropdown(false);
 
-    if (!platform || !canPublish) return;
-
-    // Check if authenticated
-    if (!isAuthenticated) {
-      authenticate(platform as Platform);
+    // Check if authenticated for this platform
+    if (!isAuthenticatedFor(targetPlatform)) {
+      authenticate(targetPlatform as Platform);
       return;
     }
 
@@ -170,13 +155,13 @@ export function ExportButton({
       formData.append('title', currentClip?.metadata?.title || 'My Reel');
       formData.append('description', currentClip?.metadata?.description || '');
       
-      if (platform === 'youtube') {
+      if (targetPlatform === 'youtube') {
         formData.append('privacyStatus', 'public');
       }
 
       setPublishProgress(30);
 
-      const response = await fetch(`/api/publish/${platform}`, {
+      const response = await fetch(`/api/publish/${targetPlatform}`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -188,8 +173,7 @@ export function ExportButton({
 
       if (!response.ok) {
         if (data.needsReauth) {
-          // Need to re-authenticate
-          authenticate(platform as Platform);
+          authenticate(targetPlatform as Platform);
           return;
         }
         throw new Error(data.error || 'Publishing failed');
@@ -197,13 +181,11 @@ export function ExportButton({
 
       setPublishProgress(100);
 
-      // Success
-      const platformLabel = PLATFORM_LABELS[platform];
+      const platformLabel = PLATFORM_LABELS[targetPlatform];
       const postUrl = data.videoUrl || data.postUrl;
       
       alert(t('publishSuccess', { platform: platformLabel, url: postUrl }));
       
-      // Open in new tab
       if (postUrl) {
         window.open(postUrl, '_blank');
       }
@@ -220,13 +202,11 @@ export function ExportButton({
   };
 
   /**
-   * Handle logout
+   * Handle logout for a specific platform
    */
-  const handleLogout = async () => {
-    if (platform && canPublish) {
-      await logout(platform as Platform);
-      setShowDropdown(false);
-    }
+  const handleLogout = async (targetPlatform: typeof PUBLISHABLE_PLATFORMS[number]) => {
+    await logout(targetPlatform as Platform);
+    setShowDropdown(false);
   };
 
   // Determine button state
@@ -238,44 +218,7 @@ export function ExportButton({
       ? t('publishing', { progress: publishProgress })
       : null;
 
-  // For non-publishable platforms, show simple export button
-  if (!canPublish) {
-    return (
-      <div className={styles.container}>
-        {hasAnimations && !isProcessing && (
-          <div className={styles.warning}>
-            {t('animationWarning')}
-          </div>
-        )}
-        <button
-          onClick={handleDownload}
-          disabled={!currentClip || isProcessing}
-          className={styles.button}
-        >
-          {isProcessing ? (
-            <>
-              <span className={styles.spinner} />
-              {statusText}
-            </>
-          ) : (
-            t('exportReel')
-          )}
-        </button>
-        {isProcessing && (
-          <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressValue}%` }}
-            />
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // For YouTube/Facebook, show dropdown with options
-  const platformLabel = PLATFORM_LABELS[platform];
-
+  // Always show dropdown: Download + Publish to any supported platform (independent of CTA selection)
   return (
     <div className={styles.container} ref={dropdownRef}>
       {hasAnimations && !isProcessing && (
@@ -313,40 +256,47 @@ export function ExportButton({
               {t('download')}
             </button>
             
-            <div className={styles.dropdownDivider} />
-            
-            <button
-              className={styles.dropdownItem}
-              onClick={handlePublish}
-            >
-              <span className={styles.dropdownIcon}>
-                {platform === 'youtube' ? '🎬' : '📘'}
-              </span>
-              {isAuthenticated 
-                ? t('publishTo', { platform: platformLabel })
-                : t('connect', { platform: platformLabel })}
-            </button>
-
-            {isAuthenticated && (
-              <>
-                <div className={styles.dropdownDivider} />
-                <button
-                  className={`${styles.dropdownItem} ${styles.dropdownItemSecondary}`}
-                  onClick={handleLogout}
-                >
-                  <span className={styles.dropdownIcon}>🚪</span>
-                  {t('disconnect', { platform: platformLabel })}
-                </button>
-              </>
-            )}
+            {PUBLISHABLE_PLATFORMS.map((p) => {
+              const label = PLATFORM_LABELS[p];
+              const isAuth = isAuthenticatedFor(p);
+              return (
+                <React.Fragment key={p}>
+                  <div className={styles.dropdownDivider} />
+                  <button
+                    className={styles.dropdownItem}
+                    onClick={() => handlePublish(p)}
+                  >
+                    <span className={styles.dropdownIcon}>
+                      {p === 'youtube' ? '🎬' : '📘'}
+                    </span>
+                    {isAuth
+                      ? t('publishTo', { platform: label })
+                      : t('connect', { platform: label })}
+                  </button>
+                  {isAuth && (
+                    <button
+                      className={`${styles.dropdownItem} ${styles.dropdownItemSecondary}`}
+                      onClick={() => handleLogout(p)}
+                    >
+                      <span className={styles.dropdownIcon}>🚪</span>
+                      {t('disconnect', { platform: label })}
+                    </button>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Auth status indicator */}
-      {!isAuthLoading && isAuthenticated && (
+      {/* Auth status: show which platforms are connected */}
+      {!isAuthLoading && (authStatus.youtube || authStatus.facebook) && (
         <div className={styles.authStatus}>
-          ✓ {t('connectedTo', { platform: platformLabel })}
+          ✓{' '}
+          {[authStatus.youtube && PLATFORM_LABELS.youtube, authStatus.facebook && PLATFORM_LABELS.facebook]
+            .filter(Boolean)
+            .map((name) => t('connectedTo', { platform: name }))
+            .join(' · ')}
         </div>
       )}
 
