@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { locales, localeDirection, type Locale } from "@/i18n/config";
 import "../globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 
 export function generateStaticParams() {
@@ -113,6 +114,7 @@ export default async function LocaleLayout({
           {children}
         </NextIntlClientProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

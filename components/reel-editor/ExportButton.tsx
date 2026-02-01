@@ -367,7 +367,7 @@ export function ExportButton({
               );
             })}
           </div>,
-          typeof document !== 'undefined' ? document.body : null
+          document.body!
         )}
       </div>
 
@@ -376,7 +376,7 @@ export function ExportButton({
         <div className={styles.authStatus}>
           ✓{' '}
           {[authStatus.youtube && PLATFORM_LABELS.youtube, authStatus.facebook && PLATFORM_LABELS.facebook]
-            .filter(Boolean)
+            .filter((n): n is string => Boolean(n))
             .map((name) => t('connectedTo', { platform: name }))
             .join(' · ')}
         </div>

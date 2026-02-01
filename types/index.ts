@@ -111,7 +111,7 @@ export interface TrimPoints {
   endTime: number;
 }
 
-export type ExportFormat = 'landscape' | 'zoom';
+export type ExportFormat = 'portrait' | 'landscape' | 'zoom';
 export type ReframingMode = 'none' | 'face' | 'speaker' | 'motion' | 'smart';
 
 export interface ReframingOptions {

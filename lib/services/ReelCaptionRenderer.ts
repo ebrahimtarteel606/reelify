@@ -275,15 +275,15 @@ export class ReelCaptionRenderer {
    */
   private static wrapSegments(
     ctx: CanvasRenderingContext2D,
-    segments: Array<{ text: string; isKeyword: boolean; fontWeight?: string }>,
+    segments: Array<{ text: string; isKeyword: boolean; fontWeight?: string; color?: string; backgroundColor?: string }>,
     maxWidth: number,
     fontStyle: string,
     fontWeight: string,
     fontSize: number,
     fontFamily: string
-  ): Array<Array<{ text: string; isKeyword: boolean; fontWeight?: string }>> {
-    const lines: Array<Array<{ text: string; isKeyword: boolean; fontWeight?: string }>> = [];
-    let currentLine: Array<{ text: string; isKeyword: boolean; fontWeight?: string }> = [];
+  ): Array<Array<{ text: string; isKeyword: boolean; fontWeight?: string; color?: string; backgroundColor?: string }>> {
+    const lines: Array<Array<{ text: string; isKeyword: boolean; fontWeight?: string; color?: string; backgroundColor?: string }>> = [];
+    let currentLine: Array<{ text: string; isKeyword: boolean; fontWeight?: string; color?: string; backgroundColor?: string }> = [];
     let currentLineWidth = 0;
 
     for (const segment of segments) {
