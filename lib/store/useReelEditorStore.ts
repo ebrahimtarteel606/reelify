@@ -36,6 +36,7 @@ interface ReelEditorState {
 
   // Actions
   setCurrentClip: (clip: ReelClipInput) => void;
+  updateClipMetadata: (metadata: { title?: string; description?: string }) => void;
   setSourceVideoDuration: (duration: number) => void;
   setTrimPoints: (trimPoints: TrimPoints) => void;
   updateTrimStart: (startTime: number) => void;
@@ -143,6 +144,20 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
       );
       set({ captions: [] });
     }
+  },
+
+  updateClipMetadata: (metadata) => {
+    const { currentClip } = get();
+    if (!currentClip) return;
+    set({
+      currentClip: {
+        ...currentClip,
+        metadata: {
+          ...currentClip.metadata,
+          ...metadata,
+        },
+      },
+    });
   },
 
   setSourceVideoDuration: (duration) => {

@@ -293,7 +293,6 @@ function EditorContent() {
     startTimeParam,
     endTimeParam,
     transcript,
-    editedTitle,
     videoDuration,
   ]);
 
@@ -443,6 +442,7 @@ function EditorContent() {
       </div>
       <ReelEditor
         clipData={clipData}
+        title={editedTitle}
         theme="dark"
         aspectRatio="9:16"
         exportQuality="medium"

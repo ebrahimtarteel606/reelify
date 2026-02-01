@@ -16,6 +16,7 @@ import styles from './ReelEditor.module.css';
 
 export function ReelEditor({
   clipData,
+  title,
   theme = 'light',
   aspectRatio = '9:16',
   exportQuality = 'medium',
@@ -24,8 +25,15 @@ export function ReelEditor({
   onExportError,
 }: ReelEditorProps) {
   const t = useTranslations('editor');
-  const { setCurrentClip, currentClip, transcriptionState, setTranscriptionState, exportFormat, setExportFormat } = useReelEditorStore();
+  const { setCurrentClip, updateClipMetadata, currentClip, transcriptionState, setTranscriptionState, exportFormat, setExportFormat } = useReelEditorStore();
   const [processedClipData, setProcessedClipData] = useState<typeof clipData | null>(null);
+
+  // Sync title prop to store so export/publish use latest title without re-initializing clip
+  useEffect(() => {
+    if (title !== undefined) {
+      updateClipMetadata({ title });
+    }
+  }, [title, updateClipMetadata]);
 
   // Initialize clip data
   useEffect(() => {

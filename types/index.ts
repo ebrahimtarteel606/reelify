@@ -101,6 +101,7 @@ export interface ReelEditorCallbacks {
 
 export interface ReelEditorProps extends ReelEditorCallbacks {
   clipData: ReelClipInput;
+  title?: string;
   theme?: 'light' | 'dark';
   aspectRatio?: '9:16' | '16:9' | '1:1';
   exportQuality?: 'low' | 'medium' | 'high';
