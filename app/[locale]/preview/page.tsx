@@ -18,7 +18,16 @@ function PreviewContent() {
   const title =
     searchParams.get("title") ||
     (locale === "ar" ? "مقطع فيديو" : "Video clip");
-  const duration = searchParams.get("duration");
+  const rawDuration = searchParams.get("duration");
+  const duration =
+    rawDuration != null
+      ? (() => {
+          const n = parseFloat(rawDuration);
+          return Number.isFinite(n)
+            ? String(Math.round(n * 10) / 10)
+            : rawDuration;
+        })()
+      : null;
   const thumbnail = searchParams.get("thumbnail");
   const category =
     searchParams.get("category") || (locale === "ar" ? "عام" : "General");
