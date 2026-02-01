@@ -54,6 +54,30 @@
   box-shadow: 0 4px 12px rgba(255, 107, 122, 0.25);
 }
 
+.headerButtons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.restoreButton {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+.restoreButton:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
 .buttonGroup {
   display: flex;
   gap: 8px;

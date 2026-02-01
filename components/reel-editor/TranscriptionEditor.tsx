@@ -16,6 +16,15 @@ export function TranscriptionEditor() {
   const setIsEditingTranscription = useReelEditorStore(
     (state) => state.setIsEditingTranscription,
   );
+  const hasUserEditedTranscription = useReelEditorStore(
+    (state) => state.hasUserEditedTranscription,
+  );
+  const setHasUserEditedTranscription = useReelEditorStore(
+    (state) => state.setHasUserEditedTranscription,
+  );
+  const restoreOriginalTranscriptionForCurrentTrim = useReelEditorStore(
+    (state) => state.restoreOriginalTranscriptionForCurrentTrim,
+  );
   const [isEditing, setIsEditing] = useState(false);
 
   // Sync store when leaving edit mode or unmounting so other controls stay in sync
@@ -239,8 +248,13 @@ export function TranscriptionEditor() {
     });
 
     setCaptions(newCaptions);
+    setHasUserEditedTranscription(true);
     setIsEditing(false);
     setIsEditingTranscription(false);
+  };
+
+  const handleRestoreOriginal = () => {
+    restoreOriginalTranscriptionForCurrentTrim();
   };
 
   const handleCancel = () => {
@@ -255,15 +269,26 @@ export function TranscriptionEditor() {
       <div className={styles.header}>
         <h3 className={styles.title}>{t("fullTranscription")}</h3>
         {!isEditing ? (
-          <button
-            onClick={() => {
-              setIsEditing(true);
-              setIsEditingTranscription(true);
-            }}
-            className={styles.editButton}
-          >
-            {t("editText")}
-          </button>
+          <div className={styles.headerButtons}>
+            <button
+              onClick={() => {
+                setIsEditing(true);
+                setIsEditingTranscription(true);
+              }}
+              className={styles.editButton}
+            >
+              {t("editText")}
+            </button>
+            {hasUserEditedTranscription && (
+              <button
+                onClick={handleRestoreOriginal}
+                className={styles.restoreButton}
+                type="button"
+              >
+                {t("restoreOriginal")}
+              </button>
+            )}
+          </div>
         ) : (
           <div className={styles.buttonGroup}>
             <button onClick={handleSave} className={styles.saveButton}>

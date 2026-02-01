@@ -213,7 +213,8 @@
     "language": "اللغة",
     "trimRange": "نطاق القص",
     "emptyError": "لا يمكن أن يكون النص فارغاً",
-    "editingHint": "التصدير والتنسيق والقص معطّلة أثناء التعديل. احفظ أو ألغِ لتفعيلها."
+    "editingHint": "التصدير والتنسيق والقص معطّلة أثناء التعديل. احفظ أو ألغِ لتفعيلها.",
+    "restoreOriginal": "استعادة النص الأصلي"
   },
   "transcriptionLoader": {
     "transcribing": "Transcribing Video...",

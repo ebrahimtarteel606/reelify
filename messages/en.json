@@ -213,7 +213,8 @@
     "language": "Language",
     "trimRange": "Trim range",
     "emptyError": "Transcription cannot be empty",
-    "editingHint": "Export, format, and trim are disabled while you edit. Save or cancel to enable them."
+    "editingHint": "Export, format, and trim are disabled while you edit. Save or cancel to enable them.",
+    "restoreOriginal": "Restore original"
   },
   "transcriptionLoader": {
     "transcribing": "Transcribing Video...",
