@@ -37,6 +37,7 @@ import {
   HelpCircle,
   type LucideIcon,
 } from "lucide-react";
+import { playSuccessSound } from "@/lib/utils/audioUtils";
 
 type ClipItem = {
   title: string;
@@ -752,6 +753,9 @@ export default function HomePage() {
       setProgress(100);
       await new Promise((resolve) => setTimeout(resolve, 200));
       setScreen("results");
+      
+      // Play congratulation sound when processing is complete
+      playSuccessSound();
 
       void generateThumbnailsInParallel(
         ffmpeg,

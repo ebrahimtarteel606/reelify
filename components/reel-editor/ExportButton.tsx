@@ -8,6 +8,7 @@ import { useReelEditorStore } from "@/lib/store/useReelEditorStore";
 import { ReelExportService } from "@/lib/services/ReelExportService";
 import { ReelExportResult, ExportFormatOptions } from "@/types";
 import { useAuthStatus, Platform } from "@/lib/hooks/useAuthStatus";
+import { playSuccessSound } from "@/lib/utils/audioUtils";
 import styles from "./ExportButton.module.css";
 
 interface ExportButtonProps {
@@ -237,6 +238,10 @@ export function ExportButton({
       console.log("Export successful:", result);
       setIsExporting(false);
       setExportedResult(result);
+      
+      // Play congratulation sound when export is ready
+      playSuccessSound();
+      
       return result;
     } catch (error) {
       console.error("Export failed:", error);
@@ -342,6 +347,9 @@ export function ExportButton({
       }
 
       setPublishProgress(100);
+      
+      // Play congratulation sound when publish is complete
+      playSuccessSound();
 
       const platformLabel = PLATFORM_CONFIG[targetPlatform].label;
       const postUrl = data.videoUrl || data.postUrl;
