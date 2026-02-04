@@ -20,7 +20,6 @@ export function ReelEditor({
   clipData,
   theme = "light",
   aspectRatio = "9:16",
-  exportQuality = "medium",
   onClipLoaded,
   onExportSuccess,
   onExportError,
@@ -284,7 +283,6 @@ export function ReelEditor({
                 <ExportButton
                   onExportSuccess={onExportSuccess}
                   onExportError={onExportError}
-                  quality={exportQuality}
                 />
               </div>
             </div>
