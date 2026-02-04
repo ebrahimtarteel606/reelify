@@ -11,7 +11,7 @@ import { ExportPanel } from "@/components/reel-editor/ExportPanel";
 import { Download } from "lucide-react";
 
 const DEFAULT_CAPTION_STYLE: CaptionStyle = {
-  fontSize: 24,
+  fontSize: 48,
   fontFamily: "Inter, sans-serif",
   fontWeight: "600",
   color: "#ffffff",
