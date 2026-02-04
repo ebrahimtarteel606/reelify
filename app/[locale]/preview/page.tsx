@@ -381,8 +381,7 @@ function PreviewContent() {
     URL.revokeObjectURL(downloadUrl);
   };
 
-  const videoFitClass =
-    isPortrait === false ? "object-contain" : "object-cover";
+  const videoFitClass = "object-cover"; // Default to zoom (fill container)
   const videoWrapperClass = `aspect-[9/16] relative ${
     isPortrait === false ? "bg-black" : "bg-neutral-900"
   }`;
