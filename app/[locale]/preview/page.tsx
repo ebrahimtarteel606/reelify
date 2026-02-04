@@ -197,25 +197,60 @@ function PreviewContent() {
 
   // Build captions from transcription segments for export
   const captionsForExport: Caption[] = useMemo(() => {
-    if (!fullTranscriptSegments) return [];
+    // First try to use segments from localStorage
+    if (fullTranscriptSegments) {
+      const { segments, reelStart, reelEnd } = fullTranscriptSegments;
 
-    const { segments, reelStart, reelEnd } = fullTranscriptSegments;
+      return segments
+        .filter((seg) => seg.start < reelEnd && seg.end > reelStart)
+        .map((seg, index) => ({
+          id: `caption-${index}`,
+          text: seg.text,
+          startTime: Math.max(seg.start, reelStart),
+          endTime: Math.min(seg.end, reelEnd),
+          position: { x: 50, y: 85 }, // Center bottom
+          style: DEFAULT_CAPTION_STYLE,
+          isVisible: true,
+          language: /[\u0600-\u06FF]/.test(seg.text)
+            ? ("ar" as const)
+            : ("en" as const),
+        }));
+    }
 
-    return segments
-      .filter((seg) => seg.start < reelEnd && seg.end > reelStart)
-      .map((seg, index) => ({
-        id: `caption-${index}`,
-        text: seg.text,
-        startTime: Math.max(seg.start, reelStart),
-        endTime: Math.min(seg.end, reelEnd),
-        position: { x: 50, y: 85 }, // Center bottom
-        style: DEFAULT_CAPTION_STYLE,
-        isVisible: true,
-        language: /[\u0600-\u06FF]/.test(seg.text)
-          ? ("ar" as const)
-          : ("en" as const),
-      }));
-  }, [fullTranscriptSegments]);
+    // Fallback: build captions from transcript text if available
+    if (transcript) {
+      const durationNum = duration ? parseFloat(duration) : 0;
+      const startTime =
+        startTimeParam != null ? parseFloat(startTimeParam) : 0;
+      const endTime =
+        endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
+      const clipDuration = endTime - startTime;
+
+      // Split transcript into segments
+      const sentences = transcript
+        .split(/[.!?،؛]+/)
+        .filter((s) => s.trim().length > 0);
+
+      if (sentences.length > 0) {
+        const segmentDuration = clipDuration / sentences.length;
+
+        return sentences.map((text, index) => ({
+          id: `caption-${index}`,
+          text: text.trim(),
+          startTime: startTime + index * segmentDuration,
+          endTime: startTime + (index + 1) * segmentDuration,
+          position: { x: 50, y: 85 }, // Center bottom
+          style: DEFAULT_CAPTION_STYLE,
+          isVisible: true,
+          language: /[\u0600-\u06FF]/.test(text)
+            ? ("ar" as const)
+            : ("en" as const),
+        }));
+      }
+    }
+
+    return [];
+  }, [fullTranscriptSegments, transcript, duration, startTimeParam, endTimeParam]);
 
   const firstReelSegmentIndex = useMemo(() => {
     if (!fullTranscriptSegments) return -1;
