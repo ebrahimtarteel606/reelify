@@ -62,11 +62,17 @@
                                               │
                                               ▼
                                    ┌──────────────────────┐
-                                   │ ElevenLabs API       │
-                                   │ Speech-to-Text       │
-                                   │ • Model: scribe_v2   │
-                                   │ • Word timestamps    │
-                                   │ • Delete temp file   │
+                                   │ Transcription        │
+                                   │ (Provider Selection) │
+                                   │ ┌──────────────────┐ │
+                                   │ │ ElevenLabs API   │ │
+                                   │ │ • scribe_v2      │ │
+                                   │ │ • Word timestamps│ │
+                                   │ ├──────────────────┤ │
+                                   │ │ Gemini Audio     │ │
+                                   │ │ • Inline / Files │ │
+                                   │ │ • JSON segments  │ │
+                                   │ └──────────────────┘ │
                                    └──────────┬───────────┘
                                               │
                                               ▼ TranscriptSegment[]
@@ -166,12 +172,15 @@
 - **Cleanup**: Deleted after transcription
 
 ### Step 7: Transcription
-- **Tool**: ElevenLabs Speech-to-Text API
-- **Endpoint**: `https://api.elevenlabs.io/v1/speech-to-text`
-- **Model**: `scribe_v2` (configurable via `ELEVENLABS_STT_MODEL`)
-- **Input**: Temporary audio file
+- **Provider**: Controlled by `TRANSCRIPTION_PROVIDER` env var (default: `elevenlabs`)
+- **Option A — ElevenLabs**:
+  - Endpoint: `https://api.elevenlabs.io/v1/speech-to-text`
+  - Model: `scribe_v2` (configurable via `ELEVENLABS_STT_MODEL`)
+- **Option B — Gemini Audio Understanding**:
+  - Inline base64 for files <= 15 MB, Gemini Files API for larger files
+  - Implementation: `lib/geminiAudio.ts`
+- **Input**: Audio buffer (from temp file or IndexedDB)
 - **Output**: `TranscriptSegment[]` with timestamps (all segments, no filtering)
-- **Cleanup**: Temporary file deleted after transcription
 
 ### Step 8: AI Analysis
 - **Tool**: Google Gemini AI (`@google/generative-ai`)
@@ -228,9 +237,10 @@
 
 | Service | Purpose | Endpoint | Authentication |
 |---------|---------|----------|----------------|
-| **ElevenLabs** | Speech-to-Text | `api.elevenlabs.io/v1/speech-to-text` | `xi-api-key` header |
+| **ElevenLabs** | Speech-to-Text (provider: `elevenlabs`) | `api.elevenlabs.io/v1/speech-to-text` | `xi-api-key` header |
 | **ElevenLabs Model** | STT Model | `scribe_v2` (default) | Configurable via `ELEVENLABS_STT_MODEL` |
-| **Google Gemini** | AI Analysis | `generativelanguage.googleapis.com` | API Key in request |
+| **Gemini Audio** | Speech-to-Text (provider: `gemini`) | `generativelanguage.googleapis.com` | API Key in request |
+| **Google Gemini** | AI Analysis (clip generation) | `generativelanguage.googleapis.com` | API Key in request |
 | **Gemini Model** | AI Model | `gemini-3-flash-preview` (default) | Configurable via `GEMINI_MODEL` |
 
 ---

@@ -132,19 +132,26 @@ Reelify is an Arabic video reel generator that processes long-form videos and au
 - **Cleanup**: File automatically deleted after processing
 
 **Step 3.4: Transcribe Audio**
-- **Location**: `app/api/process/route.ts` → `lib/elevenlabs.ts`
-- **Tool**: ElevenLabs Speech-to-Text API
-- **API Endpoint**: `https://api.elevenlabs.io/v1/speech-to-text`
-- **Process**:
-  1. Read audio file from temporary file path
-  2. Convert to Buffer using `readFile` from `node:fs/promises`
-  3. Create native FormData with audio Buffer as Blob
-  4. Send POST request to ElevenLabs API:
-     - Model: `scribe_v2` (configurable via `ELEVENLABS_STT_MODEL` env var)
-     - Timestamps granularity: `word`
-     - API Key: `ELEVENLABS_API_KEY` (from env)
-  5. Parse response to extract word-level timestamps
-  6. Return all segments (no filtering)
+- **Location**: `app/api/process/route.ts` → `lib/elevenlabs.ts` or `lib/geminiAudio.ts`
+- **Tool**: ElevenLabs Speech-to-Text API **or** Google Gemini Audio Understanding
+- **Provider Selection**: Controlled by the `TRANSCRIPTION_PROVIDER` env var (default: `elevenlabs`). Can also be passed per-request via the `provider` field.
+
+  **Provider A — ElevenLabs (default)**
+  - API Endpoint: `https://api.elevenlabs.io/v1/speech-to-text`
+  - Process:
+    1. Convert audio Buffer to Blob and create FormData
+    2. Send POST request with model `scribe_v2` and `timestamps_granularity: word`
+    3. Parse word-level timestamps into segments
+
+  **Provider B — Gemini**
+  - Uses the Gemini audio understanding capability (`generateContent` with audio data)
+  - Process:
+    1. For audio <= 15 MB: send inline as base64 data
+    2. For audio > 15 MB: upload via Gemini Files API, then reference by URI
+    3. Prompt Gemini for a structured JSON transcription with timestamps in seconds
+    4. Parse the JSON response into `TranscriptSegment[]`
+  - Implementation: `lib/geminiAudio.ts`
+
 - **Output**: `TranscriptSegment[]` array:
   ```typescript
   {
@@ -342,8 +349,9 @@ Reelify is an Arabic video reel generator that processes long-form videos and au
   }
   ```
 - **External APIs Used**:
-  - ElevenLabs Speech-to-Text API (scribe_v2 model)
-  - Google Gemini AI API (gemini-3-flash-preview model)
+  - ElevenLabs Speech-to-Text API (scribe_v2 model) — when `TRANSCRIPTION_PROVIDER=elevenlabs`
+  - Google Gemini Audio Understanding — when `TRANSCRIPTION_PROVIDER=gemini`
+  - Google Gemini AI API (gemini-3-flash-preview model) — for clip generation
 - **Temporary Files**: Audio saved to `data/temp-audio/` and deleted after processing
 
 ---
@@ -521,6 +529,7 @@ Reelify is an Arabic video reel generator that processes long-form videos and au
 - `ELEVENLABS_STT_MODEL`: ElevenLabs STT model (default: `scribe_v2`)
 - `GEMINI_API_KEY`: API key for Google Gemini AI
 - `GEMINI_MODEL`: Gemini model name (default: `gemini-3-flash-preview`)
+- `TRANSCRIPTION_PROVIDER`: Transcription provider — `elevenlabs` (default) or `gemini`
 
 ---
 
@@ -530,7 +539,8 @@ Reelify is an Arabic video reel generator that processes long-form videos and au
 - **Processing API**: `app/api/process/route.ts` (main processing endpoint)
 - **Upload API**: `app/api/upload/route.ts` (file upload handler)
 - **Preferences API**: `app/api/preferences/route.ts` (preferences storage)
-- **Transcription**: `lib/elevenlabs.ts` (ElevenLabs integration)
+- **Transcription (ElevenLabs)**: `lib/elevenlabs.ts` (ElevenLabs integration)
+- **Transcription (Gemini)**: `lib/geminiAudio.ts` (Gemini audio understanding)
 - **AI Analysis**: `lib/gemini.ts` (Gemini AI integration)
 - **Video Processing**: `lib/ffmpegWasm.ts` (FFmpeg WASM wrapper)
 - **Client Storage**: `lib/videoStorage.ts` (IndexedDB for video, audio, thumbnails)
