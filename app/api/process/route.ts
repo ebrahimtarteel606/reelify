@@ -48,9 +48,11 @@ export async function POST(request: Request) {
     }
 
     // Convert File to Buffer (no file system needed!)
+    const audioParseStart = Date.now();
     const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
+    const audioParseTime = Date.now() - audioParseStart;
     const audioSizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
-    console.log(`[API] Audio received: ${audioSizeMB}MB`);
+    console.log(`[API] Audio received: ${audioSizeMB}MB (parse: ${audioParseTime}ms)`);
 
     // Load preferences in parallel with transcription (optimization)
     const preferencesPromise = (async () => {
@@ -70,6 +72,15 @@ export async function POST(request: Request) {
     const transcriptionStart = Date.now();
     const segments = await transcribeAudioFromBuffer(audioBuffer);
     const transcriptionTime = Date.now() - transcriptionStart;
+    const audioBenchmark = {
+      parseMs: audioParseTime,
+      transcribeMs: transcriptionTime,
+      sizeMB: parseFloat(audioSizeMB),
+      segments: segments.length,
+    };
+    console.log(
+      `[API] Audio benchmark: parse=${audioBenchmark.parseMs}ms, transcribe=${audioBenchmark.transcribeMs}ms, size=${audioBenchmark.sizeMB}MB, segments=${audioBenchmark.segments}`
+    );
     console.log(
       `[API] Transcription: ${transcriptionTime}ms (${segments.length} segments)`
     );
@@ -115,7 +126,11 @@ export async function POST(request: Request) {
     // Track successful job completion
     await metrics.trackJobComplete(jobId, "video_processing", true);
 
-    return NextResponse.json({ clips: clipCandidates, segments });
+    return NextResponse.json({
+      clips: clipCandidates,
+      segments,
+      benchmark: { audio: audioBenchmark },
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Processing failed";
