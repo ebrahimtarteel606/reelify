@@ -74,6 +74,7 @@ export default function HomePage() {
   const tCommon = useTranslations("common");
 
   const [file, setFile] = useState<File | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
   const [clips, setClips] = useState<ClipItem[]>([]);
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
@@ -678,6 +679,23 @@ export default function HomePage() {
       formData.append("audio", audioFile);
       formData.append("preferences", JSON.stringify(sessionPreferences));
 
+      // Credit system: attach user ID and video duration
+      const storedUserId =
+        typeof globalThis.window !== "undefined"
+          ? (globalThis.localStorage.getItem("reelify_user_id") ??
+            document.cookie.match(/reelify_user_id=([^;]+)/)?.[1] ??
+            "")
+          : "";
+      if (storedUserId) {
+        formData.append("user_id", storedUserId);
+      }
+      if (videoDuration > 0) {
+        formData.append(
+          "source_duration_seconds",
+          String(Math.ceil(videoDuration)),
+        );
+      }
+
       let progressValue = 20;
       const progressInterval = setInterval(() => {
         progressValue = Math.min(progressValue + 0.3, 92);
@@ -1043,16 +1061,31 @@ export default function HomePage() {
                         const selectedFile = event.target.files?.[0] ?? null;
                         if (!selectedFile) {
                           setFile(null);
+                          setVideoDuration(0);
                           return;
                         }
                         const maxSize = 1024 * 1024 * 1024;
                         if (selectedFile.size > maxSize) {
                           setFile(null);
+                          setVideoDuration(0);
                           setError(t("fileTooLarge"));
                           return;
                         }
                         setError("");
                         setFile(selectedFile);
+
+                        // Extract video duration via a temporary video element
+                        const tempUrl = URL.createObjectURL(selectedFile);
+                        const tempVideo = document.createElement("video");
+                        tempVideo.preload = "metadata";
+                        tempVideo.onloadedmetadata = () => {
+                          if (tempVideo.duration && Number.isFinite(tempVideo.duration)) {
+                            setVideoDuration(tempVideo.duration);
+                          }
+                          URL.revokeObjectURL(tempUrl);
+                        };
+                        tempVideo.onerror = () => URL.revokeObjectURL(tempUrl);
+                        tempVideo.src = tempUrl;
                       }}
                     />
                   </label>

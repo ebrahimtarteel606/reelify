@@ -7,8 +7,12 @@ import {
 } from "../../../lib/gemini";
 import { loadPreferences, type QAPreferences } from "../../../lib/qaStore";
 import { metrics } from "../../../lib/services/MetricsService";
+import { chargeCredits, getUserById } from "../../../lib/supabase";
 
 export const runtime = "nodejs";
+
+// Global maximum video duration: 2 hours (in seconds)
+const MAX_VIDEO_DURATION_SECONDS = 2 * 60 * 60; // 7200s
 
 // Accept FormData with audio file (client-side storage)
 export async function POST(request: Request) {
@@ -23,6 +27,8 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const audioFile = formData.get("audio") as File | null;
     const preferencesStr = formData.get("preferences") as string | null;
+    const userId = formData.get("user_id") as string | null;
+    const sourceDurationStr = formData.get("source_duration_seconds") as string | null;
 
     // Get locale from cookie for output language
     const cookieStore = await cookies();
@@ -36,6 +42,50 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // ── Credit system enforcement ────────────────────────────
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Missing user_id" },
+        { status: 400 },
+      );
+    }
+
+    const sourceDuration = sourceDurationStr ? Math.ceil(Number(sourceDurationStr)) : 0;
+    if (!sourceDuration || sourceDuration <= 0) {
+      return NextResponse.json(
+        { error: "Missing or invalid source_duration_seconds" },
+        { status: 400 },
+      );
+    }
+
+    // Global max video length check (2 hours)
+    if (sourceDuration > MAX_VIDEO_DURATION_SECONDS) {
+      return NextResponse.json(
+        { error: "Video too long: maximum allowed duration is 2 hours" },
+        { status: 400 },
+      );
+    }
+
+    // Validate user exists
+    const user = await getUserById(userId);
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unknown user" },
+        { status: 403 },
+      );
+    }
+
+    // Atomically check credits + charge
+    const chargeResult = await chargeCredits(userId, sourceDuration);
+    if (!chargeResult.ok) {
+      console.log(`[API] Credit check failed for user ${userId}: ${chargeResult.error}`);
+      return NextResponse.json(
+        { error: chargeResult.error },
+        { status: 403 },
+      );
+    }
+    console.log(`[API] Credits charged: ${Math.ceil(sourceDuration / 60)} min (${sourceDuration}s) for user ${userId}`);
 
     // Parse preferences JSON
     let preferences: QAPreferences | undefined;

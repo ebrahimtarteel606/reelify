@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { locales, defaultLocale } from './i18n/config';
 
 const LOCALE_COOKIE = 'NEXT_LOCALE';
+const USER_ID_COOKIE = 'reelify_user_id';
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
@@ -23,6 +24,21 @@ export default function middleware(request: NextRequest) {
     pathname.includes('.') // Static files like images, fonts, etc.
   ) {
     return NextResponse.next();
+  }
+
+  // Allow /admin and /login through without user auth
+  if (pathname.startsWith('/admin') || pathname.startsWith('/login')) {
+    return NextResponse.next();
+  }
+
+  // ── User authentication gate ──────────────────────────────
+  // Any locale route (/, /ar, /en, /ar/editor, etc.) requires a valid user_id cookie
+  const userId = request.cookies.get(USER_ID_COOKIE)?.value;
+  if (!userId) {
+    const loginUrl = new URL('/login', request.url);
+    // Preserve the intended destination so we can redirect after login
+    loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Check for locale preference in cookie

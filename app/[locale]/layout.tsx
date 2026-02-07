@@ -2,7 +2,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales, localeDirection, type Locale } from "@/i18n/config";
-import "../globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
@@ -119,14 +118,12 @@ export default async function LocaleLayout({
   const dir = localeDirection[locale as Locale];
 
   return (
-    <html lang={locale} dir={dir}>
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-        <Analytics />
-        <SpeedInsights />
-      </body>
-    </html>
+    <div lang={locale} dir={dir}>
+      <NextIntlClientProvider messages={messages}>
+        {children}
+      </NextIntlClientProvider>
+      <Analytics />
+      <SpeedInsights />
+    </div>
   );
 }
