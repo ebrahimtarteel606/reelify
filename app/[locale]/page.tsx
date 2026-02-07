@@ -65,6 +65,9 @@ type PlatformKey =
   | "facebook"
   | "linkedin";
 
+// Max video duration (2 hours) – enforced client and server to protect credits
+const MAX_VIDEO_DURATION_SECONDS = 2 * 60 * 60;
+
 export default function HomePage() {
   const router = useRouter();
   const locale = useLocale();
@@ -690,6 +693,9 @@ export default function HomePage() {
         formData.append("user_id", storedUserId);
       }
       if (videoDuration > 0) {
+        if (videoDuration > MAX_VIDEO_DURATION_SECONDS) {
+          throw new Error(t("videoTooLong"));
+        }
         formData.append(
           "source_duration_seconds",
           String(Math.ceil(videoDuration)),
@@ -713,7 +719,13 @@ export default function HomePage() {
 
       const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload?.error || tLoading("analysisError"));
+        const serverError = payload?.error ?? "";
+        const isTooLong =
+          typeof serverError === "string" &&
+          serverError.toLowerCase().includes("video too long");
+        throw new Error(
+          isTooLong ? t("videoTooLong") : serverError || tLoading("analysisError")
+        );
       }
 
       const candidates = Array.isArray(payload?.clips) ? payload.clips : [];
@@ -1080,7 +1092,14 @@ export default function HomePage() {
                         tempVideo.preload = "metadata";
                         tempVideo.onloadedmetadata = () => {
                           if (tempVideo.duration && Number.isFinite(tempVideo.duration)) {
-                            setVideoDuration(tempVideo.duration);
+                            const durationSec = tempVideo.duration;
+                            if (durationSec > MAX_VIDEO_DURATION_SECONDS) {
+                              setFile(null);
+                              setVideoDuration(0);
+                              setError(t("videoTooLong"));
+                            } else {
+                              setVideoDuration(durationSec);
+                            }
                           }
                           URL.revokeObjectURL(tempUrl);
                         };
@@ -1089,9 +1108,14 @@ export default function HomePage() {
                       }}
                     />
                   </label>
-                  <p className="mt-2 text-xs text-muted-foreground text-center">
-                    {t("maxFileSize")}
-                  </p>
+                  <div className="mt-3 space-y-1 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {t("maxFileSize")}
+                    </p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {t("maxDuration")}
+                    </p>
+                  </div>
                   {file && (
                     <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
                       <p className="text-sm text-center text-primary font-medium flex items-center justify-center gap-2">
