@@ -8,8 +8,6 @@ import {
   CloseCircle,
   Facebook,
   Instagram,
-  MessageRemove,
-  MessageText,
   Music,
   ReceiveSquare,
   Snapchat,
@@ -87,6 +85,8 @@ export interface ExportPanelProps {
   startTime: number;
   endTime: number;
   captions: Caption[];
+  /** Whether to include captions in export (controlled by parent page toggle) */
+  includeCaptions: boolean;
   title?: string;
   description?: string;
   clipId?: string;
@@ -104,6 +104,7 @@ export function ExportPanel({
   startTime,
   endTime,
   captions,
+  includeCaptions,
   title = "My Reel",
   description = "",
   clipId,
@@ -120,7 +121,6 @@ export function ExportPanel({
   // UI state
   const [selectedPlatform, setSelectedPlatform] =
     useState<SelectedPlatform>("download");
-  const [includeCaptions, setIncludeCaptions] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -164,9 +164,6 @@ export function ExportPanel({
     if (p === "facebook") return authStatus.facebook;
     return false;
   };
-
-  // Check if captions exist
-  const hasCaptions = captions.length > 0;
 
   // Check if any captions have animations
   const hasAnimations = captions.some(
@@ -265,10 +262,33 @@ export function ExportPanel({
     }
   };
 
+  /** Build confirmation message: e.g. "You are going to download the reel with captions in a zoom aspect." */
+  const getConfirmationMessage = (): string => {
+    const prefix = t("confirmPrefix");
+    const action =
+      selectedPlatform === "download"
+        ? t("confirmDownload")
+        : t("confirmPublishTo", {
+            platform: PLATFORM_CONFIG[selectedPlatform].label,
+          });
+    const captionsPart = includeCaptions
+      ? t("confirmWithCaptions")
+      : t("confirmWithoutCaptions");
+    const aspectPart =
+      exportFormat === "zoom"
+        ? t("confirmZoomAspect")
+        : t("confirmLandscapeAspect");
+    return `${prefix}${action} ${captionsPart} ${aspectPart}.`;
+  };
+
   /**
-   * Handle the main export/publish action based on selected platform
+   * Handle the main export/publish action based on selected platform.
+   * Shows confirmation dialog first, then proceeds.
    */
   const handleExportAction = async () => {
+    const message = getConfirmationMessage();
+    if (!window.confirm(message)) return;
+
     if (selectedPlatform === "download") {
       await handleDownload();
       return;
@@ -350,6 +370,9 @@ export function ExportPanel({
       const platformLabel = PLATFORM_CONFIG[targetPlatform].label;
       const postUrl = data.videoUrl || data.postUrl;
 
+      // Clear parent loading state (e.g. preview page "Exporting... 100%")
+      onExportSuccess?.(result);
+
       alert(t("publishSuccess", { platform: platformLabel, url: postUrl }));
 
       if (postUrl) {
@@ -426,53 +449,8 @@ export function ExportPanel({
           </button>
         </div>
 
-        {/* Panel Content */}
+        {/* Panel Content - Only "Export to" options (Download, Facebook, Youtube) */}
         <div className="p-6 flex flex-col gap-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-          {/* Caption Toggle Section */}
-          {hasCaptions && (
-            <div className="flex flex-col gap-3">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                {t("captions")}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl border-2 text-sm font-medium transition-all relative ${
-                    includeCaptions
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-muted border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                  }`}
-                  onClick={() => setIncludeCaptions(true)}
-                >
-                  <MessageText size={20} variant="Bold" />
-                  <span>{t("withCaptions")}</span>
-                  {includeCaptions && (
-                    <TickCircle
-                      size={16}
-                      className="absolute top-2 right-2 text-primary"
-                    />
-                  )}
-                </button>
-                <button
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl border-2 text-sm font-medium transition-all relative ${
-                    !includeCaptions
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-muted border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                  }`}
-                  onClick={() => setIncludeCaptions(false)}
-                >
-                  <MessageRemove size={20} variant="Bold" />
-                  <span>{t("withoutCaptions")}</span>
-                  {!includeCaptions && (
-                    <TickCircle
-                      size={16}
-                      className="absolute top-2 right-2 text-primary"
-                    />
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Platform Selection Section */}
           <div className="flex flex-col gap-3">
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">

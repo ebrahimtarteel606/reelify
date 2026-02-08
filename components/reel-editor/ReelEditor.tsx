@@ -25,6 +25,7 @@ export function ReelEditor({
   onExportError,
 }: ReelEditorProps) {
   const t = useTranslations("editor");
+  const tExport = useTranslations("exportButton");
   const {
     setCurrentClip,
     currentClip,
@@ -32,6 +33,9 @@ export function ReelEditor({
     setTranscriptionState,
     exportFormat,
     setExportFormat,
+    includeCaptionsForExport,
+    setIncludeCaptionsForExport,
+    captions,
     selectedCaptionId,
     setSelectedCaptionId,
   } = useReelEditorStore();
@@ -279,6 +283,32 @@ export function ReelEditor({
           <div className={styles.sidebar} data-onboarding="sidebar">
             <div className={styles.sidebarHeader}>
               <h2 className={styles.sidebarTitle}>{t("transcription")}</h2>
+              {/* Caption toggle: With / Without captions (same UX as preview) */}
+              {captions.length > 0 && (
+                <div className={styles.exportOptionsRow}>
+                  <span className={styles.exportOptionsLabel}>
+                    {tExport("captions")}
+                  </span>
+                  <div className={styles.captionToggleGroup}>
+                    <button
+                      type="button"
+                      className={`${styles.captionToggleBtn} ${includeCaptionsForExport ? styles.captionToggleBtnActive : ""}`}
+                      onClick={() => setIncludeCaptionsForExport(true)}
+                      aria-pressed={includeCaptionsForExport}
+                    >
+                      {tExport("withCaptions")}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.captionToggleBtn} ${!includeCaptionsForExport ? styles.captionToggleBtnActive : ""}`}
+                      onClick={() => setIncludeCaptionsForExport(false)}
+                      aria-pressed={!includeCaptionsForExport}
+                    >
+                      {tExport("withoutCaptions")}
+                    </button>
+                  </div>
+                </div>
+              )}
               <div data-onboarding="export-button">
                 <ExportButton
                   onExportSuccess={onExportSuccess}

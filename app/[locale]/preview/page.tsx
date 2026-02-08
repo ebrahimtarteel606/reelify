@@ -40,6 +40,7 @@ function PreviewContent() {
   const locale = useLocale();
   const t = useTranslations("preview");
   const tCommon = useTranslations("common");
+  const tExport = useTranslations("exportButton");
 
   const urlParam = searchParams.get("url");
   const title =
@@ -97,6 +98,9 @@ function PreviewContent() {
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  // Export options (same UX as editor): caption toggle + aspect selected before opening export
+  const [includeCaptions, setIncludeCaptions] = useState(true);
+  const [exportFormat, setExportFormat] = useState<"zoom" | "landscape">("zoom");
 
   useEffect(() => {
     if (urlParam) {
@@ -613,6 +617,62 @@ function PreviewContent() {
                   <ReceiveSquare className="w-4 h-4 text-primary" size={16} />
                   {t("downloads")}
                 </h3>
+
+                {/* Caption toggle (with / without) - same as editor */}
+                {captionsForExport.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {tExport("captions")}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={includeCaptions ? "default" : "outline"}
+                        size="sm"
+                        className={`flex-1 ${includeCaptions ? "text-white" : ""}`}
+                        onClick={() => setIncludeCaptions(true)}
+                      >
+                        <DocumentText className="w-4 h-4 me-2" size={16} />
+                        {tExport("withCaptions")}
+                      </Button>
+                      <Button
+                        variant={!includeCaptions ? "default" : "outline"}
+                        size="sm"
+                        className={`flex-1 ${!includeCaptions ? "text-white" : ""}`}
+                        onClick={() => setIncludeCaptions(false)}
+                      >
+                        {tExport("withoutCaptions")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Aspect: Zoom / Landscape - same as editor */}
+                <div className="mb-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    {tExport("exportFormat")}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={exportFormat === "zoom" ? "default" : "outline"}
+                      size="sm"
+                      className={`flex-1 ${exportFormat === "zoom" ? "text-white" : ""}`}
+                      onClick={() => setExportFormat("zoom")}
+                    >
+                      {tExport("zoom")}
+                    </Button>
+                    <Button
+                      variant={
+                        exportFormat === "landscape" ? "default" : "outline"
+                      }
+                      size="sm"
+                      className={`flex-1 ${exportFormat === "landscape" ? "text-white" : ""}`}
+                      onClick={() => setExportFormat("landscape")}
+                    >
+                      {tExport("landscape")}
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <Button
                     onClick={() => setShowExportPanel(true)}
@@ -632,7 +692,7 @@ function PreviewContent() {
                     )}
                   </Button>
 
-                  {/* Export Panel - Shared Component */}
+                  {/* Export Panel - only "Export to" (Download, Facebook, Youtube); confirmation shown on action */}
                   <ExportPanel
                     isOpen={showExportPanel && !isExporting}
                     onClose={() => setShowExportPanel(false)}
@@ -640,10 +700,11 @@ function PreviewContent() {
                     startTime={exportStartTime}
                     endTime={exportEndTime}
                     captions={captionsForExport}
+                    includeCaptions={includeCaptions}
                     title={title}
                     description={transcript}
                     clipId={`preview-${Date.now()}`}
-                    exportFormat="zoom"
+                    exportFormat={exportFormat}
                     onExportStart={() => {
                       setIsExporting(true);
                       setExportProgress(0);

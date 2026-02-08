@@ -28,6 +28,7 @@ export function ExportButton({
     setIsExporting,
     setExportProgress,
     exportFormat,
+    includeCaptionsForExport,
     isEditingTranscription,
   } = useReelEditorStore();
 
@@ -98,7 +99,7 @@ export function ExportButton({
           </>
         ) : (
           <>
-            <ReceiveSquare size={18} />
+            <ReceiveSquare size={22} />
             {t("exportReel")}
           </>
         )}
@@ -113,6 +114,7 @@ export function ExportButton({
           startTime={trimPoints.startTime}
           endTime={trimPoints.endTime}
           captions={captions.filter((c) => c.isVisible)}
+          includeCaptions={includeCaptionsForExport}
           title={currentClip.metadata?.title}
           description={currentClip.metadata?.description}
           clipId={currentClip.clipId}

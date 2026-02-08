@@ -263,7 +263,14 @@
     "captions": "الترجمات",
     "withCaptions": "مع الترجمات",
     "withoutCaptions": "بدون الترجمات",
-    "exportTo": "تصدير إلى"
+    "exportTo": "تصدير إلى",
+    "confirmPrefix": "أنت على وشك ",
+    "confirmDownload": "تحميل الريل",
+    "confirmPublishTo": "نشر الريل على {platform}",
+    "confirmWithCaptions": "مع الترجمات",
+    "confirmWithoutCaptions": "بدون ترجمات",
+    "confirmZoomAspect": "بتنسيق تكبير (عمودي)",
+    "confirmLandscapeAspect": "بتنسيق أفقي"
   },
   "captionCanvas": {
     "safeArea": "Safe Area",

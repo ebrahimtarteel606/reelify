@@ -49,6 +49,8 @@ interface ReelEditorState {
   // UI state
   showSafeAreas: boolean;
   exportFormat: "landscape" | "zoom";
+  /** Whether to include captions in export (toggle on page) */
+  includeCaptionsForExport: boolean;
   isEditingTranscription: boolean;
 
   // Full-video transcription source (widest segment list) for extend trim and restore original
@@ -85,6 +87,7 @@ interface ReelEditorState {
   setTranscriptionState: (state: TranscriptionState) => void;
   setShowSafeAreas: (show: boolean) => void;
   setExportFormat: (format: "landscape" | "zoom") => void;
+  setIncludeCaptionsForExport: (value: boolean) => void;
   setIsEditingTranscription: (editing: boolean) => void;
   setFullTranscriptionSegments: (
     segments: Array<{
@@ -113,6 +116,7 @@ const initialState = {
   transcriptionState: { status: "idle" as const },
   showSafeAreas: false,
   exportFormat: "zoom" as const,
+  includeCaptionsForExport: true,
   isEditingTranscription: false,
   fullTranscriptionSegments: [],
   hasUserEditedTranscription: false,
@@ -702,6 +706,10 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
 
   setExportFormat: (format) => {
     set({ exportFormat: format });
+  },
+
+  setIncludeCaptionsForExport: (value) => {
+    set({ includeCaptionsForExport: value });
   },
 
   setIsEditingTranscription: (editing) => {

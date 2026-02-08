@@ -263,7 +263,14 @@
     "captions": "Captions",
     "withCaptions": "With Captions",
     "withoutCaptions": "Without Captions",
-    "exportTo": "Export to"
+    "exportTo": "Export to",
+    "confirmPrefix": "You are going to ",
+    "confirmDownload": "download the reel",
+    "confirmPublishTo": "publish the reel to {platform}",
+    "confirmWithCaptions": "with captions",
+    "confirmWithoutCaptions": "without captions",
+    "confirmZoomAspect": "in a zoom aspect",
+    "confirmLandscapeAspect": "in a landscape aspect"
   },
   "captionCanvas": {
     "safeArea": "Safe Area",

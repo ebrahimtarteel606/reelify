@@ -305,8 +305,10 @@
 
 .sidebarHeader {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding-bottom: 16px;
   border-bottom: 1px solid hsl(var(--border));
   flex-shrink: 0;
@@ -334,6 +336,50 @@
 
 .container.light .sidebarTitle {
   color: hsl(var(--foreground));
+}
+
+.exportOptionsRow {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exportOptionsLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+}
+
+.captionToggleGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.captionToggleBtn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.captionToggleBtn:hover {
+  background: hsl(var(--muted) / 0.9);
+  color: hsl(var(--foreground));
+}
+
+.captionToggleBtnActive {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: white;
 }
 
 @keyframes fadeInScale {
