@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+const ADMIN_INACTIVITY_MS = 60 * 1000 * 5; // 5 minutes
 
 // ── Types ──────────────────────────────────────────────────────
 interface UserUsage {
@@ -118,6 +120,38 @@ export default function AdminDashboard() {
     e.preventDefault();
     await fetchUsers();
   };
+
+  // ── Auto logout after 1 minute of inactivity (admin only) ───
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const logoutFromInactivity = useCallback(() => {
+    setAuthenticated(false);
+    setSecret("");
+  }, []);
+
+  useEffect(() => {
+    if (!authenticated) return;
+
+    const resetTimer = () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+      inactivityTimerRef.current = setTimeout(logoutFromInactivity, ADMIN_INACTIVITY_MS);
+    };
+
+    resetTimer();
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"];
+    events.forEach((ev) => window.addEventListener(ev, resetTimer));
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer));
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+    };
+  }, [authenticated, logoutFromInactivity]);
 
   // ── Create user ──────────────────────────────────────────────
   const handleCreate = async (e: React.FormEvent) => {
