@@ -157,6 +157,12 @@ export default function HomePage() {
     backgroundProcessingRef.current = backgroundProcessing;
   }, [backgroundProcessing]);
 
+  const clearTranscriptStorage = () => {
+    if (typeof globalThis.window === "undefined") return;
+    globalThis.sessionStorage.removeItem("reelify_segments");
+    globalThis.localStorage.removeItem("reelify_segments");
+  };
+
   // Rotate through recommendations every 4 seconds when on loading screen
   useEffect(() => {
     if (screen === "loading") {
@@ -554,6 +560,7 @@ export default function HomePage() {
       return;
     }
 
+    clearTranscriptStorage();
     await clearAllStorage();
     await storeVideoFile(file);
 
