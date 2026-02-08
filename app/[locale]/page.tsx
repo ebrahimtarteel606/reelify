@@ -26,7 +26,6 @@ import {
 } from "@/lib/videoStorage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import Image from "next/image";
 import {
@@ -1247,20 +1246,33 @@ export default function HomePage() {
               )}
 
               {/* Skip Questions Toggle */}
-              <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-xl bg-muted/50 border border-border/50">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id="skip-questions"
-                    checked={skipQuestions}
-                    onCheckedChange={checked =>
-                      setSkipQuestions(Boolean(checked))
-                    }
-                  />
-                  <label
-                    htmlFor="skip-questions"
-                    className="text-sm font-medium text-foreground">
-                    {t("skipQuestionsLabel")}
-                  </label>
+              <div className="flex items-center justify-between flex-wrap gap-4 p-4 rounded-xl bg-muted/50 border border-border/50">
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={skipQuestions}
+                    onClick={() => setSkipQuestions((prev) => !prev)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors ${
+                      skipQuestions
+                        ? "bg-primary border-primary"
+                        : "bg-background border-border"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                        skipQuestions ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">
+                      {t("skipQuestionsLabel")}
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      AI
+                    </span>
+                  </div>
                 </div>
                 {skipQuestions && (
                   <Button
