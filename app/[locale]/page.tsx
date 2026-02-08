@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
@@ -25,18 +30,34 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import Image from "next/image";
 import {
-  Youtube,
-  Instagram,
-  Facebook,
-  Linkedin,
-  Music,
+  Book,
+  Briefcase,
   Camera,
-  Timer,
-  Users,
-  Sparkles,
-  HelpCircle,
-  type LucideIcon,
-} from "lucide-react";
+  CloudAdd,
+  Cpu,
+  Eye,
+  Facebook,
+  Flash,
+  Flashy,
+  Flag,
+  Hashtag,
+  InfoCircle,
+  Instagram,
+  LampOn,
+  MessageQuestion,
+  Music,
+  Play,
+  Profile2User,
+  Snapchat,
+  Star,
+  TickCircle,
+  Timer1,
+  TrendUp,
+  Warning2,
+  Wind,
+  Youtube,
+  type Icon,
+} from "vuesax-icons-react";
 import { playSuccessSound } from "@/lib/utils/audioUtils";
 
 type ClipItem = {
@@ -64,6 +85,8 @@ type PlatformKey =
   | "snapchat"
   | "facebook"
   | "linkedin";
+
+type IconType = Icon;
 
 // Max video duration (2 hours) – enforced client and server to protect credits
 const MAX_VIDEO_DURATION_SECONDS = 2 * 60 * 60;
@@ -169,7 +192,7 @@ export default function HomePage() {
       if (currentRecommendations.length > 1) {
         const interval = setInterval(() => {
           setCurrentRecommendationIndex(
-            (prev) => (prev + 1) % currentRecommendations.length,
+            prev => (prev + 1) % currentRecommendations.length,
           );
         }, 4000);
 
@@ -255,7 +278,7 @@ export default function HomePage() {
                     return { ...clip, thumbnail: thumbnailUrl };
                   }
                   // Mark as generating if thumbnail is missing
-                  setThumbnailGenerating((prev) => new Set(prev).add(index));
+                  setThumbnailGenerating(prev => new Set(prev).add(index));
                   return { ...clip, thumbnail: "" };
                 }),
               );
@@ -333,7 +356,7 @@ export default function HomePage() {
 
       // Mark thumbnail as generating
       if (onThumbnailGenerated) {
-        setThumbnailGenerating((prev) => new Set(prev).add(index));
+        setThumbnailGenerating(prev => new Set(prev).add(index));
       }
 
       while (retries <= maxRetries && !success) {
@@ -343,7 +366,7 @@ export default function HomePage() {
               `[Thumbnails] Retry ${retries}/${maxRetries} for thumbnail ${index + 1} at ${clip.start}s`,
             );
             // Wait longer before retrying to allow memory to be freed
-            await new Promise((resolve) => setTimeout(resolve, 2000 * retries));
+            await new Promise(resolve => setTimeout(resolve, 2000 * retries));
           } else {
             console.log(
               `[Thumbnails] Generating thumbnail ${index + 1}/${clips.length} at ${clip.start}s`,
@@ -367,7 +390,7 @@ export default function HomePage() {
           // Update UI immediately when thumbnail is ready
           if (onThumbnailGenerated) {
             onThumbnailGenerated(index, blobUrl);
-            setThumbnailGenerating((prev) => {
+            setThumbnailGenerating(prev => {
               const next = new Set(prev);
               next.delete(index);
               return next;
@@ -381,7 +404,7 @@ export default function HomePage() {
             if (typeof globalThis.gc === "function") {
               globalThis.gc();
             }
-            await new Promise((resolve) => setTimeout(resolve, 500)); // Increased from 200ms to 500ms
+            await new Promise(resolve => setTimeout(resolve, 500)); // Increased from 200ms to 500ms
           }
         } catch (error) {
           const isMemoryError =
@@ -398,7 +421,7 @@ export default function HomePage() {
               error,
             );
             // Wait progressively longer before retrying
-            await new Promise((resolve) => setTimeout(resolve, 2000 * retries));
+            await new Promise(resolve => setTimeout(resolve, 2000 * retries));
 
             // Force garbage collection if available
             if (typeof globalThis.gc === "function") {
@@ -414,7 +437,7 @@ export default function HomePage() {
 
             // Remove from generating set
             if (onThumbnailGenerated) {
-              setThumbnailGenerating((prev) => {
+              setThumbnailGenerating(prev => {
                 const next = new Set(prev);
                 next.delete(index);
                 return next;
@@ -426,7 +449,7 @@ export default function HomePage() {
               console.warn(
                 "[Thumbnails] Memory error detected, waiting longer before next extraction...",
               );
-              await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased from 1000ms to 2000ms
+              await new Promise(resolve => setTimeout(resolve, 2000)); // Increased from 1000ms to 2000ms
             }
           }
         }
@@ -606,7 +629,7 @@ export default function HomePage() {
         setStatus(tLoading("waitingAnalysis"));
         let attempts = 0;
         while (backgroundProcessingRef.current && attempts < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
 
           // Log progress every 30 seconds
@@ -721,8 +744,8 @@ export default function HomePage() {
       });
 
       clearInterval(progressInterval);
-      setProgress((prev) => Math.max(prev, 85));
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      setProgress(prev => Math.max(prev, 85));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const payload = await response.json();
       if (!response.ok) {
@@ -731,7 +754,9 @@ export default function HomePage() {
           typeof serverError === "string" &&
           serverError.toLowerCase().includes("video too long");
         throw new Error(
-          isTooLong ? t("videoTooLong") : serverError || tLoading("analysisError")
+          isTooLong
+            ? t("videoTooLong")
+            : serverError || tLoading("analysisError"),
         );
       }
 
@@ -746,12 +771,12 @@ export default function HomePage() {
 
       setProgress(88);
       setStatus(tLoading("preparingClipsShort"));
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const getClipTranscript = (start: number, end: number): string => {
         return segments
-          .filter((seg) => seg.end > start && seg.start < end)
-          .map((seg) => seg.text)
+          .filter(seg => seg.end > start && seg.start < end)
+          .map(seg => seg.text)
           .join(" ");
       };
       const uploadedClips: ClipItem[] = [];
@@ -777,7 +802,7 @@ export default function HomePage() {
       }
 
       setProgress(92);
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 150));
       setClips(uploadedClips);
       setSegments(segments);
 
@@ -785,12 +810,12 @@ export default function HomePage() {
       setThumbnailGenerating(new Set(uploadedClips.map((_, index) => index)));
 
       setProgress(96);
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 150));
       setStatus("");
       setProgress(100);
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 200));
       setScreen("results");
-      
+
       // Play congratulation sound when processing is complete
       playSuccessSound();
 
@@ -801,7 +826,7 @@ export default function HomePage() {
         file,
         (index, thumbnailUrl) => {
           // Update thumbnail immediately as it's generated
-          setClips((prevClips) => {
+          setClips(prevClips => {
             const updatedClips = prevClips.map((clip, i) => {
               if (i === index) {
                 console.log(
@@ -824,14 +849,14 @@ export default function HomePage() {
           });
         },
       )
-        .then((thumbnails) => {
+        .then(thumbnails => {
           console.log(
             "[Thumbnails] Generated thumbnails:",
             thumbnails.length,
             "URLs",
           );
           // Final update to ensure all thumbnails are set
-          setClips((prevClips) => {
+          setClips(prevClips => {
             const updatedClips = prevClips.map((clip, index) => {
               const thumbnailUrl = thumbnails[index] || clip.thumbnail;
               if (thumbnailUrl && !clip.thumbnail) {
@@ -854,7 +879,7 @@ export default function HomePage() {
           });
           setThumbnailGenerating(new Set()); // Clear all generating flags
         })
-        .catch((error) => {
+        .catch(error => {
           console.error("[Thumbnails] Error generating thumbnails:", error);
         })
         .finally(() => {
@@ -912,13 +937,13 @@ export default function HomePage() {
     5: t("questions.hookStyle"),
   };
 
-  const platformIcons: Record<PlatformKey, LucideIcon> = {
+  const platformIcons: Record<PlatformKey, IconType> = {
     instagram: Instagram,
     youtube: Youtube,
     facebook: Facebook,
-    linkedin: Linkedin,
+    linkedin: Briefcase,
     tiktok: Music,
-    snapchat: Camera,
+    snapchat: Snapchat,
   };
 
   const platformIconColors: Record<PlatformKey, string> = {
@@ -930,12 +955,12 @@ export default function HomePage() {
     snapchat: "text-yellow-500",
   };
 
-  const stepIcons: Record<number, LucideIcon> = {
+  const stepIcons: Record<number, IconType> = {
     1: platformIcons[platform],
-    2: Timer,
-    3: Users,
-    4: Sparkles,
-    5: HelpCircle,
+    2: Timer1,
+    3: Profile2User,
+    4: Star,
+    5: InfoCircle,
   };
 
   const stepIconColors: Record<number, string> = {
@@ -983,27 +1008,74 @@ export default function HomePage() {
   ];
 
   const audienceOptions = [
-    { value: t("audiences.youth"), icon: "👥" },
-    { value: t("audiences.entrepreneurs"), icon: "💼" },
-    { value: t("audiences.selfDevelopment"), icon: "🚀" },
-    { value: t("audiences.students"), icon: "🎓" },
-    { value: t("audiences.techProfessionals"), icon: "💻" },
+    {
+      value: t("audiences.youth"),
+      icon: <Profile2User size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("audiences.entrepreneurs"),
+      icon: <Briefcase size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("audiences.selfDevelopment"),
+      icon: <TrendUp size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("audiences.students"),
+      icon: <Book size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("audiences.techProfessionals"),
+      icon: <Cpu size={28} variant="Bold" className="text-primary" />,
+    },
   ];
 
   const toneOptions = [
-    { value: t("tones.inspiring"), icon: "✨" },
-    { value: t("tones.educational"), icon: "📚" },
-    { value: t("tones.energetic"), icon: "🔥" },
-    { value: t("tones.calm"), icon: "🌿" },
-    { value: t("tones.practical"), icon: "🎯" },
+    {
+      value: t("tones.inspiring"),
+      icon: <Star size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("tones.educational"),
+      icon: <Book size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("tones.energetic"),
+      icon: <Flashy size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("tones.calm"),
+      icon: <Wind size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("tones.practical"),
+      icon: <Flag size={28} variant="Bold" className="text-primary" />,
+    },
   ];
 
   const hookStyleOptions = [
-    { value: t("hookStyles.directQuestion"), icon: "❓" },
-    { value: t("hookStyles.strongNumber"), icon: "📊" },
-    { value: t("hookStyles.quickPromise"), icon: "⚡" },
-    { value: t("hookStyles.shortStory"), icon: "📖" },
-    { value: t("hookStyles.warning"), icon: "⚠️" },
+    {
+      value: t("hookStyles.directQuestion"),
+      icon: (
+        <MessageQuestion size={28} variant="Bold" className="text-primary" />
+      ),
+    },
+    {
+      value: t("hookStyles.strongNumber"),
+      icon: <Hashtag size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("hookStyles.quickPromise"),
+      icon: <Flash size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("hookStyles.shortStory"),
+      icon: <Book size={28} variant="Bold" className="text-primary" />,
+    },
+    {
+      value: t("hookStyles.warning"),
+      icon: <Warning2 size={28} variant="Bold" className="text-primary" />,
+    },
   ];
 
   return (
@@ -1043,28 +1115,14 @@ export default function HomePage() {
             <CardContent className="p-10">
               <form
                 className="flex flex-col items-center gap-8"
-                onSubmit={onUploadSubmit}
-              >
+                onSubmit={onUploadSubmit}>
                 <div className="w-full">
                   <label
                     htmlFor="video"
-                    className="group flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-primary/20 rounded-2xl cursor-pointer bg-primary/5 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300 hover:scale-[1.01]"
-                  >
+                    className="group flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-primary/20 rounded-2xl cursor-pointer bg-primary/5 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300 hover:scale-[1.01]">
                     <div className="flex flex-col items-center justify-center pt-6 pb-8">
                       <div className="w-16 h-16 mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <svg
-                          className="w-8 h-8 text-primary"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
+                        <CloudAdd className="w-8 h-8 text-primary" size={32} />
                       </div>
                       <p className="mb-2 text-base text-foreground">
                         <span className="font-semibold text-primary">
@@ -1080,7 +1138,7 @@ export default function HomePage() {
                       type="file"
                       accept="video/*"
                       className="hidden"
-                      onChange={(event) => {
+                      onChange={event => {
                         const selectedFile = event.target.files?.[0] ?? null;
                         if (!selectedFile) {
                           setFile(null);
@@ -1102,7 +1160,10 @@ export default function HomePage() {
                         const tempVideo = document.createElement("video");
                         tempVideo.preload = "metadata";
                         tempVideo.onloadedmetadata = () => {
-                          if (tempVideo.duration && Number.isFinite(tempVideo.duration)) {
+                          if (
+                            tempVideo.duration &&
+                            Number.isFinite(tempVideo.duration)
+                          ) {
                             const durationSec = tempVideo.duration;
                             if (durationSec > MAX_VIDEO_DURATION_SECONDS) {
                               setFile(null);
@@ -1130,19 +1191,7 @@ export default function HomePage() {
                   {file && (
                     <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
                       <p className="text-sm text-center text-primary font-medium flex items-center justify-center gap-2">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                        <TickCircle className="w-5 h-5" size={20} />
                         {t("fileSelected", { filename: file.name })}
                       </p>
                     </div>
@@ -1152,8 +1201,7 @@ export default function HomePage() {
                   type="submit"
                   disabled={!file}
                   size="lg"
-                  className="w-full max-w-sm text-white h-14 text-lg font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
-                >
+                  className="w-full max-w-sm text-white h-14 text-lg font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl">
                   {tCommon("continue")}
                 </Button>
                 {error && (
@@ -1204,14 +1252,13 @@ export default function HomePage() {
                   <Checkbox
                     id="skip-questions"
                     checked={skipQuestions}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={checked =>
                       setSkipQuestions(Boolean(checked))
                     }
                   />
                   <label
                     htmlFor="skip-questions"
-                    className="text-sm font-medium text-foreground"
-                  >
+                    className="text-sm font-medium text-foreground">
                     {t("skipQuestionsLabel")}
                   </label>
                 </div>
@@ -1220,8 +1267,7 @@ export default function HomePage() {
                     type="button"
                     size="sm"
                     onClick={handleSkipQuestions}
-                    className="bg-gradient-teal text-white hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                  >
+                    className="bg-gradient-teal text-white hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                     {t("startWithoutQuestions")}
                   </Button>
                 )}
@@ -1230,19 +1276,7 @@ export default function HomePage() {
               {backgroundResult && !backgroundProcessing && (
                 <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200 animate-fade-in">
                   <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <TickCircle className="w-4 h-4 text-white" size={16} />
                   </div>
                   <span className="text-sm font-medium text-emerald-700">
                     {t("readyToConvert")}
@@ -1252,19 +1286,7 @@ export default function HomePage() {
 
               {backgroundError && (
                 <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200 animate-fade-in">
-                  <svg
-                    className="w-5 h-5 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <Warning2 className="w-5 h-5 text-red-500" size={20} />
                   <span className="text-sm font-medium text-red-600">
                     {backgroundError}
                   </span>
@@ -1357,29 +1379,21 @@ export default function HomePage() {
                                 ? "border-primary bg-primary/10 shadow-teal"
                                 : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                             }`}
-                            style={{ animationDelay: `${index * 0.1}s` }}
-                          >
+                            style={{ animationDelay: `${index * 0.1}s` }}>
                             <PlatformOptionIcon
                               className={`h-6 w-6 shrink-0 ${iconColor}`}
+                              size={24}
+                              variant="Bold"
                               aria-hidden
                             />
                             <span className="font-semibold text-lg">
                               {option.label}
                             </span>
                             {platform === option.value && (
-                              <svg
+                              <TickCircle
                                 className="w-6 h-6 text-primary ms-auto"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
+                                size={24}
+                              />
                             )}
                           </button>
                         );
@@ -1414,8 +1428,7 @@ export default function HomePage() {
                                 ? "border-primary bg-primary/10 shadow-teal"
                                 : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                             }`}
-                            style={{ animationDelay: `${index * 0.1}s` }}
-                          >
+                            style={{ animationDelay: `${index * 0.1}s` }}>
                             <span className="text-3xl font-bold text-foreground block">
                               {duration}
                             </span>
@@ -1445,26 +1458,16 @@ export default function HomePage() {
                               ? "border-primary bg-primary/10 shadow-teal"
                               : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                           }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
+                          style={{ animationDelay: `${index * 0.1}s` }}>
                           <span className="text-3xl">{option.icon}</span>
                           <span className="font-semibold text-lg">
                             {option.value}
                           </span>
                           {audience === option.value && (
-                            <svg
+                            <TickCircle
                               className="w-6 h-6 text-primary ms-auto"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
+                              size={24}
+                            />
                           )}
                         </button>
                       ))}
@@ -1475,7 +1478,7 @@ export default function HomePage() {
                         <input
                           type="text"
                           value={audience}
-                          onChange={(event) => {
+                          onChange={event => {
                             setAudience(event.target.value);
                             setAudienceSkipped(false);
                           }}
@@ -1499,12 +1502,11 @@ export default function HomePage() {
                             onClick={() => {
                               setAudience("");
                               setAudienceSkipped(true);
-                              setStep((current) =>
+                              setStep(current =>
                                 Math.min(totalSteps, current + 1),
                               );
                             }}
-                            className="text-primary hover:underline font-medium"
-                          >
+                            className="text-primary hover:underline font-medium">
                             {t("skipQuestion")}
                           </button>
                         </div>
@@ -1529,26 +1531,16 @@ export default function HomePage() {
                               ? "border-primary bg-primary/10 shadow-teal"
                               : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                           }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
+                          style={{ animationDelay: `${index * 0.1}s` }}>
                           <span className="text-3xl">{option.icon}</span>
                           <span className="font-semibold text-lg">
                             {option.value}
                           </span>
                           {tone === option.value && (
-                            <svg
+                            <TickCircle
                               className="w-6 h-6 text-primary ms-auto"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
+                              size={24}
+                            />
                           )}
                         </button>
                       ))}
@@ -1559,7 +1551,7 @@ export default function HomePage() {
                         <input
                           type="text"
                           value={tone}
-                          onChange={(event) => {
+                          onChange={event => {
                             setTone(event.target.value);
                             setToneSkipped(false);
                           }}
@@ -1583,12 +1575,11 @@ export default function HomePage() {
                             onClick={() => {
                               setTone("");
                               setToneSkipped(true);
-                              setStep((current) =>
+                              setStep(current =>
                                 Math.min(totalSteps, current + 1),
                               );
                             }}
-                            className="text-primary hover:underline font-medium"
-                          >
+                            className="text-primary hover:underline font-medium">
                             {t("skipQuestion")}
                           </button>
                         </div>
@@ -1615,26 +1606,16 @@ export default function HomePage() {
                               ? "border-primary bg-primary/10 shadow-teal"
                               : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                           }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
+                          style={{ animationDelay: `${index * 0.1}s` }}>
                           <span className="text-3xl">{option.icon}</span>
                           <span className="font-semibold text-lg">
                             {option.value}
                           </span>
                           {hookStyle === option.value && (
-                            <svg
+                            <TickCircle
                               className="w-6 h-6 text-primary ms-auto"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
+                              size={24}
+                            />
                           )}
                         </button>
                       ))}
@@ -1645,7 +1626,7 @@ export default function HomePage() {
                         <input
                           type="text"
                           value={hookStyle}
-                          onChange={(event) => {
+                          onChange={event => {
                             setHookStyle(event.target.value);
                             setHookStyleSkipped(false);
                           }}
@@ -1672,13 +1653,12 @@ export default function HomePage() {
                               if (step >= totalSteps) {
                                 void onStartProcessing();
                               } else {
-                                setStep((current) =>
+                                setStep(current =>
                                   Math.min(totalSteps, current + 1),
                                 );
                               }
                             }}
-                            className="text-primary hover:underline font-medium"
-                          >
+                            className="text-primary hover:underline font-medium">
                             {t("skipQuestion")}
                           </button>
                         </div>
@@ -1693,11 +1673,10 @@ export default function HomePage() {
                       variant="ghost"
                       size="lg"
                       onClick={() =>
-                        setStep((current) => Math.max(1, current - 1))
+                        setStep(current => Math.max(1, current - 1))
                       }
                       disabled={step === 1}
-                      className={`text-base px-6 ${step === 1 ? "invisible" : "hover:bg-muted"}`}
-                    >
+                      className={`text-base px-6 ${step === 1 ? "invisible" : "hover:bg-muted"}`}>
                       {t("previous")}
                     </Button>
                     {step < totalSteps ? (
@@ -1705,12 +1684,9 @@ export default function HomePage() {
                         type="button"
                         size="lg"
                         onClick={() =>
-                          setStep((current) =>
-                            Math.min(totalSteps, current + 1),
-                          )
+                          setStep(current => Math.min(totalSteps, current + 1))
                         }
-                        className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                      >
+                        className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                         {t("next")}
                       </Button>
                     ) : (
@@ -1719,8 +1695,7 @@ export default function HomePage() {
                         size="lg"
                         onClick={onStartProcessing}
                         disabled={isProcessing}
-                        className="text-base text-white px-8 bg-gradient-coral hover:shadow-warm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                      >
+                        className="text-base text-white px-8 bg-gradient-coral hover:shadow-warm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                         {isProcessing ? t("converting") : t("startConversion")}
                       </Button>
                     )}
@@ -1737,25 +1712,11 @@ export default function HomePage() {
             <Card className="shadow-card border-0 bg-gradient-card">
               <CardContent className="p-10 text-center space-y-8">
                 <div className="w-20 h-20 mx-auto rounded-full bg-gradient-teal flex items-center justify-center animate-pulse-glow">
-                  <svg
+                  <Play
                     className="w-10 h-10 text-white animate-bounce-soft"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                    size={40}
+                    variant="Bold"
+                  />
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-2xl font-bold text-foreground">
@@ -1767,7 +1728,7 @@ export default function HomePage() {
                   {currentRecommendations.length > 0 && (
                     <div className="mt-6 p-5 bg-primary/5 rounded-xl border border-primary/20 shadow-sm">
                       <div className="flex items-start gap-3">
-                        <div className="text-2xl">💡</div>
+                        <LampOn className="w-6 h-6 text-primary" size={24} />
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-primary mb-2">
                             {tLoading("tipsFor", {
@@ -1776,8 +1737,7 @@ export default function HomePage() {
                           </p>
                           <p
                             key={currentRecommendationIndex}
-                            className="text-sm text-muted-foreground leading-relaxed animate-fade-in"
-                          >
+                            className="text-sm text-muted-foreground leading-relaxed animate-fade-in">
                             {currentRecommendations[currentRecommendationIndex]}
                           </p>
                           {currentRecommendations.length > 1 && (
@@ -1817,12 +1777,11 @@ export default function HomePage() {
 
             {/* Skeleton Cards */}
             <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <Card
                   key={i}
                   className="overflow-hidden shadow-card border-0 bg-gradient-card animate-fade-in"
-                  style={{ animationDelay: `${i * 0.2}s` }}
-                >
+                  style={{ animationDelay: `${i * 0.2}s` }}>
                   <div className="aspect-[9/16] skeleton" />
                   <CardContent className="p-5 space-y-4">
                     <div className="skeleton h-4 w-16 rounded-full" />
@@ -1844,19 +1803,7 @@ export default function HomePage() {
           <section className="space-y-10 animate-fade-in">
             <div className="text-center space-y-4">
               <div className="w-16 h-16 mx-auto rounded-full bg-gradient-teal flex items-center justify-center animate-bounce-soft">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+                <TickCircle className="w-8 h-8 text-white" size={32} />
               </div>
               <h2 className="text-3xl font-bold text-foreground">
                 {tResults("clipsReady")}
@@ -1918,20 +1865,18 @@ export default function HomePage() {
                     <Card
                       key={`${clip.start}-${clip.end}-${index}`}
                       className="overflow-hidden shadow-card border-0 bg-gradient-card group hover:shadow-card-hover hover:scale-[1.03] transition-all duration-500 animate-fade-in"
-                      style={{ animationDelay: `${index * 0.15}s` }}
-                    >
+                      style={{ animationDelay: `${index * 0.15}s` }}>
                       <a
                         href={previewUrl}
                         onClick={handlePreviewClick}
                         className={`${wrapperClass} block`}
-                        aria-label={`${tResults("previewAndEdit")}: ${clip.title}`}
-                      >
+                        aria-label={`${tResults("previewAndEdit")}: ${clip.title}`}>
                         {clip.thumbnail ? (
                           <img
                             src={clip.thumbnail}
                             alt={clip.title}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
+                            onError={e => {
                               const loadThumbnail = async () => {
                                 const clipKey = `thumb-${clip.start}-${clip.end}`;
                                 const thumbnailUrl =
@@ -1963,13 +1908,11 @@ export default function HomePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100 shadow-xl">
-                            <svg
+                            <Play
                               className="w-7 h-7 text-primary"
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
+                              size={28}
+                              variant="Bold"
+                            />
                           </div>
                         </div>
                         <div className="absolute bottom-3 start-3 px-2.5 py-1 rounded-lg bg-black/70 text-white text-xs font-medium backdrop-blur-sm">
@@ -1990,32 +1933,12 @@ export default function HomePage() {
                         </div>
                         <Button
                           asChild
-                          className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
-                        >
+                          className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl">
                           <a
                             href={previewUrl}
                             target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <svg
-                              className="w-5 h-5 me-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
+                            rel="noopener noreferrer">
+                            <Eye className="w-5 h-5 me-2" size={20} />
                             {tResults("previewAndEdit")}
                           </a>
                         </Button>
@@ -2033,15 +1956,13 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <Link
               href={`/${locale}/privacy`}
-              className="hover:text-primary transition-colors"
-            >
+              className="hover:text-primary transition-colors">
               {tCommon("privacyPolicy")}
             </Link>
             <span>•</span>
             <Link
               href={`/${locale}/terms`}
-              className="hover:text-primary transition-colors"
-            >
+              className="hover:text-primary transition-colors">
               {tCommon("termsAndConditions")}
             </Link>
           </div>

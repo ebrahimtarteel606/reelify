@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Download } from "lucide-react";
+import { ReceiveSquare } from "vuesax-icons-react";
 import { useReelEditorStore } from "@/lib/store/useReelEditorStore";
 import { ReelExportResult } from "@/types";
 import { ExportPanel } from "./ExportPanel";
@@ -98,7 +98,7 @@ export function ExportButton({
           </>
         ) : (
           <>
-            <Download size={18} />
+            <ReceiveSquare size={18} />
             {t("exportReel")}
           </>
         )}

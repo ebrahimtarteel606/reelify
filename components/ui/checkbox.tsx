@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import { Check } from "lucide-react";
+import { TickSquare } from "vuesax-icons-react";
 
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ const Checkbox = React.forwardRef<
     {...props}
   >
     <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
-      <Check className="h-3.5 w-3.5" />
+      <TickSquare className="h-3.5 w-3.5" size={14} />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));

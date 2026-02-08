@@ -3,6 +3,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useReelEditorStore } from "@/lib/store/useReelEditorStore";
+import {
+  Brush2,
+  DocumentText,
+  ReceiveSquare,
+  Refresh2,
+  Timer1,
+  Video,
+} from "vuesax-icons-react";
 import styles from "./CaptionOnboarding.module.css";
 
 interface CaptionOnboardingProps {
@@ -898,37 +906,37 @@ export function CaptionOnboarding({
         return {
           title: t("step1Title"),
           content: t("step1Content"),
-          icon: "🎬",
+          icon: <Video size={28} variant="Bold" />,
         };
       case "style-editor":
         return {
           title: t("step2Title"),
           content: t("step2Content"),
-          icon: "🎨",
+          icon: <Brush2 size={28} variant="Bold" />,
         };
       case "format-toggle":
         return {
           title: t("step3Title"),
           content: t("step3Content"),
-          icon: "🔄",
+          icon: <Refresh2 size={28} variant="Bold" />,
         };
       case "timeline":
         return {
           title: t("step4Title"),
           content: t("step4Content"),
-          icon: "⏱️",
+          icon: <Timer1 size={28} variant="Bold" />,
         };
       case "transcription":
         return {
           title: t("step5Title"),
           content: t("step5Content"),
-          icon: "📝",
+          icon: <DocumentText size={28} variant="Bold" />,
         };
       case "export":
         return {
           title: t("step6Title"),
           content: t("step6Content"),
-          icon: "💾",
+          icon: <ReceiveSquare size={28} variant="Bold" />,
         };
     }
   };

@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState, useMemo, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { Edit, Warning2 } from "vuesax-icons-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReelEditor } from "@/components/reel-editor/ReelEditor";
 import { ReelClipInput, ReelExportResult } from "@/types";
@@ -284,19 +285,7 @@ function EditorContent() {
               />
             </div>
             <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Warning2 className="w-8 h-8 text-red-500" size={32} />
             </div>
             <p className="text-lg font-medium text-foreground">
               {t("videoUrlMissing")}
@@ -371,20 +360,7 @@ function EditorContent() {
                   className="flex shrink-0 text-muted-foreground transition-colors group-hover:text-foreground group-focus-within:text-primary w-4 h-4 sm:w-5 sm:h-5"
                   aria-hidden
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="100%"
-                    height="100%"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                    <path d="m15 5 4 4" />
-                  </svg>
+                  <Edit className="w-full h-full" size={20} />
                 </span>
               </label>
               <p className="mt-1 text-xs text-muted-foreground">

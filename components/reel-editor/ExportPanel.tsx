@@ -3,7 +3,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { Download, X, Check } from "lucide-react";
+import {
+  Briefcase,
+  CloseCircle,
+  Facebook,
+  Instagram,
+  MessageRemove,
+  MessageText,
+  Music,
+  ReceiveSquare,
+  Snapchat,
+  TickCircle,
+  Youtube,
+} from "vuesax-icons-react";
 import { ReelExportService } from "@/lib/services/ReelExportService";
 import { Caption, ReelExportResult, ExportFormatOptions } from "@/types";
 import { useAuthStatus, Platform } from "@/lib/hooks/useAuthStatus";
@@ -22,47 +34,47 @@ const PUBLISHABLE_PLATFORMS: SelectedPlatform[] = ["youtube", "facebook"];
 
 const PLATFORM_CONFIG: Record<
   SelectedPlatform,
-  { label: string; icon: string; color: string; gradient: string }
+  { label: string; icon: React.ReactNode; color: string; gradient: string }
 > = {
   download: {
     label: "Download",
-    icon: "💾",
+    icon: <ReceiveSquare size={22} variant="Bold" />,
     color: "#6366f1",
     gradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
   },
   instagram: {
     label: "Instagram",
-    icon: "📸",
+    icon: <Instagram size={22} variant="Bold" />,
     color: "#E1306C",
     gradient: "linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%)",
   },
   tiktok: {
     label: "TikTok",
-    icon: "🎵",
+    icon: <Music size={22} variant="Bold" />,
     color: "#000000",
     gradient: "linear-gradient(135deg, #00f2ea 0%, #ff0050 100%)",
   },
   youtube: {
     label: "YouTube",
-    icon: "▶️",
+    icon: <Youtube size={22} variant="Bold" />,
     color: "#FF0000",
     gradient: "linear-gradient(135deg, #FF0000 0%, #CC0000 100%)",
   },
   snapchat: {
     label: "Snapchat",
-    icon: "👻",
+    icon: <Snapchat size={22} variant="Bold" />,
     color: "#FFFC00",
     gradient: "linear-gradient(135deg, #FFFC00 0%, #FFE600 100%)",
   },
   facebook: {
     label: "Facebook",
-    icon: "📘",
+    icon: <Facebook size={22} variant="Bold" />,
     color: "#1877F2",
     gradient: "linear-gradient(135deg, #1877F2 0%, #0d65d9 100%)",
   },
   linkedin: {
     label: "LinkedIn",
-    icon: "💼",
+    icon: <Briefcase size={22} variant="Bold" />,
     color: "#0A66C2",
     gradient: "linear-gradient(135deg, #0A66C2 0%, #004182 100%)",
   },
@@ -410,7 +422,7 @@ export function ExportPanel({
             onClick={onClose}
             aria-label="Close"
           >
-            <X size={20} />
+            <CloseCircle size={20} />
           </button>
         </div>
 
@@ -431,10 +443,10 @@ export function ExportPanel({
                   }`}
                   onClick={() => setIncludeCaptions(true)}
                 >
-                  <span className="text-xl">💬</span>
+                  <MessageText size={20} variant="Bold" />
                   <span>{t("withCaptions")}</span>
                   {includeCaptions && (
-                    <Check
+                    <TickCircle
                       size={16}
                       className="absolute top-2 right-2 text-primary"
                     />
@@ -448,10 +460,10 @@ export function ExportPanel({
                   }`}
                   onClick={() => setIncludeCaptions(false)}
                 >
-                  <span className="text-xl">🔇</span>
+                  <MessageRemove size={20} variant="Bold" />
                   <span>{t("withoutCaptions")}</span>
                   {!includeCaptions && (
-                    <Check
+                    <TickCircle
                       size={16}
                       className="absolute top-2 right-2 text-primary"
                     />
@@ -495,7 +507,7 @@ export function ExportPanel({
                     </span>
                     {isPublishable && isAuth && (
                       <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
-                        <Check size={12} />
+                        <TickCircle size={12} />
                       </span>
                     )}
                     {isSelected && (
@@ -514,7 +526,7 @@ export function ExportPanel({
           {selectedPlatform !== "download" &&
             isAuthenticatedFor(selectedPlatform) && (
               <div className="flex items-center gap-2 px-4 py-3 bg-emerald-500/10 rounded-xl text-emerald-500 text-sm font-medium">
-                <Check size={14} />
+                <TickCircle size={14} />
                 <span>
                   {t("connectedTo", {
                     platform: PLATFORM_CONFIG[selectedPlatform].label,
@@ -551,7 +563,7 @@ export function ExportPanel({
             ) : (
               <>
                 {selectedPlatform === "download" ? (
-                  <Download size={18} />
+                  <ReceiveSquare size={18} />
                 ) : (
                   <span className="text-lg leading-none">
                     {PLATFORM_CONFIG[selectedPlatform].icon}

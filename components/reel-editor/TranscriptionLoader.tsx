@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { Warning2 } from 'vuesax-icons-react';
 import { TranscriptionState } from '@/types';
 import styles from './TranscriptionLoader.module.css';
 
@@ -41,7 +42,9 @@ export function TranscriptionLoader({ state, onRetry, onSkip }: TranscriptionLoa
     return (
       <div className={styles.container}>
         <div className={styles.errorCard}>
-          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorIcon}>
+            <Warning2 size={24} variant="Bold" />
+          </div>
           <h3 className={styles.title}>{t('failed')}</h3>
           <p className={styles.errorMessage}>
             {state.error || t('errorDefault')}

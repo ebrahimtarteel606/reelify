@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { Pause, Play, Refresh2 } from 'vuesax-icons-react';
 import { useVideoPlayer } from '@/lib/hooks/useVideoPlayer';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { secondsToTimecode } from '@/lib/utils/timecodeUtils';
@@ -85,14 +86,9 @@ export function VideoPlayer({ videoUrl, className, format = 'zoom' }: VideoPlaye
           title={isPlaying ? t('pause') : t('play')}
         >
           {isPlaying ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" />
-              <rect x="14" y="4" width="4" height="16" />
-            </svg>
+            <Pause size={14} variant="Bold" />
           ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <Play size={14} variant="Bold" />
           )}
         </button>
         <button
@@ -101,9 +97,7 @@ export function VideoPlayer({ videoUrl, className, format = 'zoom' }: VideoPlaye
           aria-label={t('replay')}
           title={t('replay')}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <Refresh2 size={14} variant="Bold" />
         </button>
         <div className={styles.timeDisplay}>
           <span className={styles.currentTime}>{secondsToTimecode(currentPlayheadTime - trimPoints.startTime)}</span>

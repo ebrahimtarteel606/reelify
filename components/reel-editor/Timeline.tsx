@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as Slider from '@radix-ui/react-slider';
-import { Pencil } from 'lucide-react';
+import { Edit } from 'vuesax-icons-react';
 import { useTranslations } from 'next-intl';
 import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
 import { secondsToTimecode, timecodeToSeconds } from '@/lib/utils/timecodeUtils';
@@ -344,7 +344,7 @@ export function Timeline() {
               disabled={isEditingTranscription}
             >
               <span className={styles.infoValueText}>{secondsToTimecode(safeTrimPoints.startTime)}</span>
-              <Pencil className={styles.infoValueIcon} aria-hidden />
+              <Edit className={styles.infoValueIcon} size={16} aria-hidden />
             </button>
           )}
         </div>
@@ -377,7 +377,7 @@ export function Timeline() {
               disabled={isEditingTranscription}
             >
               <span className={styles.infoValueText}>{secondsToTimecode(safeTrimPoints.endTime)}</span>
-              <Pencil className={styles.infoValueIcon} aria-hidden />
+              <Edit className={styles.infoValueIcon} size={16} aria-hidden />
             </button>
           )}
         </div>
