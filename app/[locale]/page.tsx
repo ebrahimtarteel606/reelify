@@ -863,6 +863,10 @@ export default function HomePage() {
           "reelify_segments",
           JSON.stringify(segments),
         );
+        globalThis.localStorage.setItem(
+          "reelify_segments",
+          JSON.stringify(segments),
+        );
         globalThis.sessionStorage.setItem("reelify_screen", "results");
       }
     } catch (err) {
