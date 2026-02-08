@@ -18,6 +18,7 @@ import { ReelExportService } from "@/lib/services/ReelExportService";
 import { Caption, ReelExportResult, ExportFormatOptions } from "@/types";
 import { useAuthStatus, Platform } from "@/lib/hooks/useAuthStatus";
 import { playSuccessSound } from "@/lib/utils/audioUtils";
+import posthog from "posthog-js";
 
 type SelectedPlatform =
   | "instagram"
@@ -188,6 +189,13 @@ export function ExportPanel({
     setExportProgress(0);
     onExportStart?.();
 
+    posthog.capture("export_started", {
+      include_captions: withCaptions,
+      export_format: exportFormat,
+      captions_count: withCaptions ? captions.filter((c) => c.isVisible).length : 0,
+      video_duration: Math.round(endTime - startTime),
+    });
+
     try {
       console.log("[ExportPanel] Starting export...");
 
@@ -229,6 +237,12 @@ export function ExportPanel({
       setIsExporting(false);
       setExportedResult(result);
 
+      posthog.capture("export_completed", {
+        include_captions: withCaptions,
+        export_format: exportFormat,
+        video_duration: Math.round(endTime - startTime),
+      });
+
       // Play congratulation sound when export is ready
       playSuccessSound();
 
@@ -238,6 +252,10 @@ export function ExportPanel({
       setIsExporting(false);
       const errorMessage =
         error instanceof Error ? error.message : "Export failed";
+      posthog.capture("export_failed", {
+        error_message: errorMessage,
+        export_format: exportFormat,
+      });
       onExportError?.(new Error(errorMessage));
       alert(t("exportFailed", { error: errorMessage }));
       return null;
@@ -251,6 +269,11 @@ export function ExportPanel({
     onClose();
     const result = await handleExport(includeCaptions);
     if (result) {
+      posthog.capture("video_downloaded", {
+        include_captions: includeCaptions,
+        export_format: exportFormat,
+        video_duration: Math.round(endTime - startTime),
+      });
       // Trigger download
       const a = document.createElement("a");
       a.href = result.videoUrl;
@@ -332,6 +355,12 @@ export function ExportPanel({
     setIsPublishing(true);
     setPublishProgress(0);
 
+    posthog.capture("publish_started", {
+      platform: targetPlatform,
+      include_captions: includeCaptions,
+      export_format: exportFormat,
+    });
+
     try {
       const formData = new FormData();
       formData.append("video", result.videoBlob, "reel.mp4");
@@ -364,6 +393,12 @@ export function ExportPanel({
 
       setPublishProgress(100);
 
+      posthog.capture("video_published", {
+        platform: targetPlatform,
+        include_captions: includeCaptions,
+        export_format: exportFormat,
+      });
+
       // Play congratulation sound when publish is complete
       playSuccessSound();
 
@@ -382,6 +417,10 @@ export function ExportPanel({
       console.error("[ExportPanel] Publish failed:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Publishing failed";
+      posthog.capture("publish_failed", {
+        platform: targetPlatform,
+        error_message: errorMessage,
+      });
       onExportError?.(new Error(errorMessage));
       alert(t("publishFailed", { error: errorMessage }));
     } finally {

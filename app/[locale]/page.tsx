@@ -64,6 +64,7 @@ import {
   type Icon,
 } from "vuesax-icons-react";
 import { playSuccessSound } from "@/lib/utils/audioUtils";
+import posthog from "posthog-js";
 
 type ClipItem = {
   title: string;
@@ -130,7 +131,7 @@ export default function HomePage() {
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // Fetch current user credits on mount
+  // Fetch current user credits on mount and identify PostHog user
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -140,6 +141,12 @@ export default function HomePage() {
         const data = await res.json();
         if (typeof data?.credits_remaining === "number") {
           setCreditsRemaining(data.credits_remaining);
+        }
+        // Identify user in PostHog if we have an ID
+        if (data?.id) {
+          posthog.identify(data.id, {
+            credits_remaining: data.credits_remaining,
+          });
         }
       } catch {
         // ignore
@@ -152,6 +159,8 @@ export default function HomePage() {
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);
+    posthog.capture("user_logged_out");
+    posthog.reset();
     document.cookie =
       "reelify_user_id=; path=/; max-age=0; SameSite=Lax";
     if (typeof globalThis.window !== "undefined") {
@@ -639,6 +648,12 @@ export default function HomePage() {
       globalThis.sessionStorage.setItem("reelify_video_blob_url", blobUrl);
     }
 
+    posthog.capture("video_uploaded", {
+      file_size_mb: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
+      duration_seconds: Math.round(videoDuration),
+      file_type: file.type,
+    });
+
     setStep(1);
     setScreen("form");
 
@@ -649,6 +664,16 @@ export default function HomePage() {
     setError("");
     setScreen("loading");
     setIsProcessing(true);
+
+    posthog.capture("processing_started", {
+      platform,
+      preferred_duration: preferredDuration,
+      audience: audienceSkipped ? null : audience,
+      tone: toneSkipped ? null : tone,
+      hook_style: hookStyleSkipped ? null : hookStyle,
+      source_duration_seconds: Math.round(videoDuration),
+      locale,
+    });
 
     try {
       // Calculate timeout based on file size (allow more time for larger files)
@@ -864,6 +889,12 @@ export default function HomePage() {
         })
         .catch(() => {});
 
+      posthog.capture("processing_completed", {
+        platform,
+        clips_generated: uploadedClips.length,
+        source_duration_seconds: Math.round(videoDuration),
+      });
+
       // Play congratulation sound when processing is complete
       playSuccessSound();
 
@@ -959,6 +990,11 @@ export default function HomePage() {
       } else if (err && typeof err === "object" && "message" in err) {
         message = String((err as { message: unknown }).message);
       }
+      posthog.capture("processing_failed", {
+        error_message: message,
+        platform,
+        source_duration_seconds: Math.round(videoDuration),
+      });
       setError(message);
       setStatus("");
       setProgress(0);
@@ -969,6 +1005,10 @@ export default function HomePage() {
   };
 
   const handleSkipQuestions = async () => {
+    posthog.capture("questions_skipped", {
+      platform,
+      preferred_duration: preferredDuration,
+    });
     setError("");
     setStatus("");
     await persistPreferences({ platform, preferredDuration });
@@ -1542,6 +1582,10 @@ export default function HomePage() {
                                 recommendedDurationMap[option.value] ??
                                 preferredDuration;
                               setPreferredDuration(recommendedDuration);
+                              posthog.capture("platform_selected", {
+                                platform: option.value,
+                                recommended_duration: recommendedDuration,
+                              });
                               void persistPreferences({
                                 platform: option.value,
                                 preferredDuration: recommendedDuration,
@@ -1592,6 +1636,10 @@ export default function HomePage() {
                             type="button"
                             onClick={() => {
                               setPreferredDuration(duration);
+                              posthog.capture("duration_selected", {
+                                duration_seconds: duration,
+                                platform,
+                              });
                               void persistPreferences({
                                 preferredDuration: duration,
                               });
@@ -2010,6 +2058,12 @@ export default function HomePage() {
 
                   const handlePreviewClick = (e: React.MouseEvent) => {
                     e.preventDefault();
+                    posthog.capture("clip_previewed", {
+                      clip_index: index,
+                      clip_title: clip.title,
+                      clip_duration: Math.round(clip.duration),
+                      category: clip.category,
+                    });
                     // Store segments in BOTH sessionStorage (current tab) and localStorage (cross-tab)
                     if (segments.length > 0) {
                       try {

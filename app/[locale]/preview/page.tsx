@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReelClipInput, Caption, CaptionStyle } from "@/types";
 import { getVideoBlobUrl } from "@/lib/videoStorage";
 import { ExportPanel } from "@/components/reel-editor/ExportPanel";
+import posthog from "posthog-js";
 import {
   Backward10Seconds,
   Clock,
@@ -83,6 +84,14 @@ function PreviewContent() {
         console.warn("[Preview] Failed to check localStorage:", e);
       }
     }
+
+    posthog.capture("preview_opened", {
+      title,
+      clip_duration: duration ? parseFloat(duration) : null,
+      has_transcript: !!transcript,
+      has_thumbnail: !!thumbnail,
+      category,
+    });
   }, []);
   const [url, setUrl] = useState<string | null>(urlParam);
   const [urlLoadDone, setUrlLoadDone] = useState(!!urlParam);
@@ -358,6 +367,7 @@ function PreviewContent() {
 
   const handleDownloadThumbnail = async () => {
     if (!thumbnail) return;
+    posthog.capture("thumbnail_downloaded", { title });
     try {
       const response = await fetch(thumbnail);
       const blob = await response.blob();
@@ -376,6 +386,10 @@ function PreviewContent() {
 
   const handleDownloadTranscript = () => {
     if (!transcript) return;
+    posthog.capture("transcript_downloaded", {
+      title,
+      transcript_length: transcript.length,
+    });
     const blob = new Blob([transcript], { type: "text/plain;charset=utf-8" });
     const downloadUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -482,6 +496,10 @@ function PreviewContent() {
               <div className="flex justify-start">
                 <Button
                   onClick={() => {
+                    posthog.capture("edit_clicked", {
+                      title,
+                      clip_duration: duration ? parseFloat(duration) : null,
+                    });
                     // Ensure segments are in localStorage for editor to read (don't pass via URL)
                     if (typeof window !== "undefined") {
                       try {

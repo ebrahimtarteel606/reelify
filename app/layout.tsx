@@ -1,4 +1,5 @@
 import "./globals.css";
+import { PostHogProvider } from "./PostHogProvider";
 
 // Root layout – must provide <html> and <body> for all routes (locale + admin + login).
 // The [locale] layout overrides lang/dir via <html> attributes at its level.
@@ -9,7 +10,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <PostHogProvider>{children}</PostHogProvider>
+      </body>
     </html>
   );
 }

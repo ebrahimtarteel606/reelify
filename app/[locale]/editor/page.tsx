@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReelEditor } from "@/components/reel-editor/ReelEditor";
 import { ReelClipInput, ReelExportResult } from "@/types";
 import { getVideoBlobUrl } from "@/lib/videoStorage";
+import posthog from "posthog-js";
 
 function EditorContent() {
   const searchParams = useSearchParams();
@@ -322,6 +323,17 @@ function EditorContent() {
       </div>
     );
   }
+
+  // Track editor opened once clip data is ready
+  useEffect(() => {
+    if (clipData) {
+      posthog.capture("editor_opened", {
+        clip_duration: Math.round(clipData.endTime - clipData.startTime),
+        has_transcription: !!clipData.transcription,
+        transcription_segments_count: clipData.transcription?.segments.length ?? 0,
+      });
+    }
+  }, [!!clipData]);
 
   const handleExportSuccess = (result: ReelExportResult) => {
     // Download is already handled by ExportPanel, just cleanup

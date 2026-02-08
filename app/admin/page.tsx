@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import posthog from "posthog-js";
 
 const ADMIN_INACTIVITY_MS = 60 * 1000 * 5; // 5 minutes
 
@@ -84,6 +85,7 @@ export default function AdminDashboard() {
       setUsers(data.users ?? []);
       setAuthenticated(true);
       setAuthError("");
+      posthog.capture("admin_logged_in");
     } catch {
       setAuthError("Invalid secret or server error");
       setAuthenticated(false);
@@ -166,6 +168,9 @@ export default function AdminDashboard() {
         credits_remaining: newCredits,
       }),
     });
+    posthog.capture("admin_user_created", {
+      credits_initial: newCredits,
+    });
     setNewName("");
     setNewEmail("");
     setNewPhone("");
@@ -176,6 +181,7 @@ export default function AdminDashboard() {
 
   // ── Update user ──────────────────────────────────────────────
   const handleSaveEdit = async (userId: string) => {
+    const user = users.find((u) => u.id === userId);
     await fetch("/api/admin/users", {
       method: "PATCH",
       headers: headers(),
@@ -185,6 +191,11 @@ export default function AdminDashboard() {
         phone: editPhone.trim(),
         credits_remaining: editCredits,
       }),
+    });
+    posthog.capture("admin_user_updated", {
+      user_id: userId,
+      credits_before: user?.credits_remaining ?? null,
+      credits_after: editCredits,
     });
     setEditingId(null);
     await fetchUsers();
@@ -197,6 +208,7 @@ export default function AdminDashboard() {
       method: "DELETE",
       headers: headers(),
     });
+    posthog.capture("admin_user_deleted", { user_id: userId });
     if (selectedUserId === userId) {
       setSelectedUserId(null);
       setUsageEvents([]);
