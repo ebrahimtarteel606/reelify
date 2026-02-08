@@ -99,6 +99,7 @@ export default function HomePage() {
   const tCommon = useTranslations("common");
 
   const [file, setFile] = useState<File | null>(null);
+  const [isValidatingVideo, setIsValidatingVideo] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
   const [clips, setClips] = useState<ClipItem[]>([]);
@@ -1153,12 +1154,13 @@ export default function HomePage() {
                         }
                         setError("");
                         setFile(selectedFile);
+                        setIsValidatingVideo(true);
 
                         // Extract video duration via a temporary video element
                         const tempUrl = URL.createObjectURL(selectedFile);
                         const tempVideo = document.createElement("video");
                         tempVideo.preload = "metadata";
-                        tempVideo.onloadedmetadata = () => {
+                        tempVideo.onloadedmetadata = async () => {
                           if (
                             tempVideo.duration &&
                             Number.isFinite(tempVideo.duration)
@@ -1167,14 +1169,74 @@ export default function HomePage() {
                             if (durationSec > MAX_VIDEO_DURATION_SECONDS) {
                               setFile(null);
                               setVideoDuration(0);
+                              setIsValidatingVideo(false);
                               setError(t("videoTooLong"));
-                            } else {
-                              setVideoDuration(durationSec);
+                              URL.revokeObjectURL(tempUrl);
+                              return;
                             }
+                            const storedUserId =
+                              typeof globalThis.window !== "undefined"
+                                ? (globalThis.localStorage.getItem(
+                                    "reelify_user_id"
+                                  ) ??
+                                    document.cookie.match(
+                                      /reelify_user_id=([^;]+)/
+                                    )?.[1] ??
+                                    "")
+                                : "";
+                            if (storedUserId) {
+                              try {
+                                const checkRes = await fetch(
+                                  "/api/credits/check",
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      user_id: storedUserId,
+                                      duration_seconds: durationSec,
+                                    }),
+                                  }
+                                );
+                                const checkPayload = await checkRes.json();
+                                if (
+                                  !checkRes.ok ||
+                                  checkPayload?.ok === false
+                                ) {
+                                  setFile(null);
+                                  setVideoDuration(0);
+                                  setIsValidatingVideo(false);
+                                  setError(
+                                    checkPayload?.error?.toLowerCase?.().includes("insufficient")
+                                      ? t("insufficientCredits")
+                                      : checkPayload?.error ?? t("insufficientCredits")
+                                  );
+                                  URL.revokeObjectURL(tempUrl);
+                                  return;
+                                }
+                              } catch {
+                                setFile(null);
+                                setVideoDuration(0);
+                                setIsValidatingVideo(false);
+                                setError(t("insufficientCredits"));
+                                URL.revokeObjectURL(tempUrl);
+                                return;
+                              }
+                            }
+                            setVideoDuration(durationSec);
+                            setIsValidatingVideo(false);
+                          } else {
+                            setIsValidatingVideo(false);
                           }
                           URL.revokeObjectURL(tempUrl);
                         };
-                        tempVideo.onerror = () => URL.revokeObjectURL(tempUrl);
+                        tempVideo.onerror = () => {
+                          setIsValidatingVideo(false);
+                          setFile(null);
+                          setVideoDuration(0);
+                          URL.revokeObjectURL(tempUrl);
+                        };
                         tempVideo.src = tempUrl;
                       }}
                     />
@@ -1189,10 +1251,19 @@ export default function HomePage() {
                   </div>
                   {file && (
                     <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
-                      <p className="text-sm text-center text-primary font-medium flex items-center justify-center gap-2">
-                        <TickCircle className="w-5 h-5" size={20} />
-                        {t("fileSelected", { filename: file.name })}
-                      </p>
+                      {isValidatingVideo ? (
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+                          <p className="text-sm text-center text-primary font-medium">
+                            {t("checkingVideo")}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-center text-primary font-medium flex items-center justify-center gap-2">
+                          <TickCircle className="w-5 h-5" size={20} />
+                          {t("fileSelected", { filename: file.name })}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
