@@ -143,6 +143,24 @@ export async function getThumbnailBlobUrl(clipKey: string): Promise<string | nul
       const request = store.get(clipKey);
       request.onsuccess = () => {
         const file = request.result as File | undefined;
+        // #region agent log
+        fetch("http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            runId: "repro-1",
+            hypothesisId: "C",
+            location: "lib/videoStorage.ts:getThumbnailBlobUrl",
+            message: "IndexedDB thumbnail lookup",
+            data: {
+              clipKey,
+              found: Boolean(file),
+              size: file?.size ?? 0,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         if (file) {
           const blobUrl = URL.createObjectURL(file);
           resolve(blobUrl);
@@ -166,6 +184,23 @@ export async function storeThumbnails(thumbnails: { blob: Blob; clipKey: string 
     const db = await initDB();
     const transaction = db.transaction([THUMBNAILS_STORE_NAME], 'readwrite');
     const store = transaction.objectStore(THUMBNAILS_STORE_NAME);
+    // #region agent log
+    fetch("http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        runId: "repro-1",
+        hypothesisId: "B",
+        location: "lib/videoStorage.ts:storeThumbnails:start",
+        message: "Storing thumbnails batch",
+        data: {
+          count: thumbnails.length,
+          keys: thumbnails.map((item) => item.clipKey),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     
     const promises = thumbnails.map(({ blob, clipKey }) => {
       const file = new File([blob], `${clipKey}.jpg`, { type: 'image/jpeg' });
@@ -177,6 +212,20 @@ export async function storeThumbnails(thumbnails: { blob: Blob; clipKey: string 
     });
     
     await Promise.all(promises);
+    // #region agent log
+    fetch("http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        runId: "repro-1",
+        hypothesisId: "B",
+        location: "lib/videoStorage.ts:storeThumbnails:success",
+        message: "Stored thumbnails batch",
+        data: { count: thumbnails.length },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
   } catch (error) {
     console.error('Error storing thumbnails:', error);
     throw error;
