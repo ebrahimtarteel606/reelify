@@ -288,24 +288,6 @@ export default function HomePage() {
     onThumbnailGenerated?: (index: number, thumbnailUrl: string) => void,
   ): Promise<string[]> => {
     const thumbnailData: { blob: Blob; clipKey: string }[] = [];
-    // #region agent log
-    fetch("http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        runId: "repro-1",
-        hypothesisId: "A",
-        location: "app/[locale]/page.tsx:generateThumbnailsInParallel:start",
-        message: "Thumbnail generation start",
-        data: {
-          clipsCount: clips.length,
-          inputName,
-          hasVideoFile: Boolean(videoFile),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
 
     try {
       await ffmpeg.readFile(inputName);
@@ -350,29 +332,6 @@ export default function HomePage() {
 
       while (retries <= maxRetries && !success) {
         try {
-          // #region agent log
-          fetch(
-            "http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                runId: "repro-1",
-                hypothesisId: "A",
-                location:
-                  "app/[locale]/page.tsx:generateThumbnailsInParallel:attempt",
-                message: "Thumbnail generation attempt",
-                data: {
-                  index,
-                  retries,
-                  start: clip.start,
-                  end: clip.end,
-                },
-                timestamp: Date.now(),
-              }),
-            },
-          ).catch(() => {});
-          // #endregion
           if (retries > 0) {
             console.log(
               `[Thumbnails] Retry ${retries}/${maxRetries} for thumbnail ${index + 1} at ${clip.start}s`,
@@ -398,28 +357,6 @@ export default function HomePage() {
           thumbnailData.push({ blob: thumbBlob, clipKey });
           blobUrls.push(blobUrl);
           success = true;
-          // #region agent log
-          fetch(
-            "http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                runId: "repro-1",
-                hypothesisId: "B",
-                location:
-                  "app/[locale]/page.tsx:generateThumbnailsInParallel:success",
-                message: "Thumbnail generation success",
-                data: {
-                  index,
-                  clipKey,
-                  blobSize: thumbBlob.size,
-                },
-                timestamp: Date.now(),
-              }),
-            },
-          ).catch(() => {});
-          // #endregion
 
           // Update UI immediately when thumbnail is ready
           if (onThumbnailGenerated) {
@@ -1988,28 +1925,6 @@ export default function HomePage() {
                                 const clipKey = `thumb-${clip.start}-${clip.end}`;
                                 const thumbnailUrl =
                                   await getThumbnailBlobUrl(clipKey);
-                                // #region agent log
-                                fetch(
-                                  "http://127.0.0.1:7243/ingest/f68f99fe-5df3-485a-84dc-26c005fe6cdf",
-                                  {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      runId: "repro-1",
-                                      hypothesisId: "C",
-                                      location:
-                                        "app/[locale]/page.tsx:thumbnail:onError",
-                                      message: "Thumbnail image onError fallback",
-                                      data: {
-                                        clipKey,
-                                        hadThumbnail: Boolean(clip.thumbnail),
-                                        resolvedFromDb: Boolean(thumbnailUrl),
-                                      },
-                                      timestamp: Date.now(),
-                                    }),
-                                  },
-                                ).catch(() => {});
-                                // #endregion
                                 if (thumbnailUrl) {
                                   (e.target as HTMLImageElement).src =
                                     thumbnailUrl;
