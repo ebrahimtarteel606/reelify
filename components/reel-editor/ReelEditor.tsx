@@ -248,32 +248,6 @@ export function ReelEditor({
                 />
                 <CaptionCanvas videoWidth={1080} videoHeight={1920} />
               </div>
-              <div
-                className={styles.formatToggle}
-                data-onboarding="format-toggle"
-              >
-                <button
-                  className={styles.toggleSwitch}
-                  onClick={() =>
-                    setExportFormat(
-                      exportFormat === "zoom" ? "landscape" : "zoom",
-                    )
-                  }
-                  role="switch"
-                  aria-checked={exportFormat === "landscape"}
-                  aria-label={`${t("format")}: ${exportFormat === "zoom" ? t("zoom") : t("landscape")}`}
-                >
-                  <span className={styles.toggleTrack}>
-                    <span className={styles.toggleTextZoom}>{t("zoom")}</span>
-                    <span className={styles.toggleTextLandscape}>
-                      {t("landscape")}
-                    </span>
-                    <span
-                      className={`${styles.toggleSlider} ${exportFormat === "landscape" ? styles.toggleSliderActive : ""}`}
-                    />
-                  </span>
-                </button>
-              </div>
             </div>
             <div data-onboarding="timeline">
               <Timeline />
@@ -283,7 +257,7 @@ export function ReelEditor({
           <div className={styles.sidebar} data-onboarding="sidebar">
             <div className={styles.sidebarHeader}>
               <h2 className={styles.sidebarTitle}>{t("transcription")}</h2>
-              {/* Caption toggle: With / Without captions (same UX as preview) */}
+              {/* Caption toggle: With / Without captions (same order as preview) */}
               {captions.length > 0 && (
                 <div className={styles.exportOptionsRow}>
                   <span className={styles.exportOptionsLabel}>
@@ -309,7 +283,37 @@ export function ReelEditor({
                   </div>
                 </div>
               )}
-              <div data-onboarding="export-button">
+              {/* Zoom / Landscape - directly under captions like preview */}
+              <div
+                className={styles.exportOptionsRow}
+                data-onboarding="format-toggle"
+              >
+                <span className={styles.exportOptionsLabel}>
+                  {tExport("exportFormat")}
+                </span>
+                <div className={styles.captionToggleGroup}>
+                  <button
+                    type="button"
+                    className={`${styles.captionToggleBtn} ${exportFormat === "zoom" ? styles.captionToggleBtnActive : ""}`}
+                    onClick={() => setExportFormat("zoom")}
+                    aria-pressed={exportFormat === "zoom"}
+                  >
+                    {tExport("zoom")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.captionToggleBtn} ${exportFormat === "landscape" ? styles.captionToggleBtnActive : ""}`}
+                    onClick={() => setExportFormat("landscape")}
+                    aria-pressed={exportFormat === "landscape"}
+                  >
+                    {tExport("landscape")}
+                  </button>
+                </div>
+              </div>
+              <div
+                className={styles.exportButtonWrapper}
+                data-onboarding="export-button"
+              >
                 <ExportButton
                   onExportSuccess={onExportSuccess}
                   onExportError={onExportError}
