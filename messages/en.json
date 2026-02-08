@@ -12,7 +12,11 @@
     "seconds": "seconds",
     "home": "Home",
     "privacyPolicy": "Privacy Policy",
-    "termsAndConditions": "Terms and Conditions"
+    "termsAndConditions": "Terms and Conditions",
+    "creditsRemaining": "{count} min",
+    "logout": "Log out",
+    "logoutConfirmTitle": "Log out?",
+    "logoutConfirmMessage": "Are you sure you want to log out? You will need to sign in again to continue."
   },
   "home": {
     "title": "Create Professional Reels",

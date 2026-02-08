@@ -26,6 +26,12 @@ import {
 } from "@/lib/videoStorage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import Image from "next/image";
 import {
@@ -121,6 +127,38 @@ export default function HomePage() {
   const [hookStyle, setHookStyle] = useState("");
   const [hookStyleSkipped, setHookStyleSkipped] = useState(false);
   const [skipQuestions, setSkipQuestions] = useState(false);
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Fetch current user credits on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (typeof data?.credits_remaining === "number") {
+          setCreditsRemaining(data.credits_remaining);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(false);
+    document.cookie =
+      "reelify_user_id=; path=/; max-age=0; SameSite=Lax";
+    if (typeof globalThis.window !== "undefined") {
+      globalThis.localStorage.removeItem("reelify_user_id");
+    }
+    router.push("/login");
+  };
 
   // Set default values based on locale
   useEffect(() => {
@@ -816,6 +854,16 @@ export default function HomePage() {
       await new Promise(resolve => setTimeout(resolve, 200));
       setScreen("results");
 
+      // Refresh credits display after successful processing
+      fetch("/api/me", { credentials: "include" })
+        .then((r) => r.ok && r.json())
+        .then((data) => {
+          if (typeof data?.credits_remaining === "number") {
+            setCreditsRemaining(data.credits_remaining);
+          }
+        })
+        .catch(() => {});
+
       // Play congratulation sound when processing is complete
       playSuccessSound();
 
@@ -1094,10 +1142,52 @@ export default function HomePage() {
             width={200}
             height={100}
           />
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex items-center justify-end gap-3">
+            {creditsRemaining !== null && (
+              <span
+                className="badge-credits inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold text-white"
+                title={tCommon("creditsRemaining", { count: creditsRemaining })}>
+                <Flash className="w-4 h-4 opacity-90" size={16} />
+                {tCommon("creditsRemaining", { count: creditsRemaining })}
+              </span>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLogoutConfirm(true)}
+              className="shrink-0">
+              {tCommon("logout")}
+            </Button>
             <LanguageSwitcher />
           </div>
         </div>
+
+        {/* Logout confirmation dialog */}
+        <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+          <DialogContent className="gap-5 sm:max-w-md">
+            <DialogTitle className="text-xl">
+              {tCommon("logoutConfirmTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {tCommon("logoutConfirmMessage")}
+            </DialogDescription>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowLogoutConfirm(false)}>
+                {tCommon("cancel")}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleLogout}>
+                {tCommon("logout")}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Header */}
         <header className="text-center space-y-4 animate-fade-in mt-4">

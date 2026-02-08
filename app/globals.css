@@ -329,6 +329,23 @@
     animation: badge-dot-pulse 2s ease-in-out infinite;
   }
 
+  .badge-credits {
+    background: linear-gradient(
+      135deg,
+      hsl(354 100% 71% / 0.95) 0%,
+      hsl(354 100% 66% / 0.9) 50%,
+      hsl(354 75% 58% / 0.95) 100%
+    );
+    color: hsl(0 0% 100%);
+    box-shadow: 0 2px 8px hsl(354 100% 71% / 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .badge-credits:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px hsl(354 100% 71% / 0.45);
+  }
+
   /* Smile / curved accent element */
   .smile-accent {
     position: relative;

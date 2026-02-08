@@ -12,7 +12,11 @@
     "home": "الرئيسية",
     "privacyPolicy": "سياسة الخصوصية",
     "termsAndConditions": "الشروط والأحكام",
-    "disabledWhileEditingTranscription": "أتمم تعديل النص أعلاه لتفعيل هذا."
+    "disabledWhileEditingTranscription": "أتمم تعديل النص أعلاه لتفعيل هذا.",
+    "creditsRemaining": "{count} دقيقة",
+    "logout": "تسجيل الخروج",
+    "logoutConfirmTitle": "تسجيل الخروج؟",
+    "logoutConfirmMessage": "هل أنت متأكد أنك تريد تسجيل الخروج؟ ستحتاج لتسجيل الدخول مرة أخرى للمتابعة."
   },
   "home": {
     "title": "اصنع ريلز احترافية",
