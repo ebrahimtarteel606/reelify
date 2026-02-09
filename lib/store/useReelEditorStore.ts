@@ -32,6 +32,7 @@ interface ReelEditorState {
 
   // Captions
   captions: Caption[];
+  editedCaptions: Caption[];
   selectedCaptionId: string | null;
   lastEditedCaptionStyle: Caption["style"] | null; // Track last edited caption style for new captions
 
@@ -107,6 +108,7 @@ const initialState = {
   sourceVideoDuration: 0,
   trimPoints: { startTime: 0, endTime: 0 },
   captions: [],
+  editedCaptions: [],
   selectedCaptionId: null,
   lastEditedCaptionStyle: null,
   currentPlayheadTime: 0,
@@ -158,6 +160,7 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
       },
       currentPlayheadTime: clip.startTime,
       fullTranscriptionSegments: fullSegments,
+      editedCaptions: [],
       hasUserEditedTranscription: false,
     });
 
@@ -288,6 +291,7 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
   setTrimPoints: (trimPoints) => {
     const {
       captions,
+      editedCaptions,
       currentClip,
       fullTranscriptionSegments,
       hasUserEditedTranscription,
@@ -434,9 +438,12 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
           language: segment.language || "ar",
         }));
 
-    if (hasUserEditedTranscription && captions.length > 0) {
+    const editSource =
+      editedCaptions.length > 0 ? editedCaptions : captions;
+
+    if (hasUserEditedTranscription && editSource.length > 0) {
       // Preserve user edits: keep captions overlapping new trim, add source segments only for gaps
-      const kept = captions
+      const kept = editSource
         .filter(
           (c) =>
             c.startTime < trimPoints.endTime &&
@@ -600,7 +607,7 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
   setCaptions: (captions) => {
     const { trimPoints } = get();
     const filteredCaptions = filterVisibleCaptions(captions, trimPoints);
-    set({ captions: filteredCaptions });
+    set({ captions: filteredCaptions, editedCaptions: captions });
   },
 
   updateCaption: (id, updates) => {
@@ -767,7 +774,11 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
       isVisible: true,
       language: segment.language || "ar",
     }));
-    set({ captions: newCaptions, hasUserEditedTranscription: false });
+    set({
+      captions: newCaptions,
+      editedCaptions: [],
+      hasUserEditedTranscription: false,
+    });
   },
 
   reset: () => {
