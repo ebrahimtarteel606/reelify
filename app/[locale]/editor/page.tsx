@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Suspense, useState, useMemo, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,20 @@ function EditorContent() {
 
   const [isRestoringUrl, setIsRestoringUrl] = useState(needsUrlRestore);
 
+  // Get URL params early (before any early returns)
+  const videoUrlParam = searchParams.get("videoUrl");
+  const startTimeParam = searchParams.get("startTime");
+  const endTimeParam = searchParams.get("endTime");
+  const titleInitial = searchParams.get("title") || t("defaultTitle");
+  const category = searchParams.get("category") || t("defaultCategory");
+  const transcript = searchParams.get("transcript") || "";
+
+  // All hooks must be called before any early returns
+  const [editedTitle, setEditedTitle] = useState(titleInitial);
+  const [videoUrl, setVideoUrl] = useState<string | null>(videoUrlParam);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
+  const [isLoadingDuration, setIsLoadingDuration] = useState(true);
+
   useEffect(() => {
     if (!needsUrlRestore) return;
 
@@ -50,32 +65,6 @@ function EditorContent() {
       }
     }
   }, [needsUrlRestore, searchParams]);
-
-  if (isRestoringUrl || needsUrlRestore) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
-        <div className="text-center space-y-4 animate-fade-in">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-lg text-muted-foreground">
-            {t("restoringSession")}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const videoUrlParam = searchParams.get("videoUrl");
-  const startTimeParam = searchParams.get("startTime");
-  const endTimeParam = searchParams.get("endTime");
-  const titleInitial = searchParams.get("title") || t("defaultTitle");
-  const category = searchParams.get("category") || t("defaultCategory");
-  const transcript = searchParams.get("transcript") || "";
-  const [editedTitle, setEditedTitle] = useState(titleInitial);
-  const [videoUrl, setVideoUrl] = useState<string | null>(videoUrlParam);
-  const [videoDuration, setVideoDuration] = useState<number>(0);
-  const [isLoadingDuration, setIsLoadingDuration] = useState(true);
 
   useEffect(() => {
     const validateAndLoadVideo = async () => {
@@ -198,7 +187,7 @@ function EditorContent() {
                 s !== null &&
                 "start" in s &&
                 "end" in s &&
-                "text" in s,
+                "text" in s
             )
           ) {
             segments = (
@@ -216,12 +205,12 @@ function EditorContent() {
                 seg.language === "ar" || seg.language === "en"
                   ? seg.language
                   : /[\u0600-\u06FF]/.test(String(seg.text))
-                    ? ("ar" as const)
-                    : ("en" as const),
+                  ? ("ar" as const)
+                  : ("en" as const),
             }));
             console.log(
               `[Editor] Loaded segments from ${source}:`,
-              segments.length,
+              segments.length
             );
 
             // Ensure both storages have the data
@@ -271,7 +260,36 @@ function EditorContent() {
     endTimeParam,
     transcript,
     videoDuration,
+    editedTitle,
   ]);
+
+  // Track editor opened once clip data is ready (must be before early returns)
+  useEffect(() => {
+    if (clipData) {
+      posthog.capture("editor_opened", {
+        clip_duration: Math.round(clipData.endTime - clipData.startTime),
+        has_transcription: !!clipData.transcription,
+        transcription_segments_count:
+          clipData.transcription?.segments.length ?? 0,
+      });
+    }
+  }, [clipData]);
+
+  // Early returns after all hooks
+  if (isRestoringUrl || needsUrlRestore) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-lg text-muted-foreground">
+            {t("restoringSession")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!videoUrl) {
     return (
@@ -297,7 +315,7 @@ function EditorContent() {
                 if (typeof globalThis.window !== "undefined") {
                   globalThis.sessionStorage.setItem(
                     "reelify_navigation_back",
-                    "true",
+                    "true"
                   );
                 }
                 globalThis.history.back();
@@ -324,17 +342,6 @@ function EditorContent() {
     );
   }
 
-  // Track editor opened once clip data is ready
-  useEffect(() => {
-    if (clipData) {
-      posthog.capture("editor_opened", {
-        clip_duration: Math.round(clipData.endTime - clipData.startTime),
-        has_transcription: !!clipData.transcription,
-        transcription_segments_count: clipData.transcription?.segments.length ?? 0,
-      });
-    }
-  }, [!!clipData]);
-
   const handleExportSuccess = (result: ReelExportResult) => {
     // Download is already handled by ExportPanel, just cleanup
     URL.revokeObjectURL(result.videoUrl);
@@ -350,11 +357,13 @@ function EditorContent() {
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <img
-              src="/Transparent white1.png"
-              alt="Reelify logo"
-              className="h-8 w-auto shrink-0"
-            />
+            <Link href={`/${locale}`}>
+              <img
+                src="/Transparent white1.png"
+                alt="Reelify logo"
+                className="h-8 w-auto shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
             <div className="flex flex-col min-w-[12rem] sm:min-w-[18rem] md:min-w-[24rem] flex-1 w-full">
               <label
                 title={t("titleEditHint")}
@@ -386,7 +395,7 @@ function EditorContent() {
               if (typeof globalThis.window !== "undefined") {
                 globalThis.sessionStorage.setItem(
                   "reelify_navigation_back",
-                  "true",
+                  "true"
                 );
               }
               globalThis.history.back();

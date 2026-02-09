@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { metrics } from "./services/MetricsService";
 
 export type TranscriptSegment = {
   start: number;
@@ -114,18 +113,6 @@ export async function transcribeAudioFromBuffer(
   if (!response.ok) {
     const details = await response.text();
     const error = `ElevenLabs STT failed (${response.status}): ${details}`;
-
-    // Track API error
-    await metrics.trackApiError("elevenlabs", error, requestTime);
-    await metrics.trackElevenLabs({
-      model: modelId,
-      transcription_characters: 0,
-      cost_usd: 0,
-      response_time_minutes: requestTime / 60000,
-      success: false,
-      error,
-    });
-
     throw new Error(error);
   }
 
@@ -149,49 +136,8 @@ export async function transcribeAudioFromBuffer(
 
     const filteredSegments = segments.filter((segment) => segment.text);
 
-    // Calculate comprehensive metrics
-    const totalCharacters = filteredSegments.reduce(
-      (sum, segment) => sum + segment.text.length,
-      0
-    );
-    const audioDuration = metrics.calculateAudioDuration(filteredSegments);
-    const costUSD = metrics.calculateElevenLabsCost(modelId, totalCharacters);
-
-    // Track comprehensive metrics
-    await metrics.trackElevenLabs({
-      model: modelId,
-      transcription_characters: totalCharacters,
-      audio_duration_minutes: audioDuration,
-      cost_usd: costUSD,
-      response_time_minutes: requestTime / 60000,
-      success: true,
-    });
-
-    console.log(
-      `[ElevenLabs] Usage tracked - Characters: ${totalCharacters}, Audio: ${audioDuration.toFixed(
-        2
-      )} min, Cost: $${costUSD.toFixed(6)}`
-    );
-
     return filteredSegments;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    // Track parsing error
-    await metrics.trackApiError(
-      "elevenlabs",
-      `Parse error: ${errorMessage}`,
-      requestTime
-    );
-    await metrics.trackElevenLabs({
-      model: modelId,
-      transcription_characters: 0,
-      cost_usd: 0,
-      response_time_minutes: requestTime / 60000,
-      success: false,
-      error: `Parse error: ${errorMessage}`,
-    });
-
     throw error;
   }
 }

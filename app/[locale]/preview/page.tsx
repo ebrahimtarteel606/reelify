@@ -1,6 +1,8 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { Suspense, useState, useMemo, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -109,7 +111,9 @@ function PreviewContent() {
   const [exportProgress, setExportProgress] = useState(0);
   // Export options (same UX as editor): caption toggle + aspect selected before opening export
   const [includeCaptions, setIncludeCaptions] = useState(true);
-  const [exportFormat, setExportFormat] = useState<"zoom" | "landscape">("zoom");
+  const [exportFormat, setExportFormat] = useState<"zoom" | "landscape">(
+    "zoom"
+  );
 
   useEffect(() => {
     if (urlParam) {
@@ -216,7 +220,7 @@ function PreviewContent() {
       .filter(
         (seg) =>
           seg.start < fullTranscriptSegments.reelEnd &&
-          seg.end > fullTranscriptSegments.reelStart,
+          seg.end > fullTranscriptSegments.reelStart
       )
       .map((seg) => seg.text)
       .join(" ");
@@ -247,8 +251,7 @@ function PreviewContent() {
     // Fallback: build captions from transcript text if available
     if (transcript) {
       const durationNum = duration ? parseFloat(duration) : 0;
-      const startTime =
-        startTimeParam != null ? parseFloat(startTimeParam) : 0;
+      const startTime = startTimeParam != null ? parseFloat(startTimeParam) : 0;
       const endTime =
         endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
       const clipDuration = endTime - startTime;
@@ -277,14 +280,20 @@ function PreviewContent() {
     }
 
     return [];
-  }, [fullTranscriptSegments, transcript, duration, startTimeParam, endTimeParam]);
+  }, [
+    fullTranscriptSegments,
+    transcript,
+    duration,
+    startTimeParam,
+    endTimeParam,
+  ]);
 
   const firstReelSegmentIndex = useMemo(() => {
     if (!fullTranscriptSegments) return -1;
     return fullTranscriptSegments.segments.findIndex(
       (seg) =>
         seg.start < fullTranscriptSegments.reelEnd &&
-        seg.end > fullTranscriptSegments.reelStart,
+        seg.end > fullTranscriptSegments.reelStart
     );
   }, [fullTranscriptSegments]);
 
@@ -469,6 +478,18 @@ function PreviewContent() {
   return (
     <div className="min-h-screen bg-gradient-warm py-10 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Logo */}
+        <div className="flex items-center justify-center mb-6">
+          <Link href={`/${locale}`}>
+            <Image
+              src="/Transparent white1.png"
+              alt="Reelify"
+              width={200}
+              height={100}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </Link>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-start">
           {/* Video Info */}
           <Card
@@ -514,26 +535,26 @@ function PreviewContent() {
                           // Ensure it's in both storages
                           window.localStorage.setItem(
                             "reelify_segments",
-                            stored,
+                            stored
                           );
                           window.sessionStorage.setItem(
                             "reelify_segments",
-                            stored,
+                            stored
                           );
                           const parsed = JSON.parse(stored);
                           console.log(
                             "[Preview] Segments ready in localStorage for editor:",
-                            Array.isArray(parsed) ? parsed.length : 0,
+                            Array.isArray(parsed) ? parsed.length : 0
                           );
                         } else {
                           console.warn(
-                            "[Preview] No segments available for editor",
+                            "[Preview] No segments available for editor"
                           );
                         }
                       } catch (e) {
                         console.warn(
                           "[Preview] Failed to prepare segments:",
-                          e,
+                          e
                         );
                       }
                     }
@@ -646,7 +667,9 @@ function PreviewContent() {
                       <Button
                         variant={includeCaptions ? "default" : "outline"}
                         size="sm"
-                        className={`flex-1 ${includeCaptions ? "text-white" : ""}`}
+                        className={`flex-1 ${
+                          includeCaptions ? "text-white" : ""
+                        }`}
                         onClick={() => setIncludeCaptions(true)}
                       >
                         <DocumentText className="w-4 h-4 me-2" size={16} />
@@ -655,7 +678,9 @@ function PreviewContent() {
                       <Button
                         variant={!includeCaptions ? "default" : "outline"}
                         size="sm"
-                        className={`flex-1 ${!includeCaptions ? "text-white" : ""}`}
+                        className={`flex-1 ${
+                          !includeCaptions ? "text-white" : ""
+                        }`}
                         onClick={() => setIncludeCaptions(false)}
                       >
                         {tExport("withoutCaptions")}
@@ -673,7 +698,9 @@ function PreviewContent() {
                     <Button
                       variant={exportFormat === "zoom" ? "default" : "outline"}
                       size="sm"
-                      className={`flex-1 ${exportFormat === "zoom" ? "text-white" : ""}`}
+                      className={`flex-1 ${
+                        exportFormat === "zoom" ? "text-white" : ""
+                      }`}
                       onClick={() => setExportFormat("zoom")}
                     >
                       {tExport("zoom")}
@@ -683,7 +710,9 @@ function PreviewContent() {
                         exportFormat === "landscape" ? "default" : "outline"
                       }
                       size="sm"
-                      className={`flex-1 ${exportFormat === "landscape" ? "text-white" : ""}`}
+                      className={`flex-1 ${
+                        exportFormat === "landscape" ? "text-white" : ""
+                      }`}
                       onClick={() => setExportFormat("landscape")}
                     >
                       {tExport("landscape")}

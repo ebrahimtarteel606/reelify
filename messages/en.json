@@ -91,7 +91,7 @@
     "hookStyleCustomHint": "You can choose a preset option or write your own opening style.",
     "platformRecommendations": {
       "instagram": [
-        "Keep text short and engaging with appropriate emojis 📸✨",
+        "Keep text short and engaging",
         "Daily stories and quick interactions boost reach",
         "Use two to three hashtags maximum for better results"
       ],
@@ -126,6 +126,7 @@
     "preparingClips": "Preparing your clips now",
     "pleaseWait": "Please wait a moment...",
     "tipsFor": "Tips for {platform}",
+    "tipsForAllPlatforms": "Tips for all platforms",
     "preparingVideo": "Preparing video...",
     "loadingTools": "Loading processing tools...",
     "readingFile": "Reading video file...",

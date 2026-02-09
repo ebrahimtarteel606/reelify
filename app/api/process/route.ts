@@ -16,19 +16,21 @@ const MAX_VIDEO_DURATION_SECONDS = 2 * 60 * 60; // 7200s
 
 // Accept FormData with audio file (client-side storage)
 export async function POST(request: Request) {
-  const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  metrics.startJob(jobId);
-
+  const requestId = `req-${Date.now()}-${Math.random()
+    .toString(36)
+    .substr(2, 9)}`;
   try {
     const startTime = Date.now();
-    console.log(`[API] Starting process request (Job ID: ${jobId})`);
+    console.log(`[API] Starting process request (ID: ${requestId})`);
 
     // Parse FormData
     const formData = await request.formData();
     const audioFile = formData.get("audio") as File | null;
     const preferencesStr = formData.get("preferences") as string | null;
     const userId = formData.get("user_id") as string | null;
-    const sourceDurationStr = formData.get("source_duration_seconds") as string | null;
+    const sourceDurationStr = formData.get("source_duration_seconds") as
+      | string
+      | null;
 
     // Get locale from cookie for output language
     const cookieStore = await cookies();
@@ -45,17 +47,16 @@ export async function POST(request: Request) {
 
     // ── Credit system enforcement ────────────────────────────
     if (!userId) {
-      return NextResponse.json(
-        { error: "Missing user_id" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
     }
 
-    const sourceDuration = sourceDurationStr ? Math.ceil(Number(sourceDurationStr)) : 0;
+    const sourceDuration = sourceDurationStr
+      ? Math.ceil(Number(sourceDurationStr))
+      : 0;
     if (!sourceDuration || sourceDuration <= 0) {
       return NextResponse.json(
         { error: "Missing or invalid source_duration_seconds" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -63,29 +64,29 @@ export async function POST(request: Request) {
     if (sourceDuration > MAX_VIDEO_DURATION_SECONDS) {
       return NextResponse.json(
         { error: "Video too long: maximum allowed duration is 2 hours" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Validate user exists
     const user = await getUserById(userId);
     if (!user) {
-      return NextResponse.json(
-        { error: "Unknown user" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "Unknown user" }, { status: 403 });
     }
 
     // Atomically check credits + charge
     const chargeResult = await chargeCredits(userId, sourceDuration);
     if (!chargeResult.ok) {
-      console.log(`[API] Credit check failed for user ${userId}: ${chargeResult.error}`);
-      return NextResponse.json(
-        { error: chargeResult.error },
-        { status: 403 },
+      console.log(
+        `[API] Credit check failed for user ${userId}: ${chargeResult.error}`
       );
+      return NextResponse.json({ error: chargeResult.error }, { status: 403 });
     }
-    console.log(`[API] Credits charged: ${Math.ceil(sourceDuration / 60)} min (${sourceDuration}s) for user ${userId}`);
+    console.log(
+      `[API] Credits charged: ${Math.ceil(
+        sourceDuration / 60
+      )} min (${sourceDuration}s) for user ${userId}`
+    );
 
     // Parse preferences JSON
     let preferences: QAPreferences | undefined;
@@ -102,7 +103,9 @@ export async function POST(request: Request) {
     const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
     const audioParseTime = Date.now() - audioParseStart;
     const audioSizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
-    console.log(`[API] Audio received: ${audioSizeMB}MB (parse: ${audioParseTime}ms)`);
+    console.log(
+      `[API] Audio received: ${audioSizeMB}MB (parse: ${audioParseTime}ms)`
+    );
 
     // Load preferences in parallel with transcription (optimization)
     const preferencesPromise = (async () => {
@@ -147,7 +150,7 @@ export async function POST(request: Request) {
     console.log("[API] Preferences:", mergedPreferences);
 
     const geminiStart = Date.now();
-    const clipCandidates = await generateClipCandidates(
+    const { clips: clipCandidates, tokenUsage } = await generateClipCandidates(
       segments,
       mergedPreferences,
       outputLanguage
@@ -157,24 +160,34 @@ export async function POST(request: Request) {
       `[API] Gemini analysis: ${geminiTime}ms (${clipCandidates.length} clips)`
     );
 
+    // Calculate audio character count from transcription segments
+    const audioCharacters = segments.reduce(
+      (sum, segment) => sum + segment.text.length,
+      0
+    );
+
+    // Track Gemini request with all required metrics
+    if (tokenUsage) {
+      await metrics.trackGemini({
+        model: tokenUsage.model,
+        audio_characters: audioCharacters,
+        audio_duration_seconds: sourceDuration,
+        tokens_input: tokenUsage.tokens_input,
+        tokens_output: tokenUsage.tokens_output,
+        cost_usd: tokenUsage.cost_usd,
+        request_id: requestId,
+      });
+    }
+
     const totalTime = Date.now() - startTime;
     console.log(`[API] Total processing time: ${totalTime}ms`);
 
     if (clipCandidates.length === 0) {
-      await metrics.trackJobComplete(
-        jobId,
-        "video_processing",
-        false,
-        "No valid clip candidates"
-      );
       return NextResponse.json(
         { error: "Gemini did not return valid clip candidates" },
         { status: 400 }
       );
     }
-
-    // Track successful job completion
-    await metrics.trackJobComplete(jobId, "video_processing", true);
 
     return NextResponse.json({
       clips: clipCandidates,
@@ -184,9 +197,6 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Processing failed";
-
-    // Track failed job
-    await metrics.trackJobComplete(jobId, "video_processing", false, message);
 
     const clientErrorMessages = [
       "Missing ELEVENLABS_API_KEY",

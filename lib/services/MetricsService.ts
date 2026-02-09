@@ -1,49 +1,31 @@
 /**
- * Comprehensive Metrics Service - Track API usage, health, and performance
+ * Metrics Service - Track Gemini API requests
  *
- * Tracks:
- * - API health (response time, errors, availability)
- * - Job success/failure
- * - End-to-end duration
- * - Gemini usage & costs
- * - ElevenLabs usage & costs
+ * Tracks for each Gemini request:
+ * - Audio character length (from transcription)
+ * - Audio duration (in seconds)
+ * - Input tokens
+ * - Output tokens
+ * - Cost (USD)
+ * - User ID
+ * - Model name
  */
 
 import { Axiom } from "@axiomhq/js";
 
 interface GeminiMetrics {
   model: string;
+  audio_characters: number; // Number of characters in transcription
+  audio_duration_seconds: number; // Audio duration in seconds
   tokens_input: number;
   tokens_output: number;
-  tokens_total: number;
   cost_usd: number;
-  response_time_minutes: number;
-  success: boolean;
-  error?: string;
-}
-
-interface ElevenLabsMetrics {
-  model: string;
-  transcription_characters: number; // Number of text characters transcribed from audio
-  audio_duration_minutes?: number;
-  cost_usd: number;
-  response_time_minutes: number;
-  success: boolean;
-  error?: string;
-}
-
-interface JobMetrics {
-  job_id: string;
-  job_type: "video_processing" | "transcription" | "clip_generation";
-  success: boolean;
-  duration_ms: number;
-  error?: string;
+  request_id?: string; // Optional request ID for debugging duplicates
 }
 
 class MetricsService {
   private axiom: Axiom | null = null;
   private enabled: boolean;
-  private jobStartTimes: Map<string, number> = new Map();
 
   constructor() {
     const token = process.env.AXIOM_TOKEN;
@@ -54,9 +36,7 @@ class MetricsService {
         token: token!,
         orgId: process.env.AXIOM_ORG_ID,
       });
-      console.log(
-        "[Metrics] Axiom enabled - Comprehensive observability active"
-      );
+      console.log("[Metrics] Axiom enabled - Gemini tracking active");
     } else {
       console.log(
         "[Metrics] Axiom not configured (metrics will only be logged)"
@@ -65,144 +45,28 @@ class MetricsService {
   }
 
   /**
-   * Start tracking a job
-   */
-  startJob(jobId: string): void {
-    this.jobStartTimes.set(jobId, Date.now());
-  }
-
-  /**
-   * Track job completion
-   */
-  async trackJobComplete(
-    jobId: string,
-    jobType: JobMetrics["job_type"],
-    success: boolean,
-    error?: string
-  ): Promise<void> {
-    const startTime = this.jobStartTimes.get(jobId);
-    const durationMs = startTime ? Date.now() - startTime : 0;
-    const durationMinutes = durationMs / 60000;
-    this.jobStartTimes.delete(jobId);
-
-    const data = {
-      metric_type: "job",
-      job_id: jobId,
-      job_type: jobType,
-      success,
-      duration_minutes: durationMinutes,
-      error: error || undefined,
-      timestamp: new Date().toISOString(),
-    };
-
-    console.log(
-      `[Metrics] Job ${jobId} (${jobType}): ${
-        success ? "SUCCESS" : "FAILED"
-      } in ${durationMinutes.toFixed(2)} minutes${error ? ` - ${error}` : ""}`
-    );
-
-    await this.send(data);
-  }
-
-  /**
-   * Track Gemini API call
+   * Track Gemini API request
+   * Tracks: audio character length, audio duration, tokens, cost, user ID, model
    */
   async trackGemini(metrics: GeminiMetrics): Promise<void> {
     const data = {
-      metric_type: "api_call",
-      service: "gemini",
       model: metrics.model,
-
-      // Tokens
+      audio_characters: metrics.audio_characters,
+      audio_duration_seconds: metrics.audio_duration_seconds,
       tokens_input: metrics.tokens_input,
       tokens_output: metrics.tokens_output,
-      tokens_total: metrics.tokens_total,
-
-      // Cost (Gemini only)
-      gemini_cost_usd: metrics.cost_usd,
-
-      // Performance & Health
-      response_time_minutes: metrics.response_time_minutes,
-      success: metrics.success,
-      error: metrics.error || undefined,
-
+      cost_usd: metrics.cost_usd,
+      request_id: metrics.request_id || `unknown-${Date.now()}`,
       timestamp: new Date().toISOString(),
     };
-
-    const status = metrics.success ? "✓" : "✗";
-    const errorMsg = metrics.error ? ` - ERROR: ${metrics.error}` : "";
 
     console.log(
-      `[Metrics] Gemini ${status}: ${
-        metrics.tokens_total
-      } tokens, $${metrics.cost_usd.toFixed(
-        6
-      )}, ${metrics.response_time_minutes.toFixed(3)} min${errorMsg}`
+      `[Metrics] Gemini request - Model: ${metrics.model}, ` +
+        `Audio: ${metrics.audio_duration_seconds}s (${metrics.audio_characters} chars), ` +
+        `Tokens: ${metrics.tokens_input} in / ${metrics.tokens_output} out, ` +
+        `Cost: $${metrics.cost_usd.toFixed(6)}`
     );
 
-    await this.send(data);
-  }
-
-  /**
-   * Track ElevenLabs API call
-   */
-  async trackElevenLabs(metrics: ElevenLabsMetrics): Promise<void> {
-    const data = {
-      metric_type: "api_call",
-      service: "elevenlabs",
-      model: metrics.model,
-
-      // Usage
-      transcription_characters: metrics.transcription_characters,
-      audio_duration_minutes: metrics.audio_duration_minutes || undefined,
-
-      // Cost (ElevenLabs only)
-      elevenlabs_cost_usd: metrics.cost_usd,
-
-      // Performance & Health
-      response_time_minutes: metrics.response_time_minutes,
-      success: metrics.success,
-      error: metrics.error || undefined,
-
-      timestamp: new Date().toISOString(),
-    };
-
-    const status = metrics.success ? "✓" : "✗";
-    const errorMsg = metrics.error ? ` - ERROR: ${metrics.error}` : "";
-    const audioDuration = metrics.audio_duration_minutes
-      ? `, ${metrics.audio_duration_minutes.toFixed(2)} min audio`
-      : "";
-
-    console.log(
-      `[Metrics] ElevenLabs ${status}: ${
-        metrics.transcription_characters
-      } chars${audioDuration}, $${metrics.cost_usd.toFixed(
-        6
-      )}, ${metrics.response_time_minutes.toFixed(3)} min${errorMsg}`
-    );
-
-    await this.send(data);
-  }
-
-  /**
-   * Track API error
-   */
-  async trackApiError(
-    service: "gemini" | "elevenlabs",
-    error: string,
-    responseTimeMs?: number
-  ): Promise<void> {
-    const responseTimeMinutes = (responseTimeMs || 0) / 60000;
-
-    const data = {
-      metric_type: "api_error",
-      service,
-      error,
-      response_time_minutes: responseTimeMinutes,
-      timestamp: new Date().toISOString(),
-    };
-
-    console.error(`[Metrics] ${service.toUpperCase()} ERROR: ${error}`);
     await this.send(data);
   }
 
@@ -227,54 +91,87 @@ class MetricsService {
 
   /**
    * Calculate Gemini cost based on token usage
-   * Pricing: https://ai.google.dev/pricing
+   * Pricing: https://ai.google.dev/gemini-api/docs/pricing
+   *
+   * Note: Pricing is per 1M tokens in USD for Paid Tier (Standard)
+   * Models with tiered pricing use <= 200k tokens threshold
    */
   calculateGeminiCost(
     model: string,
     inputTokens: number,
     outputTokens: number
   ): number {
-    const pricing: Record<string, { input: number; output: number }> = {
-      "gemini-3-flash-preview": { input: 0.075, output: 0.3 },
-      "gemini-3-pro-preview": { input: 1.25, output: 5.0 },
-      "gemini-2.5-flash": { input: 0.075, output: 0.3 },
-      "gemini-2.5-pro": { input: 1.25, output: 5.0 },
-      "gemini-1.5-flash": { input: 0.075, output: 0.3 },
-      "gemini-1.5-pro": { input: 1.25, output: 5.0 },
+    // Helper to determine pricing tier based on input token count
+    const isLargePrompt = (tokens: number) => tokens > 200_000;
+
+    // Pricing structure: { input: [small, large], output: [small, large] }
+    // For models without tiered pricing, both values are the same
+    const pricing: Record<
+      string,
+      { input: [number, number]; output: [number, number] }
+    > = {
+      // Gemini 3 Pro Preview - tiered pricing
+      "gemini-3-pro-preview": {
+        input: [2.0, 4.0], // $2.00 (<=200k), $4.00 (>200k)
+        output: [12.0, 18.0], // $12.00 (<=200k), $18.00 (>200k)
+      },
+      // Gemini 3 Flash Preview - fixed pricing
+      "gemini-3-flash-preview": {
+        input: [0.5, 0.5], // $0.50 (text/image/video), $1.00 (audio) - using text pricing
+        output: [3.0, 3.0], // $3.00
+      },
+      // Gemini 2.5 Pro - tiered pricing
+      "gemini-2.5-pro": {
+        input: [1.25, 2.5], // $1.25 (<=200k), $2.50 (>200k)
+        output: [10.0, 15.0], // $10.00 (<=200k), $15.00 (>200k)
+      },
+      // Gemini 2.5 Flash - fixed pricing
+      "gemini-2.5-flash": {
+        input: [0.3, 0.3], // $0.30 (text/image/video), $1.00 (audio) - using text pricing
+        output: [2.5, 2.5], // $2.50
+      },
+      // Gemini 2.5 Flash-Lite - fixed pricing
+      "gemini-2.5-flash-lite": {
+        input: [0.1, 0.1], // $0.10 (text/image/video), $0.30 (audio) - using text pricing
+        output: [0.4, 0.4], // $0.40
+      },
+      // Gemini 2.5 Flash Preview - fixed pricing
+      "gemini-2.5-flash-preview-09-2025": {
+        input: [0.3, 0.3], // $0.30 (text/image/video), $1.00 (audio) - using text pricing
+        output: [2.5, 2.5], // $2.50
+      },
+      // Gemini 2.0 Flash - fixed pricing
+      "gemini-2.0-flash": {
+        input: [0.1, 0.1], // $0.10 (text/image/video), $0.70 (audio) - using text pricing
+        output: [0.4, 0.4], // $0.40
+      },
+      // Gemini 2.0 Flash-Lite - fixed pricing
+      "gemini-2.0-flash-lite": {
+        input: [0.075, 0.075], // $0.075
+        output: [0.3, 0.3], // $0.30
+      },
+      // Legacy models (fallback)
+      "gemini-1.5-pro": {
+        input: [1.25, 2.5], // Approximate - using 2.5 Pro pricing
+        output: [5.0, 7.5], // Approximate
+      },
+      "gemini-1.5-flash": {
+        input: [0.075, 0.075], // Approximate - using 2.0 Flash-Lite pricing
+        output: [0.3, 0.3], // Approximate
+      },
     };
 
+    // Get pricing for model or use default
     const modelPricing = pricing[model] || pricing["gemini-3-flash-preview"];
-    const inputCost = (inputTokens / 1_000_000) * modelPricing.input;
-    const outputCost = (outputTokens / 1_000_000) * modelPricing.output;
+
+    // Determine which tier to use based on input token count
+    const tier = isLargePrompt(inputTokens) ? 1 : 0;
+
+    // Calculate costs (pricing is per 1M tokens)
+    const inputCost = (inputTokens / 1_000_000) * modelPricing.input[tier];
+    const outputCost = (outputTokens / 1_000_000) * modelPricing.output[tier];
 
     return inputCost + outputCost;
-  }
-
-  /**
-   * Calculate ElevenLabs cost based on character usage
-   * Pricing: https://elevenlabs.io/pricing (update based on your plan)
-   */
-  calculateElevenLabsCost(model: string, characters: number): number {
-    const pricing: Record<string, number> = {
-      scribe_v2: 25.0, // $25 per 1M characters
-      scribe_v1: 25.0,
-      scribe_v1_experimental: 20.0,
-    };
-
-    const rate = pricing[model] || pricing["scribe_v2"];
-    return (characters / 1_000_000) * rate;
-  }
-
-  /**
-   * Calculate audio duration from segments (in minutes)
-   */
-  calculateAudioDuration(
-    segments: Array<{ start: number; end: number }>
-  ): number {
-    if (segments.length === 0) return 0;
-    const lastSegment = segments[segments.length - 1];
-    const durationSeconds = lastSegment.end;
-    return durationSeconds / 60; // Convert to minutes
   }
 }
 
@@ -282,4 +179,4 @@ class MetricsService {
 export const metrics = new MetricsService();
 
 // Export types
-export type { GeminiMetrics, ElevenLabsMetrics, JobMetrics };
+export type { GeminiMetrics };

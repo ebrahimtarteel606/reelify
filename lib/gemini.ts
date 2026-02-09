@@ -3,6 +3,13 @@ import type { TranscriptSegment } from "./elevenlabs";
 import type { QAPreferences } from "./qaStore";
 import { metrics } from "./services/MetricsService";
 
+export type GeminiTokenUsage = {
+  model: string;
+  tokens_input: number;
+  tokens_output: number;
+  cost_usd: number;
+};
+
 export type ClipCandidate = {
   title: string;
   start: number;
@@ -74,7 +81,7 @@ export async function generateClipCandidates(
   segments: TranscriptSegment[],
   preferences?: QAPreferences,
   outputLanguage: OutputLanguage = "ar"
-): Promise<ClipCandidate[]> {
+): Promise<{ clips: ClipCandidate[]; tokenUsage: GeminiTokenUsage | null }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("Missing GEMINI_API_KEY");
@@ -183,8 +190,18 @@ export async function generateClipCandidates(
   };
 
   const platform = preferences?.platform || "instagram";
-  const platformRec =
-    platformRecommendations[platform] || platformRecommendations.instagram;
+
+  // Check if user skipped questions (minimal preferences - only platform/duration or less)
+  const hasMinimalPreferences =
+    preferenceLines.length <= 2 &&
+    !preferences?.audience &&
+    !preferences?.tone &&
+    !preferences?.hookStyle;
+
+  // When preferences are minimal, consider all platforms for best results
+  const platformRec = hasMinimalPreferences
+    ? `Consider ALL major short-form video platforms (Instagram Reels, TikTok, YouTube Shorts, Snapchat Spotlight, Facebook Reels, LinkedIn) and select the best moments that would work across multiple platforms. Focus on universally engaging content with strong hooks, clear value, and broad appeal.`
+    : platformRecommendations[platform] || platformRecommendations.instagram;
 
   const outputLangInstructions = `
       OUTPUT LANGUAGE RULE (CRITICAL):
@@ -201,10 +218,18 @@ export async function generateClipCandidates(
 
   // Optimized prompt asking for as many clips as possible with scores >= 65
   const prompt = `
-      You are a professional short-form video editor specializing in ${platform} content.
+      You are a professional short-form video editor${
+        hasMinimalPreferences
+          ? " with expertise across all major platforms"
+          : ` specializing in ${platform} content`
+      }.
       The following text is a timestamped transcript. Auto-detect its language AND dialect/accent style. Extract highlight segments of 30–90 seconds and rank best → worst.
 
-      PLATFORM-SPECIFIC RECOMMENDATIONS:
+      ${
+        hasMinimalPreferences
+          ? "PLATFORM-AGNOSTIC RECOMMENDATIONS (AI decides best approach):"
+          : "PLATFORM-SPECIFIC RECOMMENDATIONS:"
+      }
       ${platformRec}
       ${outputLangInstructions}
 
@@ -234,16 +259,28 @@ export async function generateClipCandidates(
       Sort descending by quality (best first, worst last).
 
       Selection priority:
-      1) Strong hook in first 3–5 seconds (critical for ${platform}).
+      1) Strong hook in first 3–5 seconds${
+        hasMinimalPreferences
+          ? " (critical for all platforms)"
+          : ` (critical for ${platform})`
+      }.
       2) Clean sentence boundaries.
       3) Clear value/payoff.
       4) Smooth flow.
-      5) ${platform}-specific engagement factors.
+      5) ${
+        hasMinimalPreferences
+          ? "Universal engagement factors that work across platforms"
+          : `${platform}-specific engagement factors`
+      }.
 
       Scoring:
       - Score 0–100.
-      - Internally rate hook (1–10) - especially important for ${platform}.
-      - Rank by: hook → overall quality → value → ${platform} optimization.
+      - Internally rate hook (1–10) - especially important${
+        hasMinimalPreferences ? " for all platforms" : ` for ${platform}`
+      }.
+      - Rank by: hook → overall quality → value → ${
+        hasMinimalPreferences ? "universal appeal" : `${platform} optimization`
+      }.
 
       ${preferenceBlock}
       Transcript:
@@ -279,11 +316,7 @@ export async function generateClipCandidates(
     });
     text = result.response.text();
   } catch (error: unknown) {
-    const geminiErrorTime = Date.now() - geminiStart;
-
-    // Track API error
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await metrics.trackApiError("gemini", errorMessage, geminiErrorTime);
 
     // If model fails with 404, try fallback models in order
     if (
@@ -325,34 +358,9 @@ export async function generateClipCandidates(
         const finalError = `All Gemini models failed. Tried: ${currentModelName}, ${fallbackModels.join(
           ", "
         )}. Error: ${error.message}`;
-
-        // Track final failure
-        await metrics.trackGemini({
-          model: currentModelName,
-          tokens_input: 0,
-          tokens_output: 0,
-          tokens_total: 0,
-          cost_usd: 0,
-          response_time_minutes: geminiErrorTime / 60000,
-          success: false,
-          error: finalError,
-        });
-
         throw new Error(finalError);
       }
     } else {
-      // Track unexpected error
-      await metrics.trackGemini({
-        model: currentModelName,
-        tokens_input: 0,
-        tokens_output: 0,
-        tokens_total: 0,
-        cost_usd: 0,
-        response_time_minutes: geminiErrorTime / 60000,
-        success: false,
-        error: errorMessage,
-      });
-
       throw error;
     }
   }
@@ -360,14 +368,13 @@ export async function generateClipCandidates(
   const geminiTime = Date.now() - geminiStart;
   console.log(`[Gemini] Generation completed in ${geminiTime}ms`);
 
-  // Track comprehensive metrics
+  // Extract token usage information
+  let tokenUsage: GeminiTokenUsage | null = null;
   if (result) {
     try {
       const usageMetadata = result.response.usageMetadata;
       const inputTokens = usageMetadata?.promptTokenCount || 0;
       const outputTokens = usageMetadata?.candidatesTokenCount || 0;
-      const totalTokens =
-        usageMetadata?.totalTokenCount || inputTokens + outputTokens;
 
       const costUSD = metrics.calculateGeminiCost(
         currentModelName,
@@ -375,23 +382,20 @@ export async function generateClipCandidates(
         outputTokens
       );
 
-      await metrics.trackGemini({
+      tokenUsage = {
         model: currentModelName,
         tokens_input: inputTokens,
         tokens_output: outputTokens,
-        tokens_total: totalTokens,
         cost_usd: costUSD,
-        response_time_minutes: geminiTime / 60000,
-        success: true,
-      });
+      };
 
       console.log(
-        `[Gemini] Usage tracked - Tokens: ${totalTokens} (in: ${inputTokens}, out: ${outputTokens}), Cost: $${costUSD.toFixed(
+        `[Gemini] Token usage - Model: ${currentModelName}, Input: ${inputTokens}, Output: ${outputTokens}, Cost: $${costUSD.toFixed(
           6
         )}`
       );
     } catch (metricsError) {
-      console.error("[Gemini] Failed to track metrics:", metricsError);
+      console.error("[Gemini] Failed to extract token usage:", metricsError);
     }
   }
 
@@ -489,5 +493,7 @@ export async function generateClipCandidates(
 
   // Return all valid clips ranked from best to worst (as returned by Gemini)
   // Gemini already ranks them, so we just return them in order
-  return validClips.length > 0 ? validClips : normalized.filter(isBasicValid);
+  const clips =
+    validClips.length > 0 ? validClips : normalized.filter(isBasicValid);
+  return { clips, tokenUsage };
 }
