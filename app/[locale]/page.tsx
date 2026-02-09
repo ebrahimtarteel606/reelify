@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-} from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
@@ -161,8 +156,7 @@ export default function HomePage() {
     setShowLogoutConfirm(false);
     posthog.capture("user_logged_out");
     posthog.reset();
-    document.cookie =
-      "reelify_user_id=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "reelify_user_id=; path=/; max-age=0; SameSite=Lax";
     if (typeof globalThis.window !== "undefined") {
       globalThis.localStorage.removeItem("reelify_user_id");
     }
@@ -208,7 +202,7 @@ export default function HomePage() {
   const [backgroundError, setBackgroundError] = useState<string>("");
   const [backgroundProcessing, setBackgroundProcessing] = useState(false);
   const [thumbnailGenerating, setThumbnailGenerating] = useState<Set<number>>(
-    new Set(),
+    new Set()
   );
 
   const backgroundResultRef = useRef(backgroundResult);
@@ -239,7 +233,7 @@ export default function HomePage() {
       if (currentRecommendations.length > 1) {
         const interval = setInterval(() => {
           setCurrentRecommendationIndex(
-            prev => (prev + 1) % currentRecommendations.length,
+            (prev) => (prev + 1) % currentRecommendations.length
           );
         }, 4000);
 
@@ -264,11 +258,11 @@ export default function HomePage() {
         globalThis.sessionStorage.getItem("reelify_clips") !== null;
       if (hasActiveSession) {
         console.log(
-          "[IndexedDB] Page refreshed but active session exists, preserving storage...",
+          "[IndexedDB] Page refreshed but active session exists, preserving storage..."
         );
       } else {
         console.log(
-          "[IndexedDB] Page refreshed with no active session, clearing storage...",
+          "[IndexedDB] Page refreshed with no active session, clearing storage..."
         );
         void clearAllStorage();
       }
@@ -291,7 +285,7 @@ export default function HomePage() {
     if (typeof globalThis.window === "undefined") return;
 
     const navigationState = globalThis.sessionStorage.getItem(
-      "reelify_navigation_back",
+      "reelify_navigation_back"
     );
 
     if (navigationState === "true" && screen === "upload") {
@@ -309,7 +303,7 @@ export default function HomePage() {
             if (storedSegments) {
               try {
                 const parsedSegments = JSON.parse(
-                  storedSegments,
+                  storedSegments
                 ) as TranscriptSegment[];
                 if (Array.isArray(parsedSegments)) setSegments(parsedSegments);
               } catch {
@@ -325,9 +319,9 @@ export default function HomePage() {
                     return { ...clip, thumbnail: thumbnailUrl };
                   }
                   // Mark as generating if thumbnail is missing
-                  setThumbnailGenerating(prev => new Set(prev).add(index));
+                  setThumbnailGenerating((prev) => new Set(prev).add(index));
                   return { ...clip, thumbnail: "" };
-                }),
+                })
               );
               setClips(clipsWithThumbnails);
             };
@@ -361,7 +355,7 @@ export default function HomePage() {
     inputName: string,
     clips: ClipItem[],
     videoFile: File | null,
-    onThumbnailGenerated?: (index: number, thumbnailUrl: string) => void,
+    onThumbnailGenerated?: (index: number, thumbnailUrl: string) => void
   ): Promise<string[]> => {
     const thumbnailData: { blob: Blob; clipKey: string }[] = [];
 
@@ -371,7 +365,7 @@ export default function HomePage() {
     } catch (error) {
       console.warn(
         "[Thumbnails] Input file not found in FFmpeg filesystem, re-writing...",
-        error,
+        error
       );
       if (videoFile) {
         try {
@@ -380,10 +374,10 @@ export default function HomePage() {
         } catch (rewriteError) {
           console.error(
             "[Thumbnails] Failed to re-write input file:",
-            rewriteError,
+            rewriteError
           );
           throw new Error(
-            "Failed to prepare video file for thumbnail generation",
+            "Failed to prepare video file for thumbnail generation"
           );
         }
       } else {
@@ -403,20 +397,24 @@ export default function HomePage() {
 
       // Mark thumbnail as generating
       if (onThumbnailGenerated) {
-        setThumbnailGenerating(prev => new Set(prev).add(index));
+        setThumbnailGenerating((prev) => new Set(prev).add(index));
       }
 
       while (retries <= maxRetries && !success) {
         try {
           if (retries > 0) {
             console.log(
-              `[Thumbnails] Retry ${retries}/${maxRetries} for thumbnail ${index + 1} at ${clip.start}s`,
+              `[Thumbnails] Retry ${retries}/${maxRetries} for thumbnail ${
+                index + 1
+              } at ${clip.start}s`
             );
             // Wait longer before retrying to allow memory to be freed
-            await new Promise(resolve => setTimeout(resolve, 2000 * retries));
+            await new Promise((resolve) => setTimeout(resolve, 2000 * retries));
           } else {
             console.log(
-              `[Thumbnails] Generating thumbnail ${index + 1}/${clips.length} at ${clip.start}s`,
+              `[Thumbnails] Generating thumbnail ${index + 1}/${
+                clips.length
+              } at ${clip.start}s`
             );
           }
 
@@ -425,7 +423,7 @@ export default function HomePage() {
             ffmpeg,
             inputName,
             thumbName,
-            clip.start,
+            clip.start
           );
 
           const clipKey = `thumb-${clip.start}-${clip.end}`;
@@ -437,7 +435,7 @@ export default function HomePage() {
           // Update UI immediately when thumbnail is ready
           if (onThumbnailGenerated) {
             onThumbnailGenerated(index, blobUrl);
-            setThumbnailGenerating(prev => {
+            setThumbnailGenerating((prev) => {
               const next = new Set(prev);
               next.delete(index);
               return next;
@@ -451,7 +449,7 @@ export default function HomePage() {
             if (typeof globalThis.gc === "function") {
               globalThis.gc();
             }
-            await new Promise(resolve => setTimeout(resolve, 500)); // Increased from 200ms to 500ms
+            await new Promise((resolve) => setTimeout(resolve, 500)); // Increased from 200ms to 500ms
           }
         } catch (error) {
           const isMemoryError =
@@ -464,11 +462,13 @@ export default function HomePage() {
           if (isMemoryError && retries < maxRetries) {
             retries++;
             console.warn(
-              `[Thumbnails] Memory error for thumbnail ${index + 1}, will retry...`,
-              error,
+              `[Thumbnails] Memory error for thumbnail ${
+                index + 1
+              }, will retry...`,
+              error
             );
             // Wait progressively longer before retrying
-            await new Promise(resolve => setTimeout(resolve, 2000 * retries));
+            await new Promise((resolve) => setTimeout(resolve, 2000 * retries));
 
             // Force garbage collection if available
             if (typeof globalThis.gc === "function") {
@@ -477,14 +477,14 @@ export default function HomePage() {
           } else {
             console.error(
               `[Thumbnails] Failed to generate thumbnail for clip ${index} after ${retries} retries:`,
-              error,
+              error
             );
             blobUrls.push("");
             success = true; // Stop retrying and move to next thumbnail
 
             // Remove from generating set
             if (onThumbnailGenerated) {
-              setThumbnailGenerating(prev => {
+              setThumbnailGenerating((prev) => {
                 const next = new Set(prev);
                 next.delete(index);
                 return next;
@@ -494,9 +494,9 @@ export default function HomePage() {
             // If we got a memory error, wait longer before trying the next one
             if (isMemoryError && index < clips.length - 1) {
               console.warn(
-                "[Thumbnails] Memory error detected, waiting longer before next extraction...",
+                "[Thumbnails] Memory error detected, waiting longer before next extraction..."
               );
-              await new Promise(resolve => setTimeout(resolve, 2000)); // Increased from 1000ms to 2000ms
+              await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased from 1000ms to 2000ms
             }
           }
         }
@@ -508,14 +508,14 @@ export default function HomePage() {
         console.log(
           "[Thumbnails] Storing",
           thumbnailData.length,
-          "thumbnails in IndexedDB",
+          "thumbnails in IndexedDB"
         );
         await storeThumbnails(thumbnailData);
         console.log("[Thumbnails] Successfully stored thumbnails in IndexedDB");
       } catch (error) {
         console.error(
           "[Thumbnails] Failed to store thumbnails in IndexedDB:",
-          error,
+          error
         );
       }
     }
@@ -546,7 +546,9 @@ export default function HomePage() {
 
     const fileSizeMB = videoFile.size / (1024 * 1024);
     console.log(
-      `[Background Processing] Starting audio extraction for ${fileSizeMB.toFixed(2)}MB file`,
+      `[Background Processing] Starting audio extraction for ${fileSizeMB.toFixed(
+        2
+      )}MB file`
     );
 
     try {
@@ -555,7 +557,7 @@ export default function HomePage() {
       const loadStart = Date.now();
       const ffmpeg = await getFfmpeg();
       console.log(
-        `[Background Processing] FFmpeg loaded in ${Date.now() - loadStart}ms`,
+        `[Background Processing] FFmpeg loaded in ${Date.now() - loadStart}ms`
       );
 
       setProgress(10);
@@ -564,7 +566,9 @@ export default function HomePage() {
       const inputName = `input-${Date.now()}.mp4`;
       await writeInputFile(ffmpeg, inputName, videoFile);
       console.log(
-        `[Background Processing] Video file written to FFmpeg filesystem in ${Date.now() - writeStart}ms`,
+        `[Background Processing] Video file written to FFmpeg filesystem in ${
+          Date.now() - writeStart
+        }ms`
       );
 
       setProgress(15);
@@ -575,7 +579,9 @@ export default function HomePage() {
       const audioBlob = await extractAudioWav(ffmpeg, inputName, audioName);
       const extractTime = Date.now() - extractStart;
       console.log(
-        `[Background Processing] Audio extraction completed in ${(extractTime / 1000).toFixed(1)}s (${(audioBlob.size / 1024 / 1024).toFixed(2)}MB)`,
+        `[Background Processing] Audio extraction completed in ${(
+          extractTime / 1000
+        ).toFixed(1)}s (${(audioBlob.size / 1024 / 1024).toFixed(2)}MB)`
       );
 
       setProgress(20);
@@ -594,12 +600,12 @@ export default function HomePage() {
       });
 
       console.log(
-        `[Background Processing] Background processing completed successfully`,
+        `[Background Processing] Background processing completed successfully`
       );
     } catch (err) {
       console.error(
         "[Background Processing] Error during background processing:",
-        err,
+        err
       );
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error("[Background Processing] Error details:", {
@@ -685,21 +691,25 @@ export default function HomePage() {
       const maxAttempts = maxWaitMinutes * 60 * 10; // 10 checks per second = 100ms intervals
 
       console.log(
-        `[Background Processing] Waiting for audio extraction (file: ${fileSizeMB.toFixed(2)}MB, max wait: ${maxWaitMinutes} minutes)`,
+        `[Background Processing] Waiting for audio extraction (file: ${fileSizeMB.toFixed(
+          2
+        )}MB, max wait: ${maxWaitMinutes} minutes)`
       );
 
       if (backgroundProcessingRef.current) {
         setStatus(tLoading("waitingAnalysis"));
         let attempts = 0;
         while (backgroundProcessingRef.current && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           attempts++;
 
           // Log progress every 30 seconds
           if (attempts % 300 === 0) {
             const waitedSeconds = attempts / 10;
             console.log(
-              `[Background Processing] Still waiting... (${waitedSeconds.toFixed(0)}s elapsed)`,
+              `[Background Processing] Still waiting... (${waitedSeconds.toFixed(
+                0
+              )}s elapsed)`
             );
           }
         }
@@ -707,7 +717,7 @@ export default function HomePage() {
         // If we exited the loop but processing is still running, log a warning
         if (backgroundProcessingRef.current) {
           console.warn(
-            `[Background Processing] Timeout reached (${maxWaitMinutes} minutes) but processing still running`,
+            `[Background Processing] Timeout reached (${maxWaitMinutes} minutes) but processing still running`
           );
         }
       }
@@ -720,7 +730,7 @@ export default function HomePage() {
         // Check if processing is still running - if so, provide a more helpful error
         if (backgroundProcessingRef.current) {
           throw new Error(
-            `Audio extraction is taking longer than expected (${maxWaitMinutes} minutes). Please wait a bit longer and try again, or try with a smaller file.`,
+            `Audio extraction is taking longer than expected (${maxWaitMinutes} minutes). Please wait a bit longer and try again, or try with a smaller file.`
           );
         }
         throw new Error(tLoading("videoNotReady"));
@@ -736,11 +746,11 @@ export default function HomePage() {
       if (typeof globalThis.window !== "undefined") {
         globalThis.sessionStorage.setItem(
           "reelify_video_url",
-          originalVideoUrl,
+          originalVideoUrl
         );
         globalThis.sessionStorage.setItem(
           "reelify_video_name",
-          file?.name || "video.mp4",
+          file?.name || "video.mp4"
         );
         globalThis.sessionStorage.setItem("reelify_platform", platform);
       }
@@ -778,9 +788,9 @@ export default function HomePage() {
       // Credit system: attach user ID and video duration
       const storedUserId =
         typeof globalThis.window !== "undefined"
-          ? (globalThis.localStorage.getItem("reelify_user_id") ??
+          ? globalThis.localStorage.getItem("reelify_user_id") ??
             document.cookie.match(/reelify_user_id=([^;]+)/)?.[1] ??
-            "")
+            ""
           : "";
       if (storedUserId) {
         formData.append("user_id", storedUserId);
@@ -791,7 +801,7 @@ export default function HomePage() {
         }
         formData.append(
           "source_duration_seconds",
-          String(Math.ceil(videoDuration)),
+          String(Math.ceil(videoDuration))
         );
       }
 
@@ -807,8 +817,8 @@ export default function HomePage() {
       });
 
       clearInterval(progressInterval);
-      setProgress(prev => Math.max(prev, 85));
-      await new Promise(resolve => setTimeout(resolve, 100));
+      setProgress((prev) => Math.max(prev, 85));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const payload = await response.json();
       if (!response.ok) {
@@ -819,7 +829,7 @@ export default function HomePage() {
         throw new Error(
           isTooLong
             ? t("videoTooLong")
-            : serverError || tLoading("analysisError"),
+            : serverError || tLoading("analysisError")
         );
       }
 
@@ -834,12 +844,12 @@ export default function HomePage() {
 
       setProgress(88);
       setStatus(tLoading("preparingClipsShort"));
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const getClipTranscript = (start: number, end: number): string => {
         return segments
-          .filter(seg => seg.end > start && seg.start < end)
-          .map(seg => seg.text)
+          .filter((seg) => seg.end > start && seg.start < end)
+          .map((seg) => seg.text)
           .join(" ");
       };
       const uploadedClips: ClipItem[] = [];
@@ -848,7 +858,7 @@ export default function HomePage() {
         const duration = Math.max(0, candidate.end - candidate.start);
         const clipTranscript = getClipTranscript(
           candidate.start,
-          candidate.end,
+          candidate.end
         );
 
         uploadedClips.push({
@@ -865,7 +875,7 @@ export default function HomePage() {
       }
 
       setProgress(92);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
       setClips(uploadedClips);
       setSegments(segments);
 
@@ -873,10 +883,10 @@ export default function HomePage() {
       setThumbnailGenerating(new Set(uploadedClips.map((_, index) => index)));
 
       setProgress(96);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
       setStatus("");
       setProgress(100);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       setScreen("results");
 
       // Refresh credits display after successful processing
@@ -905,11 +915,11 @@ export default function HomePage() {
         file,
         (index, thumbnailUrl) => {
           // Update thumbnail immediately as it's generated
-          setClips(prevClips => {
+          setClips((prevClips) => {
             const updatedClips = prevClips.map((clip, i) => {
               if (i === index) {
                 console.log(
-                  `[Thumbnails] Setting thumbnail for clip ${index} (${clip.start}-${clip.end})`,
+                  `[Thumbnails] Setting thumbnail for clip ${index} (${clip.start}-${clip.end})`
                 );
                 return {
                   ...clip,
@@ -921,26 +931,26 @@ export default function HomePage() {
             if (typeof globalThis.window !== "undefined") {
               globalThis.sessionStorage.setItem(
                 "reelify_clips",
-                JSON.stringify(updatedClips),
+                JSON.stringify(updatedClips)
               );
             }
             return updatedClips;
           });
-        },
+        }
       )
-        .then(thumbnails => {
+        .then((thumbnails) => {
           console.log(
             "[Thumbnails] Generated thumbnails:",
             thumbnails.length,
-            "URLs",
+            "URLs"
           );
           // Final update to ensure all thumbnails are set
-          setClips(prevClips => {
+          setClips((prevClips) => {
             const updatedClips = prevClips.map((clip, index) => {
               const thumbnailUrl = thumbnails[index] || clip.thumbnail;
               if (thumbnailUrl && !clip.thumbnail) {
                 console.log(
-                  `[Thumbnails] Final update: Setting thumbnail for clip ${index} (${clip.start}-${clip.end})`,
+                  `[Thumbnails] Final update: Setting thumbnail for clip ${index} (${clip.start}-${clip.end})`
                 );
               }
               return {
@@ -951,14 +961,14 @@ export default function HomePage() {
             if (typeof globalThis.window !== "undefined") {
               globalThis.sessionStorage.setItem(
                 "reelify_clips",
-                JSON.stringify(updatedClips),
+                JSON.stringify(updatedClips)
               );
             }
             return updatedClips;
           });
           setThumbnailGenerating(new Set()); // Clear all generating flags
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("[Thumbnails] Error generating thumbnails:", error);
         })
         .finally(() => {
@@ -968,15 +978,15 @@ export default function HomePage() {
       if (typeof globalThis.window !== "undefined") {
         globalThis.sessionStorage.setItem(
           "reelify_clips",
-          JSON.stringify(uploadedClips),
+          JSON.stringify(uploadedClips)
         );
         globalThis.sessionStorage.setItem(
           "reelify_segments",
-          JSON.stringify(segments),
+          JSON.stringify(segments)
         );
         globalThis.localStorage.setItem(
           "reelify_segments",
-          JSON.stringify(segments),
+          JSON.stringify(segments)
         );
         globalThis.sessionStorage.setItem("reelify_screen", "results");
       }
@@ -1176,17 +1186,21 @@ export default function HomePage() {
               {tCommon("closedBeta")}
             </span>
           </div>
-          <Image
-            src="/Transparent white1.png"
-            alt="Reelify"
-            width={200}
-            height={100}
-          />
+          <Link href={`/${locale}`}>
+            <Image
+              src="/Transparent white1.png"
+              alt="Reelify"
+              width={200}
+              height={100}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </Link>
           <div className="flex-1 flex items-center justify-end gap-3">
             {creditsRemaining !== null && (
               <span
                 className="badge-credits inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold text-white"
-                title={tCommon("creditsRemaining", { count: creditsRemaining })}>
+                title={tCommon("creditsRemaining", { count: creditsRemaining })}
+              >
                 <Flash className="w-4 h-4 opacity-90" size={16} />
                 {tCommon("creditsRemaining", { count: creditsRemaining })}
               </span>
@@ -1196,7 +1210,8 @@ export default function HomePage() {
               variant="outline"
               size="sm"
               onClick={() => setShowLogoutConfirm(true)}
-              className="shrink-0">
+              className="shrink-0"
+            >
               {tCommon("logout")}
             </Button>
             <LanguageSwitcher />
@@ -1216,13 +1231,15 @@ export default function HomePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowLogoutConfirm(false)}>
+                onClick={() => setShowLogoutConfirm(false)}
+              >
                 {tCommon("cancel")}
               </Button>
               <Button
                 type="button"
                 variant="destructive"
-                onClick={handleLogout}>
+                onClick={handleLogout}
+              >
                 {tCommon("logout")}
               </Button>
             </div>
@@ -1245,11 +1262,13 @@ export default function HomePage() {
             <CardContent className="p-10">
               <form
                 className="flex flex-col items-center gap-8"
-                onSubmit={onUploadSubmit}>
+                onSubmit={onUploadSubmit}
+              >
                 <div className="w-full">
                   <label
                     htmlFor="video"
-                    className="group flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-primary/20 rounded-2xl cursor-pointer bg-primary/5 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300 hover:scale-[1.01]">
+                    className="group flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-primary/20 rounded-2xl cursor-pointer bg-primary/5 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300 hover:scale-[1.01]"
+                  >
                     <div className="flex flex-col items-center justify-center pt-6 pb-8">
                       <div className="w-16 h-16 mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                         <CloudAdd className="w-8 h-8 text-primary" size={32} />
@@ -1268,7 +1287,7 @@ export default function HomePage() {
                       type="file"
                       accept="video/*"
                       className="hidden"
-                      onChange={event => {
+                      onChange={(event) => {
                         const selectedFile = event.target.files?.[0] ?? null;
                         if (!selectedFile) {
                           setFile(null);
@@ -1306,13 +1325,13 @@ export default function HomePage() {
                             }
                             const storedUserId =
                               typeof globalThis.window !== "undefined"
-                                ? (globalThis.localStorage.getItem(
+                                ? globalThis.localStorage.getItem(
                                     "reelify_user_id"
                                   ) ??
-                                    document.cookie.match(
-                                      /reelify_user_id=([^;]+)/
-                                    )?.[1] ??
-                                    "")
+                                  document.cookie.match(
+                                    /reelify_user_id=([^;]+)/
+                                  )?.[1] ??
+                                  ""
                                 : "";
                             if (storedUserId) {
                               try {
@@ -1338,9 +1357,12 @@ export default function HomePage() {
                                   setVideoDuration(0);
                                   setIsValidatingVideo(false);
                                   setError(
-                                    checkPayload?.error?.toLowerCase?.().includes("insufficient")
+                                    checkPayload?.error
+                                      ?.toLowerCase?.()
+                                      .includes("insufficient")
                                       ? t("insufficientCredits")
-                                      : checkPayload?.error ?? t("insufficientCredits")
+                                      : checkPayload?.error ??
+                                          t("insufficientCredits")
                                   );
                                   URL.revokeObjectURL(tempUrl);
                                   return;
@@ -1401,7 +1423,8 @@ export default function HomePage() {
                   type="submit"
                   disabled={!file}
                   size="lg"
-                  className="w-full max-w-sm text-white h-14 text-lg font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl">
+                  className="w-full max-w-sm text-white h-14 text-lg font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
+                >
                   {tCommon("continue")}
                 </Button>
                 {error && (
@@ -1480,7 +1503,8 @@ export default function HomePage() {
                     type="button"
                     size="sm"
                     onClick={handleSkipQuestions}
-                    className="bg-gradient-teal text-white hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                    className="bg-gradient-teal text-white hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  >
                     {t("startWithoutQuestions")}
                   </Button>
                 )}
@@ -1596,7 +1620,8 @@ export default function HomePage() {
                                 ? "border-primary bg-primary/10 shadow-teal"
                                 : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                             }`}
-                            style={{ animationDelay: `${index * 0.1}s` }}>
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                          >
                             <PlatformOptionIcon
                               className={`h-6 w-6 shrink-0 ${iconColor}`}
                               size={24}
@@ -1649,7 +1674,8 @@ export default function HomePage() {
                                 ? "border-primary bg-primary/10 shadow-teal"
                                 : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                             }`}
-                            style={{ animationDelay: `${index * 0.1}s` }}>
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                          >
                             <span className="text-3xl font-bold text-foreground block">
                               {duration}
                             </span>
@@ -1679,7 +1705,8 @@ export default function HomePage() {
                               ? "border-primary bg-primary/10 shadow-teal"
                               : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                           }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}>
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
                           <span className="text-3xl">{option.icon}</span>
                           <span className="font-semibold text-lg">
                             {option.value}
@@ -1699,7 +1726,7 @@ export default function HomePage() {
                         <input
                           type="text"
                           value={audience}
-                          onChange={event => {
+                          onChange={(event) => {
                             setAudience(event.target.value);
                             setAudienceSkipped(false);
                           }}
@@ -1723,11 +1750,12 @@ export default function HomePage() {
                             onClick={() => {
                               setAudience("");
                               setAudienceSkipped(true);
-                              setStep(current =>
-                                Math.min(totalSteps, current + 1),
+                              setStep((current) =>
+                                Math.min(totalSteps, current + 1)
                               );
                             }}
-                            className="text-primary hover:underline font-medium">
+                            className="text-primary hover:underline font-medium"
+                          >
                             {t("skipQuestion")}
                           </button>
                         </div>
@@ -1752,7 +1780,8 @@ export default function HomePage() {
                               ? "border-primary bg-primary/10 shadow-teal"
                               : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                           }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}>
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
                           <span className="text-3xl">{option.icon}</span>
                           <span className="font-semibold text-lg">
                             {option.value}
@@ -1772,7 +1801,7 @@ export default function HomePage() {
                         <input
                           type="text"
                           value={tone}
-                          onChange={event => {
+                          onChange={(event) => {
                             setTone(event.target.value);
                             setToneSkipped(false);
                           }}
@@ -1796,11 +1825,12 @@ export default function HomePage() {
                             onClick={() => {
                               setTone("");
                               setToneSkipped(true);
-                              setStep(current =>
-                                Math.min(totalSteps, current + 1),
+                              setStep((current) =>
+                                Math.min(totalSteps, current + 1)
                               );
                             }}
-                            className="text-primary hover:underline font-medium">
+                            className="text-primary hover:underline font-medium"
+                          >
                             {t("skipQuestion")}
                           </button>
                         </div>
@@ -1827,7 +1857,8 @@ export default function HomePage() {
                               ? "border-primary bg-primary/10 shadow-teal"
                               : "border-transparent bg-muted/50 hover:bg-muted hover:border-primary/20"
                           }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}>
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
                           <span className="text-3xl">{option.icon}</span>
                           <span className="font-semibold text-lg">
                             {option.value}
@@ -1847,7 +1878,7 @@ export default function HomePage() {
                         <input
                           type="text"
                           value={hookStyle}
-                          onChange={event => {
+                          onChange={(event) => {
                             setHookStyle(event.target.value);
                             setHookStyleSkipped(false);
                           }}
@@ -1874,12 +1905,13 @@ export default function HomePage() {
                               if (step >= totalSteps) {
                                 void onStartProcessing();
                               } else {
-                                setStep(current =>
-                                  Math.min(totalSteps, current + 1),
+                                setStep((current) =>
+                                  Math.min(totalSteps, current + 1)
                                 );
                               }
                             }}
-                            className="text-primary hover:underline font-medium">
+                            className="text-primary hover:underline font-medium"
+                          >
                             {t("skipQuestion")}
                           </button>
                         </div>
@@ -1894,10 +1926,13 @@ export default function HomePage() {
                       variant="ghost"
                       size="lg"
                       onClick={() =>
-                        setStep(current => Math.max(1, current - 1))
+                        setStep((current) => Math.max(1, current - 1))
                       }
                       disabled={step === 1}
-                      className={`text-base px-6 ${step === 1 ? "invisible" : "hover:bg-muted"}`}>
+                      className={`text-base px-6 ${
+                        step === 1 ? "invisible" : "hover:bg-muted"
+                      }`}
+                    >
                       {t("previous")}
                     </Button>
                     {step < totalSteps ? (
@@ -1905,9 +1940,12 @@ export default function HomePage() {
                         type="button"
                         size="lg"
                         onClick={() =>
-                          setStep(current => Math.min(totalSteps, current + 1))
+                          setStep((current) =>
+                            Math.min(totalSteps, current + 1)
+                          )
                         }
-                        className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                        className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                      >
                         {t("next")}
                       </Button>
                     ) : (
@@ -1916,7 +1954,8 @@ export default function HomePage() {
                         size="lg"
                         onClick={onStartProcessing}
                         disabled={isProcessing}
-                        className="text-base text-white px-8 bg-gradient-coral hover:shadow-warm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                        className="text-base text-white px-8 bg-gradient-coral hover:shadow-warm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                      >
                         {isProcessing ? t("converting") : t("startConversion")}
                       </Button>
                     )}
@@ -1958,7 +1997,8 @@ export default function HomePage() {
                           </p>
                           <p
                             key={currentRecommendationIndex}
-                            className="text-sm text-muted-foreground leading-relaxed animate-fade-in">
+                            className="text-sm text-muted-foreground leading-relaxed animate-fade-in"
+                          >
                             {currentRecommendations[currentRecommendationIndex]}
                           </p>
                           {currentRecommendations.length > 1 && (
@@ -1966,14 +2006,17 @@ export default function HomePage() {
                               {currentRecommendations.map(
                                 (rec: string, index: number) => (
                                   <div
-                                    key={`rec-${platform}-${index}-${rec.substring(0, 10)}`}
+                                    key={`rec-${platform}-${index}-${rec.substring(
+                                      0,
+                                      10
+                                    )}`}
                                     className={`h-1.5 rounded-full transition-all duration-300 ${
                                       index === currentRecommendationIndex
                                         ? "w-6 bg-primary"
                                         : "w-1.5 bg-primary/30"
                                     }`}
                                   />
-                                ),
+                                )
                               )}
                             </div>
                           )}
@@ -1998,11 +2041,12 @@ export default function HomePage() {
 
             {/* Skeleton Cards */}
             <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map(i => (
+              {[1, 2, 3].map((i) => (
                 <Card
                   key={i}
                   className="overflow-hidden shadow-card border-0 bg-gradient-card animate-fade-in"
-                  style={{ animationDelay: `${i * 0.2}s` }}>
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                >
                   <div className="aspect-[9/16] skeleton" />
                   <CardContent className="p-5 space-y-4">
                     <div className="skeleton h-4 w-16 rounded-full" />
@@ -2053,7 +2097,9 @@ export default function HomePage() {
                     tags: clip.tags.join(","),
                     transcript: clip.transcript,
                   };
-                  const previewUrl = `/${locale}/preview?${new URLSearchParams(previewParams).toString()}`;
+                  const previewUrl = `/${locale}/preview?${new URLSearchParams(
+                    previewParams
+                  ).toString()}`;
                   const wrapperClass = `aspect-[9/16] relative overflow-hidden cursor-pointer bg-gradient-to-br from-primary/10 to-primary/5`;
 
                   const handlePreviewClick = (e: React.MouseEvent) => {
@@ -2070,15 +2116,15 @@ export default function HomePage() {
                         const segmentsJson = JSON.stringify(segments);
                         globalThis.sessionStorage.setItem(
                           "reelify_segments",
-                          segmentsJson,
+                          segmentsJson
                         );
                         globalThis.localStorage.setItem(
                           "reelify_segments",
-                          segmentsJson,
+                          segmentsJson
                         );
                         console.log(
                           "[Results] Saved segments to storage before navigation:",
-                          segments.length,
+                          segments.length
                         );
                       } catch (err) {
                         console.warn("[Results] Failed to save segments:", err);
@@ -2092,22 +2138,27 @@ export default function HomePage() {
                     <Card
                       key={`${clip.start}-${clip.end}-${index}`}
                       className="overflow-hidden shadow-card border-0 bg-gradient-card group hover:shadow-card-hover hover:scale-[1.03] transition-all duration-500 animate-fade-in"
-                      style={{ animationDelay: `${index * 0.15}s` }}>
+                      style={{ animationDelay: `${index * 0.15}s` }}
+                    >
                       <a
                         href={previewUrl}
                         onClick={handlePreviewClick}
                         className={`${wrapperClass} block`}
-                        aria-label={`${tResults("previewAndEdit")}: ${clip.title}`}>
+                        aria-label={`${tResults("previewAndEdit")}: ${
+                          clip.title
+                        }`}
+                      >
                         {clip.thumbnail ? (
                           <img
                             src={clip.thumbnail}
                             alt={clip.title}
                             className="w-full h-full object-cover"
-                            onError={e => {
+                            onError={(e) => {
                               const loadThumbnail = async () => {
                                 const clipKey = `thumb-${clip.start}-${clip.end}`;
-                                const thumbnailUrl =
-                                  await getThumbnailBlobUrl(clipKey);
+                                const thumbnailUrl = await getThumbnailBlobUrl(
+                                  clipKey
+                                );
                                 if (thumbnailUrl) {
                                   (e.target as HTMLImageElement).src =
                                     thumbnailUrl;
@@ -2160,11 +2211,13 @@ export default function HomePage() {
                         </div>
                         <Button
                           asChild
-                          className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl">
+                          className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
+                        >
                           <a
                             href={previewUrl}
                             target="_blank"
-                            rel="noopener noreferrer">
+                            rel="noopener noreferrer"
+                          >
                             <Eye className="w-5 h-5 me-2" size={20} />
                             {tResults("previewAndEdit")}
                           </a>
@@ -2183,13 +2236,15 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <Link
               href={`/${locale}/privacy`}
-              className="hover:text-primary transition-colors">
+              className="hover:text-primary transition-colors"
+            >
               {tCommon("privacyPolicy")}
             </Link>
             <span>•</span>
             <Link
               href={`/${locale}/terms`}
-              className="hover:text-primary transition-colors">
+              className="hover:text-primary transition-colors"
+            >
               {tCommon("termsAndConditions")}
             </Link>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Suspense, useState, useMemo, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -198,7 +199,7 @@ function EditorContent() {
                 s !== null &&
                 "start" in s &&
                 "end" in s &&
-                "text" in s,
+                "text" in s
             )
           ) {
             segments = (
@@ -216,12 +217,12 @@ function EditorContent() {
                 seg.language === "ar" || seg.language === "en"
                   ? seg.language
                   : /[\u0600-\u06FF]/.test(String(seg.text))
-                    ? ("ar" as const)
-                    : ("en" as const),
+                  ? ("ar" as const)
+                  : ("en" as const),
             }));
             console.log(
               `[Editor] Loaded segments from ${source}:`,
-              segments.length,
+              segments.length
             );
 
             // Ensure both storages have the data
@@ -265,13 +266,7 @@ function EditorContent() {
         description: transcript,
       },
     };
-  }, [
-    videoUrl,
-    startTimeParam,
-    endTimeParam,
-    transcript,
-    videoDuration,
-  ]);
+  }, [videoUrl, startTimeParam, endTimeParam, transcript, videoDuration]);
 
   if (!videoUrl) {
     return (
@@ -297,7 +292,7 @@ function EditorContent() {
                 if (typeof globalThis.window !== "undefined") {
                   globalThis.sessionStorage.setItem(
                     "reelify_navigation_back",
-                    "true",
+                    "true"
                   );
                 }
                 globalThis.history.back();
@@ -330,7 +325,8 @@ function EditorContent() {
       posthog.capture("editor_opened", {
         clip_duration: Math.round(clipData.endTime - clipData.startTime),
         has_transcription: !!clipData.transcription,
-        transcription_segments_count: clipData.transcription?.segments.length ?? 0,
+        transcription_segments_count:
+          clipData.transcription?.segments.length ?? 0,
       });
     }
   }, [!!clipData]);
@@ -350,11 +346,13 @@ function EditorContent() {
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <img
-              src="/Transparent white1.png"
-              alt="Reelify logo"
-              className="h-8 w-auto shrink-0"
-            />
+            <Link href={`/${locale}`}>
+              <img
+                src="/Transparent white1.png"
+                alt="Reelify logo"
+                className="h-8 w-auto shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
             <div className="flex flex-col min-w-[12rem] sm:min-w-[18rem] md:min-w-[24rem] flex-1 w-full">
               <label
                 title={t("titleEditHint")}
@@ -386,7 +384,7 @@ function EditorContent() {
               if (typeof globalThis.window !== "undefined") {
                 globalThis.sessionStorage.setItem(
                   "reelify_navigation_back",
-                  "true",
+                  "true"
                 );
               }
               globalThis.history.back();
