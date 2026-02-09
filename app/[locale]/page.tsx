@@ -188,11 +188,31 @@ export default function HomePage() {
   const [currentRecommendationIndex, setCurrentRecommendationIndex] =
     useState<number>(0);
 
-  // Get recommendations for current platform from translations
+  // Get recommendations - show all platforms when skipQuestions is true
   const currentRecommendations = useMemo(() => {
-    const recs = t.raw(`platformRecommendations.${platform}`) as string[];
-    return Array.isArray(recs) ? recs : [];
-  }, [platform, t]);
+    if (skipQuestions) {
+      // Show all platform recommendations when skipping questions
+      const allPlatforms: PlatformKey[] = [
+        "instagram",
+        "facebook",
+        "tiktok",
+        "youtube",
+        "snapchat",
+        "linkedin",
+      ];
+      const allRecs: string[] = [];
+      allPlatforms.forEach((plat) => {
+        const recs = t.raw(`platformRecommendations.${plat}`) as string[];
+        if (Array.isArray(recs)) {
+          allRecs.push(...recs);
+        }
+      });
+      return allRecs;
+    } else {
+      const recs = t.raw(`platformRecommendations.${platform}`) as string[];
+      return Array.isArray(recs) ? recs : [];
+    }
+  }, [platform, t, skipQuestions]);
 
   const [backgroundResult, setBackgroundResult] = useState<{
     ffmpeg: Awaited<ReturnType<typeof getFfmpeg>>;
@@ -1021,7 +1041,7 @@ export default function HomePage() {
     });
     setError("");
     setStatus("");
-    await persistPreferences({ platform, preferredDuration });
+    // Don't persist preferences when skipping questions - let AI decide
     void onStartProcessing();
   };
 
@@ -1991,9 +2011,12 @@ export default function HomePage() {
                         <LampOn className="w-6 h-6 text-primary" size={24} />
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-primary mb-2">
-                            {tLoading("tipsFor", {
-                              platform: t(`platforms.${platform}`),
-                            })}
+                            {skipQuestions
+                              ? tLoading("tipsForAllPlatforms") ||
+                                "Tips for all platforms"
+                              : tLoading("tipsFor", {
+                                  platform: t(`platforms.${platform}`),
+                                })}
                           </p>
                           <p
                             key={currentRecommendationIndex}
