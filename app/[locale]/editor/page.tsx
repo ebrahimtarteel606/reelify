@@ -29,6 +29,20 @@ function EditorContent() {
 
   const [isRestoringUrl, setIsRestoringUrl] = useState(needsUrlRestore);
 
+  // Get URL params early (before any early returns)
+  const videoUrlParam = searchParams.get("videoUrl");
+  const startTimeParam = searchParams.get("startTime");
+  const endTimeParam = searchParams.get("endTime");
+  const titleInitial = searchParams.get("title") || t("defaultTitle");
+  const category = searchParams.get("category") || t("defaultCategory");
+  const transcript = searchParams.get("transcript") || "";
+
+  // All hooks must be called before any early returns
+  const [editedTitle, setEditedTitle] = useState(titleInitial);
+  const [videoUrl, setVideoUrl] = useState<string | null>(videoUrlParam);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
+  const [isLoadingDuration, setIsLoadingDuration] = useState(true);
+
   useEffect(() => {
     if (!needsUrlRestore) return;
 
@@ -51,32 +65,6 @@ function EditorContent() {
       }
     }
   }, [needsUrlRestore, searchParams]);
-
-  if (isRestoringUrl || needsUrlRestore) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
-        <div className="text-center space-y-4 animate-fade-in">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-lg text-muted-foreground">
-            {t("restoringSession")}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const videoUrlParam = searchParams.get("videoUrl");
-  const startTimeParam = searchParams.get("startTime");
-  const endTimeParam = searchParams.get("endTime");
-  const titleInitial = searchParams.get("title") || t("defaultTitle");
-  const category = searchParams.get("category") || t("defaultCategory");
-  const transcript = searchParams.get("transcript") || "";
-  const [editedTitle, setEditedTitle] = useState(titleInitial);
-  const [videoUrl, setVideoUrl] = useState<string | null>(videoUrlParam);
-  const [videoDuration, setVideoDuration] = useState<number>(0);
-  const [isLoadingDuration, setIsLoadingDuration] = useState(true);
 
   useEffect(() => {
     const validateAndLoadVideo = async () => {
@@ -266,7 +254,42 @@ function EditorContent() {
         description: transcript,
       },
     };
-  }, [videoUrl, startTimeParam, endTimeParam, transcript, videoDuration]);
+  }, [
+    videoUrl,
+    startTimeParam,
+    endTimeParam,
+    transcript,
+    videoDuration,
+    editedTitle,
+  ]);
+
+  // Track editor opened once clip data is ready (must be before early returns)
+  useEffect(() => {
+    if (clipData) {
+      posthog.capture("editor_opened", {
+        clip_duration: Math.round(clipData.endTime - clipData.startTime),
+        has_transcription: !!clipData.transcription,
+        transcription_segments_count:
+          clipData.transcription?.segments.length ?? 0,
+      });
+    }
+  }, [clipData]);
+
+  // Early returns after all hooks
+  if (isRestoringUrl || needsUrlRestore) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-lg text-muted-foreground">
+            {t("restoringSession")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!videoUrl) {
     return (
@@ -318,18 +341,6 @@ function EditorContent() {
       </div>
     );
   }
-
-  // Track editor opened once clip data is ready
-  useEffect(() => {
-    if (clipData) {
-      posthog.capture("editor_opened", {
-        clip_duration: Math.round(clipData.endTime - clipData.startTime),
-        has_transcription: !!clipData.transcription,
-        transcription_segments_count:
-          clipData.transcription?.segments.length ?? 0,
-      });
-    }
-  }, [!!clipData]);
 
   const handleExportSuccess = (result: ReelExportResult) => {
     // Download is already handled by ExportPanel, just cleanup
