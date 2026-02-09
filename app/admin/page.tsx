@@ -229,7 +229,7 @@ export default function AdminDashboard() {
           onSubmit={handleLogin}
           className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm space-y-6"
         >
-          <h1 className="text-2xl font-bold text-center text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold text-center text-gray-900">Dashboard</h1>
           <p className="text-sm text-gray-500 text-center">Enter your admin password to continue</p>
           <input
             type="password"
