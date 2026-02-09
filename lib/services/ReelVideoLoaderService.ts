@@ -9,11 +9,11 @@ export class ReelVideoLoaderService {
     height: number;
   }> {
     return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
+      const video = document.createElement("video");
+      video.preload = "metadata";
       video.src = videoUrl;
 
-      video.addEventListener('loadedmetadata', () => {
+      video.addEventListener("loadedmetadata", () => {
         resolve({
           videoElement: video,
           duration: video.duration,
@@ -22,8 +22,8 @@ export class ReelVideoLoaderService {
         });
       });
 
-      video.addEventListener('error', (e) => {
-        reject(new Error('Failed to load video'));
+      video.addEventListener("error", (e) => {
+        reject(new Error("Failed to load video"));
       });
 
       video.load();
@@ -42,11 +42,11 @@ export class ReelVideoLoaderService {
    * Create video element for playback
    */
   static createVideoElement(videoUrl: string): HTMLVideoElement {
-    const video = document.createElement('video');
+    const video = document.createElement("video");
     video.src = videoUrl;
     video.controls = false;
     video.playsInline = true;
-    video.crossOrigin = 'anonymous';
+    video.crossOrigin = "anonymous";
     return video;
   }
 }

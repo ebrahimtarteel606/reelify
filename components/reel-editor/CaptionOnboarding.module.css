@@ -271,7 +271,7 @@
 }
 
 .stepDot.completed {
-  background: #FF8A95;
+  background: #ff8a95;
 }
 
 .actions {
@@ -323,7 +323,7 @@
   cursor: pointer;
   width: 16px;
   height: 16px;
-  accent-color: #FF6B7A;
+  accent-color: #ff6b7a;
 }
 
 .dontShowAgain span {

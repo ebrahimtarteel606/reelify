@@ -1,14 +1,11 @@
-import { Caption } from '@/types';
+import { Caption } from "@/types";
 
 /**
  * Calculate animation progress for a caption
  * Returns a value between 0 and 1 representing animation progress
  */
-export function calculateAnimationProgress(
-  caption: Caption,
-  currentTime: number
-): number {
-  if (!caption.style.animation || caption.style.animation.type === 'none') {
+export function calculateAnimationProgress(caption: Caption, currentTime: number): number {
+  if (!caption.style.animation || caption.style.animation.type === "none") {
     return 1; // No animation, fully visible
   }
 
@@ -42,25 +39,23 @@ export function calculateAnimationProgress(
  */
 function applyEasing(
   progress: number,
-  easing: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+  easing: "linear" | "easeIn" | "easeOut" | "easeInOut"
 ): number {
   switch (easing) {
-    case 'linear':
+    case "linear":
       return progress;
 
-    case 'easeIn':
+    case "easeIn":
       // Quadratic ease-in
       return progress * progress;
 
-    case 'easeOut':
+    case "easeOut":
       // Quadratic ease-out
       return progress * (2 - progress);
 
-    case 'easeInOut':
+    case "easeInOut":
       // Quadratic ease-in-out
-      return progress < 0.5
-        ? 2 * progress * progress
-        : -1 + (4 - 2 * progress) * progress;
+      return progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
 
     default:
       return progress;
@@ -79,14 +74,14 @@ export function getAnimationTransform(
   translateY: number;
   scale: number;
 } {
-  if (!caption.style.animation || caption.style.animation.type === 'none') {
+  if (!caption.style.animation || caption.style.animation.type === "none") {
     return { opacity: 1, translateX: 0, translateY: 0, scale: 1 };
   }
 
   const { type } = caption.style.animation;
 
   switch (type) {
-    case 'fade':
+    case "fade":
       return {
         opacity: progress,
         translateX: 0,
@@ -94,7 +89,7 @@ export function getAnimationTransform(
         scale: 1,
       };
 
-    case 'slideLeft':
+    case "slideLeft":
       return {
         opacity: progress,
         translateX: -100 * (1 - progress), // Slide from left
@@ -102,7 +97,7 @@ export function getAnimationTransform(
         scale: 1,
       };
 
-    case 'slideRight':
+    case "slideRight":
       return {
         opacity: progress,
         translateX: 100 * (1 - progress), // Slide from right
@@ -110,7 +105,7 @@ export function getAnimationTransform(
         scale: 1,
       };
 
-    case 'slideTop':
+    case "slideTop":
       return {
         opacity: progress,
         translateX: 0,
@@ -118,7 +113,7 @@ export function getAnimationTransform(
         scale: 1,
       };
 
-    case 'slideBottom':
+    case "slideBottom":
       return {
         opacity: progress,
         translateX: 0,
@@ -126,15 +121,15 @@ export function getAnimationTransform(
         scale: 1,
       };
 
-    case 'scale':
+    case "scale":
       return {
         opacity: progress,
         translateX: 0,
         translateY: 0,
-        scale: 0.5 + (0.5 * progress), // Scale from 50% to 100%
+        scale: 0.5 + 0.5 * progress, // Scale from 50% to 100%
       };
 
-    case 'typewriter':
+    case "typewriter":
       // Typewriter effect is handled differently in the renderer
       return {
         opacity: 1,
@@ -151,9 +146,6 @@ export function getAnimationTransform(
 /**
  * Calculate visible character count for typewriter effect
  */
-export function getTypewriterCharCount(
-  text: string,
-  progress: number
-): number {
+export function getTypewriterCharCount(text: string, progress: number): number {
   return Math.floor(text.length * progress);
 }

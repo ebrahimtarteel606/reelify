@@ -3,10 +3,10 @@
  * This allows blob URLs to be recreated across page navigations
  */
 
-const DB_NAME = 'reelify-video-storage';
-const STORE_NAME = 'videos';
-const THUMBNAILS_STORE_NAME = 'thumbnails';
-const AUDIO_STORE_NAME = 'audio';
+const DB_NAME = "reelify-video-storage";
+const STORE_NAME = "videos";
+const THUMBNAILS_STORE_NAME = "thumbnails";
+const AUDIO_STORE_NAME = "audio";
 const DB_VERSION = 3; // Incremented to add audio store
 
 /**
@@ -17,7 +17,7 @@ async function initDB(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      reject(new Error('Failed to open IndexedDB'));
+      reject(new Error("Failed to open IndexedDB"));
     };
 
     request.onsuccess = () => {
@@ -45,16 +45,16 @@ async function initDB(): Promise<IDBDatabase> {
 export async function storeVideoFile(file: File): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const transaction = db.transaction([STORE_NAME], "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
-      const request = store.put(file, 'current-video');
+      const request = store.put(file, "current-video");
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to store video file'));
+      request.onerror = () => reject(new Error("Failed to store video file"));
     });
   } catch (error) {
-    console.error('Error storing video file:', error);
+    console.error("Error storing video file:", error);
     throw error;
   }
 }
@@ -65,11 +65,11 @@ export async function storeVideoFile(file: File): Promise<void> {
 export async function getVideoBlobUrl(): Promise<string | null> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const transaction = db.transaction([STORE_NAME], "readonly");
     const store = transaction.objectStore(STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
-      const request = store.get('current-video');
+      const request = store.get("current-video");
       request.onsuccess = () => {
         const file = request.result as File | undefined;
         if (file) {
@@ -79,10 +79,10 @@ export async function getVideoBlobUrl(): Promise<string | null> {
           resolve(null);
         }
       };
-      request.onerror = () => reject(new Error('Failed to retrieve video file'));
+      request.onerror = () => reject(new Error("Failed to retrieve video file"));
     });
   } catch (error) {
-    console.error('Error retrieving video file:', error);
+    console.error("Error retrieving video file:", error);
     return null;
   }
 }
@@ -93,16 +93,16 @@ export async function getVideoBlobUrl(): Promise<string | null> {
 export async function clearVideoFile(): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const transaction = db.transaction([STORE_NAME], "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
-      const request = store.delete('current-video');
+      const request = store.delete("current-video");
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to clear video file'));
+      request.onerror = () => reject(new Error("Failed to clear video file"));
     });
   } catch (error) {
-    console.error('Error clearing video file:', error);
+    console.error("Error clearing video file:", error);
     // Don't throw - clearing is best-effort
   }
 }
@@ -113,19 +113,19 @@ export async function clearVideoFile(): Promise<void> {
 export async function storeThumbnail(thumbnailBlob: Blob, clipKey: string): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([THUMBNAILS_STORE_NAME], 'readwrite');
+    const transaction = db.transaction([THUMBNAILS_STORE_NAME], "readwrite");
     const store = transaction.objectStore(THUMBNAILS_STORE_NAME);
-    
+
     // Convert blob to File for storage
-    const file = new File([thumbnailBlob], `${clipKey}.jpg`, { type: 'image/jpeg' });
-    
+    const file = new File([thumbnailBlob], `${clipKey}.jpg`, { type: "image/jpeg" });
+
     return new Promise((resolve, reject) => {
       const request = store.put(file, clipKey);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to store thumbnail'));
+      request.onerror = () => reject(new Error("Failed to store thumbnail"));
     });
   } catch (error) {
-    console.error('Error storing thumbnail:', error);
+    console.error("Error storing thumbnail:", error);
     throw error;
   }
 }
@@ -136,9 +136,9 @@ export async function storeThumbnail(thumbnailBlob: Blob, clipKey: string): Prom
 export async function getThumbnailBlobUrl(clipKey: string): Promise<string | null> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([THUMBNAILS_STORE_NAME], 'readonly');
+    const transaction = db.transaction([THUMBNAILS_STORE_NAME], "readonly");
     const store = transaction.objectStore(THUMBNAILS_STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
       const request = store.get(clipKey);
       request.onsuccess = () => {
@@ -150,10 +150,10 @@ export async function getThumbnailBlobUrl(clipKey: string): Promise<string | nul
           resolve(null);
         }
       };
-      request.onerror = () => reject(new Error('Failed to retrieve thumbnail'));
+      request.onerror = () => reject(new Error("Failed to retrieve thumbnail"));
     });
   } catch (error) {
-    console.error('Error retrieving thumbnail:', error);
+    console.error("Error retrieving thumbnail:", error);
     return null;
   }
 }
@@ -161,24 +161,26 @@ export async function getThumbnailBlobUrl(clipKey: string): Promise<string | nul
 /**
  * Store multiple thumbnails at once
  */
-export async function storeThumbnails(thumbnails: { blob: Blob; clipKey: string }[]): Promise<void> {
+export async function storeThumbnails(
+  thumbnails: { blob: Blob; clipKey: string }[]
+): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([THUMBNAILS_STORE_NAME], 'readwrite');
+    const transaction = db.transaction([THUMBNAILS_STORE_NAME], "readwrite");
     const store = transaction.objectStore(THUMBNAILS_STORE_NAME);
-    
+
     const promises = thumbnails.map(({ blob, clipKey }) => {
-      const file = new File([blob], `${clipKey}.jpg`, { type: 'image/jpeg' });
+      const file = new File([blob], `${clipKey}.jpg`, { type: "image/jpeg" });
       return new Promise<void>((resolve, reject) => {
         const request = store.put(file, clipKey);
         request.onsuccess = () => resolve();
         request.onerror = () => reject(new Error(`Failed to store thumbnail ${clipKey}`));
       });
     });
-    
+
     await Promise.all(promises);
   } catch (error) {
-    console.error('Error storing thumbnails:', error);
+    console.error("Error storing thumbnails:", error);
     throw error;
   }
 }
@@ -189,16 +191,16 @@ export async function storeThumbnails(thumbnails: { blob: Blob; clipKey: string 
 export async function clearThumbnails(): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([THUMBNAILS_STORE_NAME], 'readwrite');
+    const transaction = db.transaction([THUMBNAILS_STORE_NAME], "readwrite");
     const store = transaction.objectStore(THUMBNAILS_STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
       const request = store.clear();
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to clear thumbnails'));
+      request.onerror = () => reject(new Error("Failed to clear thumbnails"));
     });
   } catch (error) {
-    console.error('Error clearing thumbnails:', error);
+    console.error("Error clearing thumbnails:", error);
     // Don't throw - clearing is best-effort
   }
 }
@@ -209,16 +211,16 @@ export async function clearThumbnails(): Promise<void> {
 export async function storeAudioFile(file: File): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([AUDIO_STORE_NAME], 'readwrite');
+    const transaction = db.transaction([AUDIO_STORE_NAME], "readwrite");
     const store = transaction.objectStore(AUDIO_STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
-      const request = store.put(file, 'current-audio');
+      const request = store.put(file, "current-audio");
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to store audio file'));
+      request.onerror = () => reject(new Error("Failed to store audio file"));
     });
   } catch (error) {
-    console.error('Error storing audio file:', error);
+    console.error("Error storing audio file:", error);
     throw error;
   }
 }
@@ -229,19 +231,19 @@ export async function storeAudioFile(file: File): Promise<void> {
 export async function getAudioFile(): Promise<File | null> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([AUDIO_STORE_NAME], 'readonly');
+    const transaction = db.transaction([AUDIO_STORE_NAME], "readonly");
     const store = transaction.objectStore(AUDIO_STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
-      const request = store.get('current-audio');
+      const request = store.get("current-audio");
       request.onsuccess = () => {
         const file = request.result as File | undefined;
         resolve(file || null);
       };
-      request.onerror = () => reject(new Error('Failed to retrieve audio file'));
+      request.onerror = () => reject(new Error("Failed to retrieve audio file"));
     });
   } catch (error) {
-    console.error('Error retrieving audio file:', error);
+    console.error("Error retrieving audio file:", error);
     return null;
   }
 }
@@ -252,16 +254,16 @@ export async function getAudioFile(): Promise<File | null> {
 export async function clearAudioFile(): Promise<void> {
   try {
     const db = await initDB();
-    const transaction = db.transaction([AUDIO_STORE_NAME], 'readwrite');
+    const transaction = db.transaction([AUDIO_STORE_NAME], "readwrite");
     const store = transaction.objectStore(AUDIO_STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
-      const request = store.delete('current-audio');
+      const request = store.delete("current-audio");
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to clear audio file'));
+      request.onerror = () => reject(new Error("Failed to clear audio file"));
     });
   } catch (error) {
-    console.error('Error clearing audio file:', error);
+    console.error("Error clearing audio file:", error);
     // Don't throw - clearing is best-effort
   }
 }
@@ -271,14 +273,10 @@ export async function clearAudioFile(): Promise<void> {
  */
 export async function clearAllStorage(): Promise<void> {
   try {
-    await Promise.all([
-      clearVideoFile(),
-      clearAudioFile(),
-      clearThumbnails(),
-    ]);
-    console.log('[IndexedDB] All storage cleared');
+    await Promise.all([clearVideoFile(), clearAudioFile(), clearThumbnails()]);
+    console.log("[IndexedDB] All storage cleared");
   } catch (error) {
-    console.error('Error clearing all storage:', error);
+    console.error("Error clearing all storage:", error);
     // Don't throw - clearing is best-effort
   }
 }

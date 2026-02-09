@@ -13,7 +13,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       onBeforeGenerateToken: async () => {
         // You can add authentication here if needed
         return {
-          allowedContentTypes: ["audio/wav", "audio/mpeg", "audio/ogg", "video/mp4", "video/quicktime", "image/jpeg"],
+          allowedContentTypes: [
+            "audio/wav",
+            "audio/mpeg",
+            "audio/ogg",
+            "video/mp4",
+            "video/quicktime",
+            "image/jpeg",
+          ],
           maximumSizeInBytes: 1024 * 1024 * 1024, // 1GB max
           addRandomSuffix: true,
         };
@@ -25,9 +32,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }

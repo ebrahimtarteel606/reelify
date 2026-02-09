@@ -1,6 +1,6 @@
-import { getRequestConfig } from 'next-intl/server';
-import { cookies, headers } from 'next/headers';
-import { locales, defaultLocale, type Locale } from './config';
+import { getRequestConfig } from "next-intl/server";
+import { cookies, headers } from "next/headers";
+import { locales, defaultLocale, type Locale } from "./config";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // Get locale from request (set by middleware)

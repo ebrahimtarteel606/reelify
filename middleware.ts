@@ -1,15 +1,15 @@
-import createMiddleware from 'next-intl/middleware';
-import { NextRequest, NextResponse } from 'next/server';
-import { locales, defaultLocale } from './i18n/config';
+import createMiddleware from "next-intl/middleware";
+import { NextRequest, NextResponse } from "next/server";
+import { locales, defaultLocale } from "./i18n/config";
 
-const LOCALE_COOKIE = 'NEXT_LOCALE';
-const USER_ID_COOKIE = 'reelify_user_id';
+const LOCALE_COOKIE = "NEXT_LOCALE";
+const USER_ID_COOKIE = "reelify_user_id";
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'always',
+  localePrefix: "always",
   localeDetection: true,
 });
 
@@ -18,16 +18,16 @@ export default function middleware(request: NextRequest) {
 
   // Skip middleware for API routes, static files, and Next.js internals
   if (
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.includes('.') // Static files like images, fonts, etc.
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".") // Static files like images, fonts, etc.
   ) {
     return NextResponse.next();
   }
 
   // Allow /admin and /login through without user auth
-  if (pathname.startsWith('/admin') || pathname.startsWith('/login')) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/login")) {
     return NextResponse.next();
   }
 
@@ -35,17 +35,17 @@ export default function middleware(request: NextRequest) {
   // Any locale route (/, /ar, /en, /ar/editor, etc.) requires a valid user_id cookie
   const userId = request.cookies.get(USER_ID_COOKIE)?.value;
   if (!userId) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL("/login", request.url);
     // Preserve the intended destination so we can redirect after login
-    loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
+    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
   // Check for locale preference in cookie
   const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
-  
+
   // If user has a saved preference, use it
-  if (cookieLocale && locales.includes(cookieLocale as typeof locales[number])) {
+  if (cookieLocale && locales.includes(cookieLocale as (typeof locales)[number])) {
     // Check if the current path already has this locale
     const pathLocale = locales.find(
       (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
@@ -53,10 +53,7 @@ export default function middleware(request: NextRequest) {
 
     // If path locale doesn't match cookie preference, redirect
     if (pathLocale !== cookieLocale) {
-      const newPathname = pathname.replace(
-        new RegExp(`^/(${locales.join('|')})`),
-        ''
-      ) || '/';
+      const newPathname = pathname.replace(new RegExp(`^/(${locales.join("|")})`), "") || "/";
       const url = new URL(`/${cookieLocale}${newPathname}`, request.url);
       url.search = request.nextUrl.search;
       return NextResponse.redirect(url);
@@ -69,5 +66,5 @@ export default function middleware(request: NextRequest) {
 
 export const config = {
   // Match all pathnames except for API routes, static files, and Next.js internals
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };

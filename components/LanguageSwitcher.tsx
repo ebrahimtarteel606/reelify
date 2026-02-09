@@ -12,7 +12,7 @@ export function LanguageSwitcher() {
 
   const switchLocale = (newLocale: Locale) => {
     if (newLocale === locale) return;
-    
+
     startTransition(async () => {
       // Set the cookie via server action
       document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;

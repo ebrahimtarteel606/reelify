@@ -46,4 +46,3 @@ npm run dev
 - واجهة البرمجة تعمل على Node.js عبر `runtime = "nodejs"`.
 - في حال وجود خطأ، ستظهر رسالة واضحة مثل: `Missing GEMINI_API_KEY` أو `Transcript was empty`.
 - المقاطع الناتجة تُخزّن في Vercel Blob ويمكن تحميلها مباشرة.
-

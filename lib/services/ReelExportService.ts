@@ -41,7 +41,7 @@ export class ReelExportService {
     } catch (error) {
       console.error("Failed to initialize FFmpeg:", error);
       throw new Error(
-        `Failed to initialize FFmpeg: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to initialize FFmpeg: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
   }
@@ -78,7 +78,7 @@ export class ReelExportService {
     captions: Caption[],
     clipId: string,
     onProgress?: (progress: number) => void,
-    formatOptions?: ExportFormatOptions,
+    formatOptions?: ExportFormatOptions
   ): Promise<ReelExportResult> {
     // Validate inputs
     if (!videoUrl || !videoUrl.trim()) {
@@ -87,7 +87,7 @@ export class ReelExportService {
 
     if (endTime <= startTime) {
       throw new Error(
-        `Invalid time range: end time (${endTime}) must be greater than start time (${startTime})`,
+        `Invalid time range: end time (${endTime}) must be greater than start time (${startTime})`
       );
     }
 
@@ -107,7 +107,7 @@ export class ReelExportService {
         visibleCaptions,
         clipId,
         onProgress,
-        formatOptions,
+        formatOptions
       );
     }
 
@@ -141,10 +141,7 @@ export class ReelExportService {
         const frameMatch = message.match(/frame=\s*(\d+)/);
         if (frameMatch && expectedFrames > 0) {
           const currentFrame = parseInt(frameMatch[1], 10);
-          const progress = Math.min(
-            Math.round((currentFrame / expectedFrames) * 100),
-            99,
-          );
+          const progress = Math.min(Math.round((currentFrame / expectedFrames) * 100), 99);
           onProgress(progress);
         }
       });
@@ -191,11 +188,10 @@ export class ReelExportService {
         console.log("Video file fetched, size:", videoData.length, "bytes");
       } catch (fetchError) {
         console.error("Failed to fetch video file:", fetchError);
-        const errorMsg =
-          fetchError instanceof Error ? fetchError.message : "Unknown error";
+        const errorMsg = fetchError instanceof Error ? fetchError.message : "Unknown error";
         if (errorMsg.includes("CORS") || errorMsg.includes("Failed to fetch")) {
           throw new Error(
-            `Failed to fetch video file due to CORS or network error. The video server must allow cross-origin requests. Original error: ${errorMsg}`,
+            `Failed to fetch video file due to CORS or network error. The video server must allow cross-origin requests. Original error: ${errorMsg}`
           );
         }
         throw new Error(`Failed to fetch video file: ${errorMsg}`);
@@ -214,10 +210,7 @@ export class ReelExportService {
         inputHeight = videoMetadata.height;
         console.log("Video dimensions:", inputWidth, "x", inputHeight);
       } catch (probeError) {
-        console.warn(
-          "Failed to probe video dimensions, using defaults:",
-          probeError,
-        );
+        console.warn("Failed to probe video dimensions, using defaults:", probeError);
         // Try to probe using FFmpeg
         try {
           // Use FFmpeg to probe video info
@@ -230,9 +223,7 @@ export class ReelExportService {
       }
 
       // Helper function to execute FFmpeg and check result
-      const executeAndCheck = async (
-        args: string[],
-      ): Promise<Uint8Array | null> => {
+      const executeAndCheck = async (args: string[]): Promise<Uint8Array | null> => {
         const commandString = args.join(" ");
         console.log("FFmpeg command:", commandString);
         console.log(
@@ -244,7 +235,7 @@ export class ReelExportService {
               }
               return arg;
             })
-            .join(" "),
+            .join(" ")
         );
 
         try {
@@ -259,13 +250,10 @@ export class ReelExportService {
                 log.toLowerCase().includes("drawtext") ||
                 log.toLowerCase().includes("font") ||
                 log.toLowerCase().includes("error") ||
-                log.toLowerCase().includes("warning"),
+                log.toLowerCase().includes("warning")
             );
             if (drawtextErrors.length > 0) {
-              console.warn(
-                "FFmpeg drawtext-related messages:",
-                drawtextErrors.join("\n"),
-              );
+              console.warn("FFmpeg drawtext-related messages:", drawtextErrors.join("\n"));
             }
           }
         } catch (execError) {
@@ -279,9 +267,7 @@ export class ReelExportService {
         try {
           const data = await ffmpeg.readFile("output.mp4");
           const uint8Data =
-            typeof data === "string"
-              ? new TextEncoder().encode(data)
-              : new Uint8Array(data);
+            typeof data === "string" ? new TextEncoder().encode(data) : new Uint8Array(data);
 
           if (uint8Data && uint8Data.length > 0) {
             return uint8Data;
@@ -311,29 +297,23 @@ export class ReelExportService {
       });
 
       if (canUseStreamCopy) {
-        console.log(
-          "No captions detected - using stream copy mode for faster export",
-        );
+        console.log("No captions detected - using stream copy mode for faster export");
       } else {
-        console.log(
-          `Exporting with ${visibleCaptions.length} visible captions`,
-        );
+        console.log(`Exporting with ${visibleCaptions.length} visible captions`);
       }
 
       // Note: We use drawtext filters instead of ASS subtitles for better compatibility with FFmpeg WASM
       // IMPORTANT: FFmpeg WASM drawtext filter REQUIRES a font file for ALL text (not just Arabic)
 
       // Check if any visible captions contain Arabic/RTL text
-      const hasArabicCaptions = visibleCaptions.some((c) =>
-        /[\u0600-\u06FF]/.test(c.text),
-      );
+      const hasArabicCaptions = visibleCaptions.some((c) => /[\u0600-\u06FF]/.test(c.text));
 
       // ALWAYS load a font file - required by FFmpeg drawtext filter
       // If any captions exist, we MUST have a font
       if (visibleCaptions.length > 0) {
         console.log(
           "Loading font for subtitle rendering...",
-          hasArabicCaptions ? "(Arabic/Mixed text detected)" : "(English text)",
+          hasArabicCaptions ? "(Arabic/Mixed text detected)" : "(English text)"
         );
         try {
           let arabicFontData: ArrayBuffer | null = null;
@@ -359,23 +339,21 @@ export class ReelExportService {
               const response = await fetch(path, { cache: "no-cache" });
               if (response.ok) {
                 const data = await response.arrayBuffer();
-                console.log(
-                  `Arabic font response from ${path}: ${data.byteLength} bytes`,
-                );
+                console.log(`Arabic font response from ${path}: ${data.byteLength} bytes`);
                 if (data.byteLength > 10000) {
                   arabicFontData = data;
                   console.log(
-                    `✓ Arabic font loaded from local: ${path} (${data.byteLength} bytes)`,
+                    `✓ Arabic font loaded from local: ${path} (${data.byteLength} bytes)`
                   );
                   break;
                 } else {
                   console.warn(
-                    `Arabic font file too small: ${data.byteLength} bytes (expected > 10000)`,
+                    `Arabic font file too small: ${data.byteLength} bytes (expected > 10000)`
                   );
                 }
               } else {
                 console.warn(
-                  `Arabic font fetch failed for ${path}: ${response.status} ${response.statusText}`,
+                  `Arabic font fetch failed for ${path}: ${response.status} ${response.statusText}`
                 );
               }
             } catch (err) {
@@ -399,9 +377,7 @@ export class ReelExportService {
               if (arabicResponse.ok) {
                 arabicFontData = await arabicResponse.arrayBuffer();
                 if (arabicFontData.byteLength > 10000) {
-                  console.log(
-                    `✓ Arabic font loaded from CDN: ${arabicFontData.byteLength} bytes`,
-                  );
+                  console.log(`✓ Arabic font loaded from CDN: ${arabicFontData.byteLength} bytes`);
                 } else {
                   const size = arabicFontData.byteLength;
                   arabicFontData = null;
@@ -409,7 +385,7 @@ export class ReelExportService {
                 }
               } else {
                 console.error(
-                  `CDN Arabic font fetch failed: ${arabicResponse.status} ${arabicResponse.statusText}`,
+                  `CDN Arabic font fetch failed: ${arabicResponse.status} ${arabicResponse.statusText}`
                 );
               }
             } catch (err) {
@@ -434,9 +410,7 @@ export class ReelExportService {
                 console.log(`English font response: ${data.byteLength} bytes`);
                 if (data.byteLength > 10000) {
                   englishFontData = data;
-                  console.log(
-                    `✓ English font loaded from local: ${data.byteLength} bytes`,
-                  );
+                  console.log(`✓ English font loaded from local: ${data.byteLength} bytes`);
                   break;
                 }
               }
@@ -448,12 +422,10 @@ export class ReelExportService {
 
           // Fallback: If Roboto loading failed, try CDN or use Noto Sans Arabic
           if (!englishFontData && arabicFontData) {
-            console.warn(
-              "Roboto font not found, falling back to Noto Sans Arabic for English",
-            );
+            console.warn("Roboto font not found, falling back to Noto Sans Arabic for English");
             englishFontData = arabicFontData.slice(0); // Clone the buffer
             console.log(
-              `✓ English font using Noto Sans Arabic fallback: ${englishFontData.byteLength} bytes`,
+              `✓ English font using Noto Sans Arabic fallback: ${englishFontData.byteLength} bytes`
             );
           }
 
@@ -461,7 +433,7 @@ export class ReelExportService {
           if (hasArabicCaptions) {
             if (!arabicFontData || arabicFontData.byteLength < 10000) {
               throw new Error(
-                `Arabic font loading failed. Size: ${arabicFontData?.byteLength || 0} bytes`,
+                `Arabic font loading failed. Size: ${arabicFontData?.byteLength || 0} bytes`
               );
             }
           }
@@ -469,23 +441,21 @@ export class ReelExportService {
           // English font is always required (for English-only or mixed captions)
           if (!englishFontData || englishFontData.byteLength < 10000) {
             throw new Error(
-              `English font loading failed. Size: ${englishFontData?.byteLength || 0} bytes. Last error: ${lastError?.message || "Unknown"}`,
+              `English font loading failed. Size: ${englishFontData?.byteLength || 0} bytes. Last error: ${lastError?.message || "Unknown"}`
             );
           }
 
           // If Arabic font failed but we have English font and no Arabic captions, use English font for both
           if (!arabicFontData && !hasArabicCaptions && englishFontData) {
             arabicFontData = englishFontData.slice(0); // Clone for consistency
-            console.log(
-              `Using English font as Arabic font fallback (no Arabic captions detected)`,
-            );
+            console.log(`Using English font as Arabic font fallback (no Arabic captions detected)`);
           }
 
           // Write both fonts to FFmpeg
           // Ensure both fonts are loaded before writing
           if (!arabicFontData || !englishFontData) {
             throw new Error(
-              `Font data missing: arabic=${!!arabicFontData}, english=${!!englishFontData}`,
+              `Font data missing: arabic=${!!arabicFontData}, english=${!!englishFontData}`
             );
           }
 
@@ -519,7 +489,7 @@ export class ReelExportService {
                   ? new TextEncoder().encode(verifyEnglish).length
                   : new Uint8Array(verifyEnglish as ArrayBuffer).length;
             console.log(
-              `✓ Font verification: arabic.ttf=${arabicSize} bytes, default.ttf=${englishSize} bytes`,
+              `✓ Font verification: arabic.ttf=${arabicSize} bytes, default.ttf=${englishSize} bytes`
             );
 
             if (
@@ -527,14 +497,11 @@ export class ReelExportService {
               englishSize !== englishFontData.byteLength
             ) {
               console.warn(
-                `⚠ Font size mismatch - expected arabic=${arabicFontData.byteLength}, got=${arabicSize}, expected english=${englishFontData.byteLength}, got=${englishSize}`,
+                `⚠ Font size mismatch - expected arabic=${arabicFontData.byteLength}, got=${arabicSize}, expected english=${englishFontData.byteLength}, got=${englishSize}`
               );
             }
           } catch (verifyError) {
-            console.warn(
-              "⚠ Font verification failed (non-fatal):",
-              verifyError,
-            );
+            console.warn("⚠ Font verification failed (non-fatal):", verifyError);
           }
 
           console.log(`✓ Fonts written to FFmpeg successfully`);
@@ -542,14 +509,11 @@ export class ReelExportService {
         } catch (fontError) {
           console.error("Failed to load font:", fontError);
           console.error("Font error details:", {
-            error:
-              fontError instanceof Error
-                ? fontError.message
-                : String(fontError),
+            error: fontError instanceof Error ? fontError.message : String(fontError),
             hasArabic: hasArabicCaptions,
           });
           throw new Error(
-            `FONT_LOAD_ERROR: Cannot export with captions - font loading failed. ${fontError instanceof Error ? fontError.message : String(fontError)}`,
+            `FONT_LOAD_ERROR: Cannot export with captions - font loading failed. ${fontError instanceof Error ? fontError.message : String(fontError)}`
           );
         }
       }
@@ -578,7 +542,7 @@ export class ReelExportService {
         "output.mp4",
         canUseStreamCopy,
         inputWidth,
-        inputHeight,
+        inputHeight
       );
       let uint8Data = await executeAndCheck(args);
 
@@ -603,17 +567,14 @@ export class ReelExportService {
           "output.mp4",
           false,
           inputWidth,
-          inputHeight,
+          inputHeight
         );
         uint8Data = await executeAndCheck(args);
       }
 
       // If failed and we had captions, try without captions as fallback
       if (!uint8Data && captions.length > 0) {
-        console.warn(
-          "Export with captions failed. FFmpeg logs:",
-          this.getRecentLogs().join("\n"),
-        );
+        console.warn("Export with captions failed. FFmpeg logs:", this.getRecentLogs().join("\n"));
         console.warn("Attempting export without captions...");
 
         // Clean up failed output
@@ -633,7 +594,7 @@ export class ReelExportService {
           "output.mp4",
           true,
           inputWidth,
-          inputHeight,
+          inputHeight
         );
         uint8Data = await executeAndCheck(args);
 
@@ -654,14 +615,14 @@ export class ReelExportService {
             "output.mp4",
             false,
             inputWidth,
-            inputHeight,
+            inputHeight
           );
           uint8Data = await executeAndCheck(args);
         }
 
         if (uint8Data) {
           console.warn(
-            "Export succeeded without captions. Captions may contain unsupported characters or require font files not available in the browser.",
+            "Export succeeded without captions. Captions may contain unsupported characters or require font files not available in the browser."
           );
         }
       }
@@ -670,7 +631,7 @@ export class ReelExportService {
         const logs = this.getRecentLogs();
         console.error("FFmpeg logs:", logs.join("\n"));
         throw new Error(
-          `Exported video file is empty. FFmpeg may have failed silently. Check console for FFmpeg logs.`,
+          `Exported video file is empty. FFmpeg may have failed silently. Check console for FFmpeg logs.`
         );
       }
 
@@ -678,11 +639,7 @@ export class ReelExportService {
       const blobData = new Uint8Array(uint8Data);
       const blob = new Blob([blobData], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
-      console.log(
-        "Export completed successfully, file size:",
-        blob.size,
-        "bytes",
-      );
+      console.log("Export completed successfully, file size:", blob.size, "bytes");
 
       // Set progress to 100% on completion
       if (onProgress) {
@@ -729,12 +686,11 @@ export class ReelExportService {
         }
         // Video CORS errors
         if (
-          (error.message.includes("CORS") ||
-            error.message.includes("Failed to fetch video")) &&
+          (error.message.includes("CORS") || error.message.includes("Failed to fetch video")) &&
           !error.message.includes("font")
         ) {
           throw new Error(
-            "Failed to load video file. This might be a CORS (Cross-Origin) issue. The video URL must allow cross-origin requests.",
+            "Failed to load video file. This might be a CORS (Cross-Origin) issue. The video URL must allow cross-origin requests."
           );
         }
         // FFmpeg processing errors

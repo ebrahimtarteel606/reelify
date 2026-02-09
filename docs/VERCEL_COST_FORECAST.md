@@ -6,12 +6,12 @@ Based on [Vercel Pricing](https://vercel.com/pricing) and Reelify’s architectu
 
 ## Usage assumptions
 
-| Parameter | Value |
-|-----------|--------|
-| Users | 100 |
-| Reels per user per day | 10 |
-| Video length per reel | 1 hour |
-| **Total process requests per day** | **1,000** |
+| Parameter                            | Value       |
+| ------------------------------------ | ----------- |
+| Users                                | 100         |
+| Reels per user per day               | 10          |
+| Video length per reel                | 1 hour      |
+| **Total process requests per day**   | **1,000**   |
 | **Total process requests per month** | **~30,000** |
 
 **Per-reel flow (from your app):**
@@ -30,13 +30,13 @@ Based on [Vercel Pricing](https://vercel.com/pricing) and Reelify’s architectu
 
 ## Monthly usage on Vercel
 
-| Resource | Calculation | Monthly usage |
-|----------|-------------|----------------|
-| **Function invocations** | 1,000/day × 30 | **30,000** |
-| **Active CPU (hours)** | 30,000 × (10/60) | **5,000 hours** |
-| **Provisioned memory (GB-hours)** | 30,000 × 1 × (10/60) | **5,000 GB-hours** |
-| **Edge requests (approx.)** | Process + pages, ~3,000/day | **~90,000** |
-| **Fast Data Transfer (approx.)** | 1,000 × 15 MB in + 1 MB out ≈ 16 GB/day | **~480 GB** |
+| Resource                          | Calculation                             | Monthly usage      |
+| --------------------------------- | --------------------------------------- | ------------------ |
+| **Function invocations**          | 1,000/day × 30                          | **30,000**         |
+| **Active CPU (hours)**            | 30,000 × (10/60)                        | **5,000 hours**    |
+| **Provisioned memory (GB-hours)** | 30,000 × 1 × (10/60)                    | **5,000 GB-hours** |
+| **Edge requests (approx.)**       | Process + pages, ~3,000/day             | **~90,000**        |
+| **Fast Data Transfer (approx.)**  | 1,000 × 15 MB in + 1 MB out ≈ 16 GB/day | **~480 GB**        |
 
 ---
 
@@ -44,13 +44,13 @@ Based on [Vercel Pricing](https://vercel.com/pricing) and Reelify’s architectu
 
 Pro is required for this load (Hobby has tight limits and is for personal use). Pricing below is from Vercel’s public pricing; you get **$20 included usage credit** on Pro.
 
-| SKU | Allowance / rate | Your usage | Estimated cost (USD/mo) |
-|-----|-------------------|------------|--------------------------|
-| **Invocations** | $0.60 per 1M | 30,000 | **~$18** |
-| **Active CPU** | $0.128 per hour | 5,000 hrs | **~$640** |
-| **Provisioned Memory** | $0.0106 per GB-hour | 5,000 GB-hrs | **~$53** |
-| **Edge requests** | 10M/mo included | ~90K | **$0** |
-| **Fast Data Transfer** | 1 TB/mo included | ~480 GB | **$0** |
+| SKU                    | Allowance / rate    | Your usage   | Estimated cost (USD/mo) |
+| ---------------------- | ------------------- | ------------ | ----------------------- |
+| **Invocations**        | $0.60 per 1M        | 30,000       | **~$18**                |
+| **Active CPU**         | $0.128 per hour     | 5,000 hrs    | **~$640**               |
+| **Provisioned Memory** | $0.0106 per GB-hour | 5,000 GB-hrs | **~$53**                |
+| **Edge requests**      | 10M/mo included     | ~90K         | **$0**                  |
+| **Fast Data Transfer** | 1 TB/mo included    | ~480 GB      | **$0**                  |
 
 **Subtotal (Vercel compute only):** **~$711/month**  
 After **$20 included credit:** **~$691/month** (order of magnitude; actuals depend on rounding and other usage).
@@ -77,7 +77,7 @@ After **$20 included credit:** **~$691/month** (order of magnitude; actuals depe
 
    Those bills depend on your chosen providers and their pricing for 1,000 hours of audio per day.
 
-3. **Scaling and optimization**  
+3. **Scaling and optimization**
    - Reducing average CPU time per reel (faster transcription, smaller audio, or chunking) lowers the **Active CPU** share.
    - Moving heavy work to a queue + background worker (e.g. off-Vercel) would change the cost shape (fewer long serverless runs, possibly lower Vercel compute, but other infra cost).
 

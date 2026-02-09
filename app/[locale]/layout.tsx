@@ -7,7 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 
 export function generateStaticParams() {
-  return locales.map(locale => ({ locale }));
+  return locales.map((locale) => ({ locale }));
 }
 
 export async function generateMetadata({
@@ -20,9 +20,7 @@ export async function generateMetadata({
   const isArabic = locale === "ar";
 
   return {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-    ),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
     title: {
       default: isArabic
         ? "Reelify | ريلز عربية بالذكاء الاصطناعي"
@@ -55,9 +53,7 @@ export async function generateMetadata({
         { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
       ],
       shortcut: "/favicon.ico",
-      apple: [
-        { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
       other: [
         { rel: "icon", url: "/web-app-manifest-192x192.png", sizes: "192x192", type: "image/png" },
         { rel: "icon", url: "/web-app-manifest-512x512.png", sizes: "512x512", type: "image/png" },
@@ -119,9 +115,7 @@ export default async function LocaleLayout({
 
   return (
     <div lang={locale} dir={dir}>
-      <NextIntlClientProvider messages={messages}>
-        {children}
-      </NextIntlClientProvider>
+      <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
       <Analytics />
       <SpeedInsights />
     </div>

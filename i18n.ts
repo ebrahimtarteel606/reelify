@@ -11,7 +11,7 @@ export default getRequestConfig(async () => {
   try {
     // Try to get locale from cookie first, then from Accept-Language header
     const cookieStore = await cookies();
-    
+
     // Check cookie first
     const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
     if (cookieLocale && locales.includes(cookieLocale as Locale)) {

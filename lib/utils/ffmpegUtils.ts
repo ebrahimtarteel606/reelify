@@ -1,9 +1,4 @@
-import {
-  Caption,
-  ExportSettings,
-  ExportFormatOptions,
-  ReframingMode,
-} from "@/types";
+import { Caption, ExportSettings, ExportFormatOptions, ReframingMode } from "@/types";
 
 /**
  * Convert CSS color (hex or rgba) to FFmpeg color format
@@ -29,7 +24,7 @@ function convertColorToFFmpeg(color: string): string {
 
   // Handle rgba format: rgba(r, g, b, a)
   const rgbaMatch = color.match(
-    /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/i,
+    /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/i
   );
   if (rgbaMatch) {
     const r = parseInt(rgbaMatch[1], 10).toString(16).padStart(2, "0");
@@ -46,9 +41,7 @@ function convertColorToFFmpeg(color: string): string {
   }
 
   // Handle rgb format: rgb(r, g, b)
-  const rgbMatch = color.match(
-    /rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i,
-  );
+  const rgbMatch = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
   if (rgbMatch) {
     const r = parseInt(rgbMatch[1], 10).toString(16).padStart(2, "0");
     const g = parseInt(rgbMatch[2], 10).toString(16).padStart(2, "0");
@@ -89,7 +82,7 @@ function escapeTextForFFmpeg(text: string): string {
  */
 function applyTextTransform(
   text: string,
-  transform?: "none" | "uppercase" | "lowercase" | "capitalize",
+  transform?: "none" | "uppercase" | "lowercase" | "capitalize"
 ): string {
   if (!transform || transform === "none") {
     return text;
@@ -103,9 +96,7 @@ function applyTextTransform(
     case "capitalize":
       return text
         .split(" ")
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        )
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(" ");
     default:
       return text;
@@ -121,32 +112,22 @@ export function buildCaptionFilter(
   caption: Caption,
   trimStart: number,
   videoWidth: number = 1080,
-  videoHeight: number = 1920,
+  videoHeight: number = 1920
 ): string {
-  console.log(
-    `[buildCaptionFilter] Building filter for caption "${caption.id}":`,
-    {
-      text: caption.text.substring(0, 50),
-      isVisible: caption.isVisible,
-      startTime: caption.startTime,
-      endTime: caption.endTime,
-      trimStart,
-      videoSize: { width: videoWidth, height: videoHeight },
-    },
-  );
+  console.log(`[buildCaptionFilter] Building filter for caption "${caption.id}":`, {
+    text: caption.text.substring(0, 50),
+    isVisible: caption.isVisible,
+    startTime: caption.startTime,
+    endTime: caption.endTime,
+    trimStart,
+    videoSize: { width: videoWidth, height: videoHeight },
+  });
 
   // Check if we have keyword highlights
-  const hasKeywords =
-    caption.style.keywordHighlights &&
-    caption.style.keywordHighlights.length > 0;
+  const hasKeywords = caption.style.keywordHighlights && caption.style.keywordHighlights.length > 0;
 
   if (hasKeywords) {
-    return buildCaptionWithKeywordFilters(
-      caption,
-      trimStart,
-      videoWidth,
-      videoHeight,
-    );
+    return buildCaptionWithKeywordFilters(caption, trimStart, videoWidth, videoHeight);
   }
 
   return buildSimpleCaptionFilter(caption, trimStart, videoWidth, videoHeight);
@@ -156,9 +137,7 @@ export function buildCaptionFilter(
  * Split text into segments by script (Arabic vs Latin)
  * Returns array of {text: string, isArabic: boolean}
  */
-function splitTextByScript(
-  text: string,
-): Array<{ text: string; isArabic: boolean }> {
+function splitTextByScript(text: string): Array<{ text: string; isArabic: boolean }> {
   const segments: Array<{ text: string; isArabic: boolean }> = [];
   let currentSegment = "";
   let currentIsArabic: boolean | null = null;
@@ -211,7 +190,7 @@ function wrapTextForFFmpeg(
   text: string,
   fontSize: number,
   fontFamily: string,
-  maxWidth: number,
+  maxWidth: number
 ): string {
   // Use canvas measureText for accurate width calculation (same as preview)
   if (typeof window !== "undefined" && typeof document !== "undefined") {
@@ -250,16 +229,14 @@ function wrapTextForFFmpeg(
         }
 
         const result = lines.length > 0 ? lines.join("\n") : text;
-        console.log(
-          `[wrapTextForFFmpeg] Wrapped text into ${lines.length} lines`,
-        );
+        console.log(`[wrapTextForFFmpeg] Wrapped text into ${lines.length} lines`);
 
         return result;
       }
     } catch (err) {
       console.warn(
         "[wrapTextForFFmpeg] Failed to use canvas measureText, falling back to estimation:",
-        err,
+        err
       );
     }
   }
@@ -301,9 +278,7 @@ function wrapTextForFFmpeg(
   }
 
   const result = lines.length > 0 ? lines.join("\n") : text;
-  console.log(
-    `[wrapTextForFFmpeg] Fallback wrapped text into ${lines.length} lines`,
-  );
+  console.log(`[wrapTextForFFmpeg] Fallback wrapped text into ${lines.length} lines`);
 
   return result;
 }
@@ -316,7 +291,7 @@ function buildSimpleCaptionFilter(
   caption: Caption,
   trimStart: number,
   videoWidth: number,
-  videoHeight: number,
+  videoHeight: number
 ): string {
   // Adjust caption timing relative to trim start
   const captionStart = Math.max(0, caption.startTime - trimStart);
@@ -332,16 +307,14 @@ function buildSimpleCaptionFilter(
         trimStart,
         calculatedStart: captionStart,
         calculatedEnd: captionEnd,
-      },
+      }
     );
     return ""; // Return empty filter string - will be filtered out
   }
 
   // Additional validation: ensure caption has text before processing
   if (!caption.text || caption.text.trim().length === 0) {
-    console.warn(
-      `[buildSimpleCaptionFilter] Skipping caption ${caption.id} - empty text`,
-    );
+    console.warn(`[buildSimpleCaptionFilter] Skipping caption ${caption.id} - empty text`);
     return "";
   }
 
@@ -364,14 +337,14 @@ function buildSimpleCaptionFilter(
     text,
     caption.style.fontSize,
     caption.style.fontFamily,
-    maxTextWidth,
+    maxTextWidth
   );
   const lines = wrappedText.split("\n");
 
   console.log(`[buildSimpleCaptionFilter] Caption text: ${lines.length} lines`);
   console.log(
     `[buildSimpleCaptionFilter] Lines:`,
-    lines.map((line, i) => `${i + 1}: "${line.substring(0, 30)}..."`),
+    lines.map((line, i) => `${i + 1}: "${line.substring(0, 30)}..."`)
   );
 
   // Calculate position (FFmpeg uses top-left origin for x, y coordinates)
@@ -400,24 +373,19 @@ function buildSimpleCaptionFilter(
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.font = `normal normal ${caption.style.fontSize}px ${caption.style.fontFamily}`;
-        maxLineWidth = Math.max(
-          ...lines.map((line) => ctx.measureText(line).width),
-        );
+        maxLineWidth = Math.max(...lines.map((line) => ctx.measureText(line).width));
       }
     } catch (err) {
       console.warn(
         "[buildSimpleCaptionFilter] Failed to measure text width, using estimation:",
-        err,
+        err
       );
     }
   }
 
   // Fallback to estimation if canvas not available
   if (maxLineWidth === 0) {
-    const longestLine = lines.reduce(
-      (a, b) => (a.length > b.length ? a : b),
-      "",
-    );
+    const longestLine = lines.reduce((a, b) => (a.length > b.length ? a : b), "");
     maxLineWidth = longestLine.length * caption.style.fontSize * 0.5;
   }
 
@@ -426,7 +394,7 @@ function buildSimpleCaptionFilter(
 
   if (hasArabic) {
     console.log(
-      `[buildSimpleCaptionFilter] Caption contains Arabic text - will use font file and text shaping`,
+      `[buildSimpleCaptionFilter] Caption contains Arabic text - will use font file and text shaping`
     );
   }
 
@@ -492,7 +460,7 @@ function buildSimpleCaptionFilter(
         console.log(
           `[buildSimpleCaptionFilter] Measured widest line ${
             widestLineIndex + 1
-          }: ${Math.round(widestLineWidth)}px`,
+          }: ${Math.round(widestLineWidth)}px`
         );
       }
     } catch (err) {
@@ -506,10 +474,7 @@ function buildSimpleCaptionFilter(
         if (lineHasArabic && lineHasLatin) {
           const segments = splitTextByScript(line);
           segments.forEach((seg) => {
-            estimatedWidth +=
-              seg.text.length *
-              caption.style.fontSize *
-              (seg.isArabic ? 0.7 : 0.6);
+            estimatedWidth += seg.text.length * caption.style.fontSize * (seg.isArabic ? 0.7 : 0.6);
           });
         } else {
           estimatedWidth = line.length * caption.style.fontSize * 0.6;
@@ -558,10 +523,7 @@ function buildSimpleCaptionFilter(
   // Use the SMALLER of horizontal and vertical padding to keep box reasonable
   // But ensure minimum padding of 90px for proper spacing (increased)
   // Increased cap to 220px to allow more bottom padding
-  const boxPadding = Math.max(
-    90,
-    Math.min(horizontalPadding, verticalPadding, 220),
-  ); // Cap at 220px
+  const boxPadding = Math.max(90, Math.min(horizontalPadding, verticalPadding, 220)); // Cap at 220px
 
   // Calculate vertical offset to shift text upward within the box
   // This creates more visual space at the bottom while keeping top padding smaller
@@ -584,7 +546,7 @@ function buildSimpleCaptionFilter(
   const createLineFilters = (
     lineText: string,
     lineIndex: number,
-    includeBox: boolean,
+    includeBox: boolean
   ): string[] => {
     const lineHasArabic = /[\u0600-\u06FF]/.test(lineText);
     const lineHasLatin = /[a-zA-Z0-9]/.test(lineText);
@@ -594,21 +556,11 @@ function buildSimpleCaptionFilter(
     // English segments MUST use default.ttf (Roboto) without text_shaping
     // Single filter approach doesn't work: text_shaping=0 breaks Arabic, text_shaping=1 breaks English
     if (lineHasArabic && lineHasLatin) {
-      return createMixedLineFilters(
-        lineText,
-        lineIndex,
-        includeBox,
-        widestLineWidth,
-        videoWidth,
-      );
+      return createMixedLineFilters(lineText, lineIndex, includeBox, widestLineWidth, videoWidth);
     }
 
     // For pure Arabic or pure English, use single filter
-    const singleFilter = createSingleLineFilter(
-      lineText,
-      lineIndex,
-      includeBox,
-    );
+    const singleFilter = createSingleLineFilter(lineText, lineIndex, includeBox);
     // Convert to array if needed (single filter returns string, box filter returns array)
     return Array.isArray(singleFilter) ? singleFilter : [singleFilter];
   };
@@ -619,7 +571,7 @@ function buildSimpleCaptionFilter(
     lineIndex: number,
     includeBox: boolean,
     referenceWidth?: number,
-    videoWidth?: number,
+    videoWidth?: number
   ): string[] => {
     const segments = splitTextByScript(lineText);
     const filters: string[] = [];
@@ -709,16 +661,10 @@ function buildSimpleCaptionFilter(
           }
         }
       } catch (err) {
-        console.warn(
-          "[createMixedLineFilters] Canvas measurement failed, using estimation:",
-          err,
-        );
+        console.warn("[createMixedLineFilters] Canvas measurement failed, using estimation:", err);
         // Fallback estimation
         segments.forEach((seg) => {
-          const width =
-            seg.text.length *
-            caption.style.fontSize *
-            (seg.isArabic ? 0.7 : 0.6);
+          const width = seg.text.length * caption.style.fontSize * (seg.isArabic ? 0.7 : 0.6);
           segmentWidths.push(width);
           segmentData.push({ text: seg.text, width, isArabic: seg.isArabic });
           totalWidth += width;
@@ -727,8 +673,7 @@ function buildSimpleCaptionFilter(
     } else {
       // Fallback estimation
       segments.forEach((seg) => {
-        const width =
-          seg.text.length * caption.style.fontSize * (seg.isArabic ? 0.7 : 0.6);
+        const width = seg.text.length * caption.style.fontSize * (seg.isArabic ? 0.7 : 0.6);
         segmentWidths.push(width);
         segmentData.push({ text: seg.text, width, isArabic: seg.isArabic });
         totalWidth += width;
@@ -788,25 +733,21 @@ function buildSimpleCaptionFilter(
           `[buildSimpleCaptionFilter] Line ${
             lineIndex + 1
           }: Background box created for mixed content (width: ${Math.round(
-            boxWidth,
-          )}px, x=${boxX}, videoWidth=${videoWidth})`,
+            boxWidth
+          )}px, x=${boxX}, videoWidth=${videoWidth})`
         );
       } else {
         console.warn(
-          `[buildSimpleCaptionFilter] Line ${
-            lineIndex + 1
-          }: Failed to convert background color: ${
+          `[buildSimpleCaptionFilter] Line ${lineIndex + 1}: Failed to convert background color: ${
             caption.style.backgroundColor
-          }`,
+          }`
         );
       }
     } else {
       console.log(
         `[buildSimpleCaptionFilter] Line ${
           lineIndex + 1
-        }: No box (includeBox=${includeBox}, backgroundColor=${
-          caption.style.backgroundColor
-        })`,
+        }: No box (includeBox=${includeBox}, backgroundColor=${caption.style.backgroundColor})`
       );
     }
 
@@ -857,7 +798,7 @@ function buildSimpleCaptionFilter(
               // Fallback: use sequential order with estimated position
               console.warn(
                 `[createMixedLineFilters] Range API failed for segment ${segIndex}:`,
-                err,
+                err
               );
               visualOrder.push({ index: segIndex, visualX: segIndex * 100 });
             }
@@ -866,9 +807,7 @@ function buildSimpleCaptionFilter(
           });
         } else {
           // Fallback: sequential order if text node not found
-          console.warn(
-            "[createMixedLineFilters] Text node not found, using sequential order",
-          );
+          console.warn("[createMixedLineFilters] Text node not found, using sequential order");
           visualOrder = segmentData.map((_, idx) => ({
             index: idx,
             visualX: idx * 100,
@@ -886,12 +825,12 @@ function buildSimpleCaptionFilter(
             index: v.index,
             text: segmentData[v.index].text.substring(0, 20),
             visualX: Math.round(v.visualX),
-          })),
+          }))
         );
       } catch (err) {
         console.warn(
           "[createMixedLineFilters] Failed to determine visual order, using sequential:",
-          err,
+          err
         );
         // Fallback to sequential order
         visualOrder = segmentData.map((_, idx) => ({
@@ -921,8 +860,7 @@ function buildSimpleCaptionFilter(
 
     // If we successfully determined visual order, use relative positioning
     // Otherwise, fall back to sequential positioning
-    const useVisualOrder =
-      visualOrder.length > 0 && visualOrder[0].visualX !== 0;
+    const useVisualOrder = visualOrder.length > 0 && visualOrder[0].visualX !== 0;
 
     if (useVisualOrder && visualOrder.length === segmentData.length) {
       // Calculate the offset of the first segment in visual order
@@ -930,9 +868,7 @@ function buildSimpleCaptionFilter(
       const firstSegmentIndex = visualOrder[0].index;
       const firstSegmentWidth =
         segmentWidths[firstSegmentIndex] ||
-        segmentData[firstSegmentIndex].text.length *
-          caption.style.fontSize *
-          0.6;
+        segmentData[firstSegmentIndex].text.length * caption.style.fontSize * 0.6;
 
       // Adjust baseX to account for the visual offset
       // The first segment should be positioned at baseX + (firstVisualX - 0)
@@ -944,8 +880,7 @@ function buildSimpleCaptionFilter(
       const segIndex = visualItem.index;
       const segment = segmentData[segIndex];
       const segmentWidth =
-        segmentWidths[segIndex] ||
-        segment.text.length * caption.style.fontSize * 0.6;
+        segmentWidths[segIndex] || segment.text.length * caption.style.fontSize * 0.6;
 
       // Calculate X position based on visual order
       let currentX: number;
@@ -961,16 +896,14 @@ function buildSimpleCaptionFilter(
           const prevSegIndex = prevVisualItem.index;
           const prevSegmentWidth =
             segmentWidths[prevSegIndex] ||
-            segmentData[prevSegIndex].text.length *
-              caption.style.fontSize *
-              0.6;
+            segmentData[prevSegIndex].text.length * caption.style.fontSize * 0.6;
           currentX = baseX;
           // Calculate cumulative width up to this point in visual order
           for (let i = 0; i < visualIndex; i++) {
             const prevIdx = visualOrder[i].index;
             currentX += Math.round(
               segmentWidths[prevIdx] ||
-                segmentData[prevIdx].text.length * caption.style.fontSize * 0.6,
+                segmentData[prevIdx].text.length * caption.style.fontSize * 0.6
             );
           }
         }
@@ -999,11 +932,9 @@ function buildSimpleCaptionFilter(
       ];
 
       console.log(
-        `[createMixedLineFilters] Positioning segment ${
-          segIndex + 1
-        } (visual pos ${
+        `[createMixedLineFilters] Positioning segment ${segIndex + 1} (visual pos ${
           visualIndex + 1
-        }) at x=${currentX}, text="${segment.text.substring(0, 20)}..."`,
+        }) at x=${currentX}, text="${segment.text.substring(0, 20)}..."`
       );
 
       // CRITICAL: Use correct font for each script
@@ -1019,25 +950,21 @@ function buildSimpleCaptionFilter(
         // If text_shaping is needed, it can be enabled, but it often breaks rendering in WASM
         // segmentOptions.push('text_shaping=1'); // Disabled - causes empty boxes in FFmpeg WASM
         console.log(
-          `[createMixedLineFilters] Segment ${
-            segIndex + 1
-          }: Arabic "${segment.text.substring(
+          `[createMixedLineFilters] Segment ${segIndex + 1}: Arabic "${segment.text.substring(
             0,
-            20,
-          )}..." - using arabic.ttf WITHOUT text_shaping (WASM compatibility), fontsize=${segmentFontSize}`,
+            20
+          )}..." - using arabic.ttf WITHOUT text_shaping (WASM compatibility), fontsize=${segmentFontSize}`
         );
       } else {
         segmentOptions.push("fontfile=default.ttf");
         // NO text_shaping for English - it breaks rendering
         console.log(
-          `[createMixedLineFilters] Segment ${
-            segIndex + 1
-          }: English "${segment.text.substring(
+          `[createMixedLineFilters] Segment ${segIndex + 1}: English "${segment.text.substring(
             0,
-            20,
+            20
           )}..." - using default.ttf, fontsize=${segmentFontSize} (reduced from ${
             caption.style.fontSize
-          } to match Arabic weight)`,
+          } to match Arabic weight)`
         );
       }
 
@@ -1048,11 +975,9 @@ function buildSimpleCaptionFilter(
     });
 
     console.log(
-      `[buildSimpleCaptionFilter] Line ${
-        lineIndex + 1
-      }: Mixed content split into ${
+      `[buildSimpleCaptionFilter] Line ${lineIndex + 1}: Mixed content split into ${
         segments.length
-      } segments, total width: ${Math.round(totalWidth)}px`,
+      } segments, total width: ${Math.round(totalWidth)}px`
     );
     return filters;
   };
@@ -1062,7 +987,7 @@ function buildSimpleCaptionFilter(
   const createSingleLineFilter = (
     lineText: string,
     lineIndex: number,
-    includeBox: boolean,
+    includeBox: boolean
   ): string | string[] => {
     // Calculate Y position for this specific line
     // Shift text upward within the box to create more bottom padding visually
@@ -1116,7 +1041,7 @@ function buildSimpleCaptionFilter(
         // Error during measurement, use estimation
         console.warn(
           `[buildSimpleCaptionFilter] Canvas measurement failed, using estimation:`,
-          err,
+          err
         );
         lineWidth = lineText.length * caption.style.fontSize * 0.5;
         if (includeBox) {
@@ -1144,28 +1069,25 @@ function buildSimpleCaptionFilter(
       const marginLeft = boxLeftEdge;
       const marginRight = videoWidth - boxRightEdge;
 
-      console.log(
-        `[buildSimpleCaptionFilter] Line ${lineIndex + 1} (WITH BOX):`,
-        {
-          textX: lineX,
-          textWidth: Math.round(widestLineWidth),
-          boxPadding,
-          boxLeftEdge,
-          boxRightEdge,
-          boxCenter: Math.round(boxCenter),
-          targetCenter: scaledX,
-          marginLeft: Math.round(marginLeft),
-          marginRight: Math.round(marginRight),
-          marginDiff: Math.round(Math.abs(marginLeft - marginRight)),
-        },
-      );
+      console.log(`[buildSimpleCaptionFilter] Line ${lineIndex + 1} (WITH BOX):`, {
+        textX: lineX,
+        textWidth: Math.round(widestLineWidth),
+        boxPadding,
+        boxLeftEdge,
+        boxRightEdge,
+        boxCenter: Math.round(boxCenter),
+        targetCenter: scaledX,
+        marginLeft: Math.round(marginLeft),
+        marginRight: Math.round(marginRight),
+        marginDiff: Math.round(Math.abs(marginLeft - marginRight)),
+      });
     } else {
       console.log(
         `[buildSimpleCaptionFilter] Line ${
           lineIndex + 1
         }: x=${lineX}, y=${lineY}, width=${Math.round(
-          lineWidth,
-        )}, text="${lineText.substring(0, 20)}..."`,
+          lineWidth
+        )}, text="${lineText.substring(0, 20)}..."`
       );
     }
 
@@ -1212,15 +1134,13 @@ function buildSimpleCaptionFilter(
       console.log(
         `[buildSimpleCaptionFilter] Line ${
           lineIndex + 1
-        }: Pure Arabic, arabic.ttf WITHOUT text_shaping (WASM compatibility)`,
+        }: Pure Arabic, arabic.ttf WITHOUT text_shaping (WASM compatibility)`
       );
     } else if (lineHasLatin && !lineHasArabic) {
       // Pure English line - use default.ttf (Roboto) for proper Latin rendering
       lineOptions.push("fontfile=default.ttf");
       console.log(
-        `[buildSimpleCaptionFilter] Line ${
-          lineIndex + 1
-        }: Pure English, default.ttf (Roboto)`,
+        `[buildSimpleCaptionFilter] Line ${lineIndex + 1}: Pure English, default.ttf (Roboto)`
       );
     } else if (lineHasArabic && lineHasLatin) {
       // Mixed Arabic+English line - use arabic.ttf WITHOUT text_shaping
@@ -1231,7 +1151,7 @@ function buildSimpleCaptionFilter(
       console.log(
         `[buildSimpleCaptionFilter] Line ${
           lineIndex + 1
-        }: Mixed Arabic+English, arabic.ttf WITHOUT text_shaping - both scripts should render`,
+        }: Mixed Arabic+English, arabic.ttf WITHOUT text_shaping - both scripts should render`
       );
     } else {
       // No script detected - default to arabic.ttf if caption has Arabic, otherwise default.ttf
@@ -1240,14 +1160,12 @@ function buildSimpleCaptionFilter(
         console.log(
           `[buildSimpleCaptionFilter] Line ${
             lineIndex + 1
-          }: No script detected, using arabic.ttf (caption has Arabic)`,
+          }: No script detected, using arabic.ttf (caption has Arabic)`
         );
       } else {
         lineOptions.push("fontfile=default.ttf");
         console.log(
-          `[buildSimpleCaptionFilter] Line ${
-            lineIndex + 1
-          }: No script detected, using default.ttf`,
+          `[buildSimpleCaptionFilter] Line ${lineIndex + 1}: No script detected, using default.ttf`
         );
       }
     }
@@ -1296,10 +1214,7 @@ function buildSimpleCaptionFilter(
         ];
 
         // Return box filter + text filter (box first) as array
-        return [
-          `drawtext=${boxOptions.join(":")}`,
-          `drawtext=${lineOptions.join(":")}`,
-        ];
+        return [`drawtext=${boxOptions.join(":")}`, `drawtext=${lineOptions.join(":")}`];
       }
     }
 
@@ -1313,24 +1228,18 @@ function buildSimpleCaptionFilter(
   // This ensures the box is properly centered around the entire caption
 
   if (lines.length === 0) {
-    console.error(
-      `[buildSimpleCaptionFilter] ERROR: No lines to render for caption ${caption.id}`,
-    );
+    console.error(`[buildSimpleCaptionFilter] ERROR: No lines to render for caption ${caption.id}`);
     return "";
   }
 
   // Add widest line with box FIRST (bottom layer)
   // createLineFilters returns an array (may be multiple filters for mixed content)
-  const widestLineFilters = createLineFilters(
-    lines[widestLineIndex],
-    widestLineIndex,
-    true,
-  );
+  const widestLineFilters = createLineFilters(lines[widestLineIndex], widestLineIndex, true);
   widestLineFilters.forEach((filter, idx) => {
     console.log(
       `[buildSimpleCaptionFilter] Widest line ${widestLineIndex + 1} filter ${
         idx + 1
-      }/${widestLineFilters.length} (with box): ${filter.substring(0, 100)}...`,
+      }/${widestLineFilters.length} (with box): ${filter.substring(0, 100)}...`
     );
     filters.push(filter);
   });
@@ -1344,7 +1253,7 @@ function buildSimpleCaptionFilter(
       console.log(
         `[buildSimpleCaptionFilter] Line ${i + 1} filter ${idx + 1}/${
           lineFilters.length
-        }: ${filter.substring(0, 80)}...`,
+        }: ${filter.substring(0, 80)}...`
       );
       filters.push(filter);
     });
@@ -1355,17 +1264,10 @@ function buildSimpleCaptionFilter(
   console.log(
     `[buildSimpleCaptionFilter] ✅ Built ${
       filters.length
-    } filters (box on widest line ${widestLineIndex + 1}, drawn first)`,
+    } filters (box on widest line ${widestLineIndex + 1}, drawn first)`
   );
-  console.log(
-    `[buildSimpleCaptionFilter] Final filter length: ${finalFilter.length} chars`,
-  );
-  console.log(
-    `[buildSimpleCaptionFilter] Filter preview: ${finalFilter.substring(
-      0,
-      200,
-    )}...`,
-  );
+  console.log(`[buildSimpleCaptionFilter] Final filter length: ${finalFilter.length} chars`);
+  console.log(`[buildSimpleCaptionFilter] Filter preview: ${finalFilter.substring(0, 200)}...`);
 
   if (!finalFilter || finalFilter.length === 0) {
     console.error(
@@ -1374,7 +1276,7 @@ function buildSimpleCaptionFilter(
         linesCount: lines.length,
         filtersCount: filters.length,
         captionText: caption.text,
-      },
+      }
     );
   }
 
@@ -1389,7 +1291,7 @@ function buildCaptionWithKeywordFilters(
   caption: Caption,
   trimStart: number,
   videoWidth: number,
-  videoHeight: number,
+  videoHeight: number
 ): string {
   // For FFmpeg, keyword highlighting is complex to implement properly
   // We'll render it as a single caption with the base style
@@ -1407,7 +1309,7 @@ export function generateASSSubtitleFile(
   captions: Caption[],
   trimStart: number,
   videoWidth: number = 1080,
-  videoHeight: number = 1920,
+  videoHeight: number = 1920
 ): string {
   // Filter visible captions
   const visibleCaptions = captions.filter((caption) => caption.isVisible);
@@ -1437,10 +1339,8 @@ export function generateASSSubtitleFile(
 
   // Add each caption as a dialogue event
   visibleCaptions.forEach((caption) => {
-    const captionStart =
-      Math.round(Math.max(0, caption.startTime - trimStart) * 100) / 100;
-    const captionEnd =
-      Math.round(Math.max(0, caption.endTime - trimStart) * 100) / 100;
+    const captionStart = Math.round(Math.max(0, caption.startTime - trimStart) * 100) / 100;
+    const captionEnd = Math.round(Math.max(0, caption.endTime - trimStart) * 100) / 100;
 
     // Skip if outside trim range
     if (captionEnd <= captionStart) return;
@@ -1480,7 +1380,7 @@ export function generateASSSubtitleFile(
       text,
       caption.style.fontSize,
       caption.style.fontFamily,
-      maxTextWidth,
+      maxTextWidth
     );
 
     // Build ASS dialogue line
@@ -1505,10 +1405,7 @@ export function generateASSSubtitleFile(
     }
 
     // Background box - use ASS box drawing for background
-    if (
-      caption.style.backgroundColor &&
-      caption.style.backgroundColor !== "transparent"
-    ) {
+    if (caption.style.backgroundColor && caption.style.backgroundColor !== "transparent") {
       // Convert background color to ASS format: &HAABBGGRR
       let bgColorASS = "&H80000000&"; // Default: semi-transparent black
       if (caption.style.backgroundColor.startsWith("#")) {
@@ -1522,7 +1419,7 @@ export function generateASSSubtitleFile(
       } else if (caption.style.backgroundColor.startsWith("rgba")) {
         // Parse rgba color
         const match = caption.style.backgroundColor.match(
-          /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/,
+          /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/
         );
         if (match) {
           const r = parseInt(match[1], 10).toString(16).padStart(2, "0");
@@ -1538,9 +1435,7 @@ export function generateASSSubtitleFile(
       styledText = `{\\bord4\\3c${bgColorASS}\\4c${bgColorASS}}${styledText}`;
     }
 
-    assLines.push(
-      `Dialogue: 0,${startTimeStr},${endTimeStr},Default,,0,0,0,,${styledText}`,
-    );
+    assLines.push(`Dialogue: 0,${startTimeStr},${endTimeStr},Default,,0,0,0,,${styledText}`);
   });
 
   return assLines.join("\n");
@@ -1554,7 +1449,7 @@ export function buildCaptionFilters(
   captions: Caption[],
   trimStart: number,
   videoWidth: number = 1080,
-  videoHeight: number = 1920,
+  videoHeight: number = 1920
 ): string {
   console.log("[buildCaptionFilters] Building filters for captions:", {
     totalCaptions: captions.length,
@@ -1565,9 +1460,7 @@ export function buildCaptionFilters(
 
   const filters = captions
     .filter((caption) => caption.isVisible)
-    .map((caption) =>
-      buildCaptionFilter(caption, trimStart, videoWidth, videoHeight),
-    )
+    .map((caption) => buildCaptionFilter(caption, trimStart, videoWidth, videoHeight))
     .filter((filter) => filter && filter.length > 0); // Filter out empty strings
 
   console.log("[buildCaptionFilters] Generated filters:", {
@@ -1599,7 +1492,7 @@ export function buildFFmpegCommand(
   outputFile: string = "output.mp4",
   useStreamCopy: boolean = false,
   inputWidth: number = 1920,
-  inputHeight: number = 1080,
+  inputHeight: number = 1080
 ): string[] {
   // Filter captions that are visible AND overlap with the trim range
   const trimEnd = startTime + duration;
@@ -1631,14 +1524,7 @@ export function buildFFmpegCommand(
   // Use INPUT SEEKING (-ss BEFORE -i) for fast seeking
   // This seeks in the input stream without decoding, making it much faster
   // The slight frame inaccuracy at keyframe boundaries is acceptable for most use cases
-  const args: string[] = [
-    "-ss",
-    startTime.toString(),
-    "-i",
-    inputFile,
-    "-t",
-    duration.toString(),
-  ];
+  const args: string[] = ["-ss", startTime.toString(), "-i", inputFile, "-t", duration.toString()];
 
   if (shouldUseStreamCopy) {
     // Stream copy mode - no re-encoding, nearly instant
@@ -1665,7 +1551,7 @@ export function buildFFmpegCommand(
           inputHeight,
           width,
           height,
-          settings.formatOptions,
+          settings.formatOptions
         );
         filterParts.push(...reframingFilters);
       }
@@ -1674,9 +1560,7 @@ export function buildFFmpegCommand(
       // For landscape format, scale maintaining aspect ratio and add black bars
       if (settings.formatOptions?.format === "landscape") {
         // Scale maintaining aspect ratio, then pad to exact dimensions
-        filterParts.push(
-          `scale=${width}:${height}:force_original_aspect_ratio=decrease`,
-        );
+        filterParts.push(`scale=${width}:${height}:force_original_aspect_ratio=decrease`);
         filterParts.push(`pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`);
       } else {
         // For zoom format, scale to fill (may crop)
@@ -1686,31 +1570,24 @@ export function buildFFmpegCommand(
       // Add caption filters using drawtext (stream copy fallback path)
       if (hasCaptions) {
         console.log(
-          `[buildFFmpegCommand] Adding drawtext filters (stream copy fallback) for ${visibleCaptions.length} captions`,
+          `[buildFFmpegCommand] Adding drawtext filters (stream copy fallback) for ${visibleCaptions.length} captions`
         );
 
         // Build drawtext filters for each caption
-        const captionFilters = buildCaptionFilters(
-          visibleCaptions,
-          startTime,
-          width,
-          height,
-        );
+        const captionFilters = buildCaptionFilters(visibleCaptions, startTime, width, height);
         if (captionFilters && captionFilters.length > 0) {
           console.log(
             `[buildFFmpegCommand] Caption filters (stream copy):`,
-            captionFilters.substring(0, 200) + "...",
+            captionFilters.substring(0, 200) + "..."
           );
           filterParts.push(captionFilters);
         } else {
           console.warn(
-            "[buildFFmpegCommand] No caption filters generated in stream copy fallback!",
+            "[buildFFmpegCommand] No caption filters generated in stream copy fallback!"
           );
         }
       } else {
-        console.warn(
-          "[buildFFmpegCommand] NO CAPTIONS in stream copy fallback!",
-        );
+        console.warn("[buildFFmpegCommand] NO CAPTIONS in stream copy fallback!");
       }
 
       if (filterParts.length > 0) {
@@ -1739,7 +1616,7 @@ export function buildFFmpegCommand(
         inputHeight,
         width,
         height,
-        settings.formatOptions,
+        settings.formatOptions
       );
       filterParts.push(...reframingFilters);
     }
@@ -1748,9 +1625,7 @@ export function buildFFmpegCommand(
     // For landscape format, scale maintaining aspect ratio and add black bars
     if (settings.formatOptions?.format === "landscape") {
       // Scale maintaining aspect ratio, then pad to exact dimensions
-      filterParts.push(
-        `scale=${width}:${height}:force_original_aspect_ratio=decrease`,
-      );
+      filterParts.push(`scale=${width}:${height}:force_original_aspect_ratio=decrease`);
       filterParts.push(`pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`);
     } else {
       // For zoom format, scale to fill (may crop)
@@ -1769,43 +1644,34 @@ export function buildFFmpegCommand(
             adjustedStart: Math.max(0, c.startTime - startTime),
             adjustedEnd: Math.max(0, c.endTime - startTime),
           })),
-        },
+        }
       );
 
       // Build drawtext filters for each caption
       // FFmpeg WASM doesn't have font files for ASS subtitles, so we use drawtext which has embedded fonts
-      const captionFilters = buildCaptionFilters(
-        visibleCaptions,
-        startTime,
-        width,
-        height,
-      );
+      const captionFilters = buildCaptionFilters(visibleCaptions, startTime, width, height);
       if (captionFilters && captionFilters.length > 0) {
         console.log(
           `[buildFFmpegCommand] Caption filters generated:`,
-          captionFilters.substring(0, 200) + "...",
+          captionFilters.substring(0, 200) + "..."
         );
         filterParts.push(captionFilters);
       } else {
-        console.warn(
-          "[buildFFmpegCommand] No caption filters generated despite having captions!",
-        );
+        console.warn("[buildFFmpegCommand] No caption filters generated despite having captions!");
       }
     } else {
-      console.warn(
-        "[buildFFmpegCommand] NO CAPTIONS TO ADD - hasCaptions is false!",
-      );
+      console.warn("[buildFFmpegCommand] NO CAPTIONS TO ADD - hasCaptions is false!");
     }
 
     if (filterParts.length > 0) {
       const filterChain = filterParts.join(",");
       console.log(
         `[buildFFmpegCommand] Complete filter chain (${filterParts.length} filters):`,
-        filterChain,
+        filterChain
       );
       console.log(
         `[buildFFmpegCommand] Filter breakdown:`,
-        filterParts.map((f, i) => `${i + 1}. ${f.substring(0, 150)}...`),
+        filterParts.map((f, i) => `${i + 1}. ${f.substring(0, 150)}...`)
       );
       args.push("-vf", filterChain);
     } else {
@@ -1838,7 +1704,7 @@ function calculateCropFilter(
   inputHeight: number,
   outputWidth: number,
   outputHeight: number,
-  reframingMode: ReframingMode,
+  reframingMode: ReframingMode
 ): string {
   // Calculate aspect ratios
   const inputAspect = inputWidth / inputHeight;
@@ -1856,11 +1722,7 @@ function calculateCropFilter(
     y = 0;
 
     // Smart reframing: adjust x position based on mode
-    if (
-      reframingMode === "smart" ||
-      reframingMode === "face" ||
-      reframingMode === "speaker"
-    ) {
+    if (reframingMode === "smart" || reframingMode === "face" || reframingMode === "speaker") {
       // Center-weighted cropping (can be enhanced with ML models later)
       // For now, use center position
       x = Math.round((inputWidth - cropWidth) / 2);
@@ -1878,11 +1740,7 @@ function calculateCropFilter(
     x = 0;
 
     // Smart reframing: adjust y position based on mode
-    if (
-      reframingMode === "smart" ||
-      reframingMode === "face" ||
-      reframingMode === "speaker"
-    ) {
+    if (reframingMode === "smart" || reframingMode === "face" || reframingMode === "speaker") {
       // Center-weighted cropping (can be enhanced with ML models later)
       // For now, use center position
       y = Math.round((inputHeight - cropHeight) / 2);
@@ -1906,7 +1764,7 @@ function buildReframingFilters(
   inputHeight: number,
   outputWidth: number,
   outputHeight: number,
-  formatOptions?: ExportFormatOptions,
+  formatOptions?: ExportFormatOptions
 ): string[] {
   const filters: string[] = [];
 
@@ -1969,7 +1827,7 @@ function buildReframingFilters(
  */
 export function getExportSettings(
   quality: "high",
-  formatOptions?: ExportFormatOptions,
+  formatOptions?: ExportFormatOptions
 ): ExportSettings {
   const presets = {
     high: {

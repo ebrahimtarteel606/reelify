@@ -161,8 +161,7 @@
   color: hsl(var(--foreground));
   font-size: 15px;
   line-height: 1.6;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   resize: vertical;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

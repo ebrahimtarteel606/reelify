@@ -10,7 +10,7 @@ export function getSupabaseAdmin() {
 
   if (!url || !key) {
     throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables",
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables"
     );
   }
 
@@ -53,15 +53,9 @@ export interface UsageEvent {
 // ── Credit helpers ────────────────────────────────────────────
 
 /** Fetch a single user by ID. Returns null if not found. */
-export async function getUserById(
-  userId: string,
-): Promise<CreditUser | null> {
+export async function getUserById(userId: string): Promise<CreditUser | null> {
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", userId)
-    .single();
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
 
   if (error || !data) return null;
   return data as CreditUser;
@@ -75,7 +69,7 @@ export async function getUserById(
  */
 export async function chargeCredits(
   userId: string,
-  durationSeconds: number,
+  durationSeconds: number
 ): Promise<{ ok: boolean; error?: string }> {
   const durationMinutes = Math.ceil(durationSeconds / 60);
   const supabase = getSupabaseAdmin();

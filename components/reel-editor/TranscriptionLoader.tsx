@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useTranslations } from 'next-intl';
-import { Warning2 } from 'vuesax-icons-react';
-import { TranscriptionState } from '@/types';
-import styles from './TranscriptionLoader.module.css';
+import React from "react";
+import { useTranslations } from "next-intl";
+import { Warning2 } from "vuesax-icons-react";
+import { TranscriptionState } from "@/types";
+import styles from "./TranscriptionLoader.module.css";
 
 interface TranscriptionLoaderProps {
   state: TranscriptionState;
@@ -13,24 +13,22 @@ interface TranscriptionLoaderProps {
 }
 
 export function TranscriptionLoader({ state, onRetry, onSkip }: TranscriptionLoaderProps) {
-  const t = useTranslations('transcriptionLoader');
+  const t = useTranslations("transcriptionLoader");
 
-  if (state.status === 'idle') {
+  if (state.status === "idle") {
     return null;
   }
 
-  if (state.status === 'loading') {
+  if (state.status === "loading") {
     return (
       <div className={styles.container}>
         <div className={styles.loadingCard}>
           <div className={styles.spinner} />
-          <h3 className={styles.title}>{t('transcribing')}</h3>
-          <p className={styles.message}>
-            {t('transcribingMessage')}
-          </p>
+          <h3 className={styles.title}>{t("transcribing")}</h3>
+          <p className={styles.message}>{t("transcribingMessage")}</p>
           {onSkip && (
             <button onClick={onSkip} className={styles.skipButton}>
-              {t('skipButton')}
+              {t("skipButton")}
             </button>
           )}
         </div>
@@ -38,26 +36,24 @@ export function TranscriptionLoader({ state, onRetry, onSkip }: TranscriptionLoa
     );
   }
 
-  if (state.status === 'error') {
+  if (state.status === "error") {
     return (
       <div className={styles.container}>
         <div className={styles.errorCard}>
           <div className={styles.errorIcon}>
             <Warning2 size={24} variant="Bold" />
           </div>
-          <h3 className={styles.title}>{t('failed')}</h3>
-          <p className={styles.errorMessage}>
-            {state.error || t('errorDefault')}
-          </p>
+          <h3 className={styles.title}>{t("failed")}</h3>
+          <p className={styles.errorMessage}>{state.error || t("errorDefault")}</p>
           <div className={styles.buttonGroup}>
             {onRetry && (
               <button onClick={onRetry} className={styles.retryButton}>
-                {t('retryButton')}
+                {t("retryButton")}
               </button>
             )}
             {onSkip && (
               <button onClick={onSkip} className={styles.skipButton}>
-                {t('continueWithout')}
+                {t("continueWithout")}
               </button>
             )}
           </div>

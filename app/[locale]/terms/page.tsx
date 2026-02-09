@@ -8,8 +8,8 @@ import Link from "next/link";
 
 export default function TermsPage() {
   const locale = useLocale();
-  const t = useTranslations('terms');
-  const tCommon = useTranslations('common');
+  const t = useTranslations("terms");
+  const tCommon = useTranslations("common");
 
   return (
     <main className="min-h-screen bg-gradient-warm">
@@ -34,10 +34,10 @@ export default function TermsPage() {
         {/* Header */}
         <header className="text-center space-y-4 animate-fade-in mt-4">
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
-            {t('title')}
+            {t("title")}
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            {t('lastUpdated')}
+            {t("lastUpdated")}
           </p>
         </header>
 
@@ -46,28 +46,22 @@ export default function TermsPage() {
           <CardContent className="p-8 sm:p-10 space-y-8">
             {/* Introduction */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('introduction')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('introText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("introduction")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("introText")}</p>
             </section>
 
             {/* Service Description */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('serviceDescription')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('serviceDescriptionText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("serviceDescription")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("serviceDescriptionText")}</p>
             </section>
 
             {/* Acceptance */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('acceptance')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('acceptanceText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("acceptance")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("acceptanceText")}</p>
               <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc list-inside">
-                {(t.raw('acceptanceList') as string[]).map((item, index) => (
+                {(t.raw("acceptanceList") as string[]).map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
@@ -75,35 +69,31 @@ export default function TermsPage() {
 
             {/* User Content */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('userContent')}</h2>
+              <h2 className="text-2xl font-bold text-foreground">{t("userContent")}</h2>
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-foreground">{t('ownership')}</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {t('ownershipText')}
-                </p>
+                <h3 className="text-lg font-semibold text-foreground">{t("ownership")}</h3>
+                <p className="text-muted-foreground leading-relaxed">{t("ownershipText")}</p>
               </div>
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-foreground">{t('license')}</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {t('licenseText')}
-                </p>
+                <h3 className="text-lg font-semibold text-foreground">{t("license")}</h3>
+                <p className="text-muted-foreground leading-relaxed">{t("licenseText")}</p>
               </div>
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-foreground">{t('contentResponsibility')}</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {t("contentResponsibility")}
+                </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {t('contentResponsibilityText')}
+                  {t("contentResponsibilityText")}
                 </p>
               </div>
             </section>
 
             {/* Prohibited Uses */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('prohibitedUses')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('prohibitedUsesText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("prohibitedUses")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("prohibitedUsesText")}</p>
               <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc list-inside">
-                {(t.raw('prohibitedUsesList') as string[]).map((item, index) => (
+                {(t.raw("prohibitedUsesList") as string[]).map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
@@ -111,12 +101,12 @@ export default function TermsPage() {
 
             {/* Intellectual Property */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('intellectualProperty')}</h2>
+              <h2 className="text-2xl font-bold text-foreground">{t("intellectualProperty")}</h2>
               <p className="text-muted-foreground leading-relaxed">
-                {t('intellectualPropertyText')}
+                {t("intellectualPropertyText")}
               </p>
               <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc list-inside">
-                {(t.raw('intellectualPropertyList') as string[]).map((item, index) => (
+                {(t.raw("intellectualPropertyList") as string[]).map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
@@ -124,12 +114,10 @@ export default function TermsPage() {
 
             {/* Disclaimer */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('disclaimer')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('disclaimerText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("disclaimer")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("disclaimerText")}</p>
               <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc list-inside">
-                {(t.raw('disclaimerList') as string[]).map((item, index) => (
+                {(t.raw("disclaimerList") as string[]).map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
@@ -137,20 +125,18 @@ export default function TermsPage() {
 
             {/* Limitation of Liability */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('limitationOfLiability')}</h2>
+              <h2 className="text-2xl font-bold text-foreground">{t("limitationOfLiability")}</h2>
               <p className="text-muted-foreground leading-relaxed">
-                {t('limitationOfLiabilityText')}
+                {t("limitationOfLiabilityText")}
               </p>
             </section>
 
             {/* Indemnification */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('indemnification')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('indemnificationText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("indemnification")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("indemnificationText")}</p>
               <ul className="space-y-2 text-muted-foreground leading-relaxed list-disc list-inside">
-                {(t.raw('indemnificationList') as string[]).map((item, index) => (
+                {(t.raw("indemnificationList") as string[]).map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
@@ -158,42 +144,32 @@ export default function TermsPage() {
 
             {/* Modifications */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('modifications')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('modificationsText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("modifications")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("modificationsText")}</p>
             </section>
 
             {/* Termination */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('termination')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('terminationText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("termination")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("terminationText")}</p>
             </section>
 
             {/* Governing Law */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('governingLaw')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('governingLawText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("governingLaw")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("governingLawText")}</p>
             </section>
 
             {/* Severability */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('severability')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('severabilityText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("severability")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("severabilityText")}</p>
             </section>
 
             {/* Contact */}
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">{t('contact')}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('contactText')}
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">{t("contact")}</h2>
+              <p className="text-muted-foreground leading-relaxed">{t("contactText")}</p>
             </section>
           </CardContent>
         </Card>
@@ -201,11 +177,11 @@ export default function TermsPage() {
         {/* Footer Links */}
         <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground animate-fade-in">
           <Link href={`/${locale}`} className="hover:text-primary transition-colors">
-            {tCommon('home')}
+            {tCommon("home")}
           </Link>
           <span>•</span>
           <Link href={`/${locale}/privacy`} className="hover:text-primary transition-colors">
-            {tCommon('privacyPolicy')}
+            {tCommon("privacyPolicy")}
           </Link>
         </div>
       </section>

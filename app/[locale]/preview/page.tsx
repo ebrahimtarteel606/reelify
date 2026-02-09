@@ -46,22 +46,17 @@ function PreviewContent() {
   const tExport = useTranslations("exportButton");
 
   const urlParam = searchParams.get("url");
-  const title =
-    searchParams.get("title") ||
-    (locale === "ar" ? "مقطع فيديو" : "Video clip");
+  const title = searchParams.get("title") || (locale === "ar" ? "مقطع فيديو" : "Video clip");
   const rawDuration = searchParams.get("duration");
   const duration =
     rawDuration != null
       ? (() => {
           const n = parseFloat(rawDuration);
-          return Number.isFinite(n)
-            ? String(Math.round(n * 10) / 10)
-            : rawDuration;
+          return Number.isFinite(n) ? String(Math.round(n * 10) / 10) : rawDuration;
         })()
       : null;
   const thumbnail = searchParams.get("thumbnail");
-  const category =
-    searchParams.get("category") || (locale === "ar" ? "عام" : "General");
+  const category = searchParams.get("category") || (locale === "ar" ? "عام" : "General");
   const tagsParam = searchParams.get("tags") || "";
   const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
   const transcript = searchParams.get("transcript") || "";
@@ -111,9 +106,7 @@ function PreviewContent() {
   const [exportProgress, setExportProgress] = useState(0);
   // Export options (same UX as editor): caption toggle + aspect selected before opening export
   const [includeCaptions, setIncludeCaptions] = useState(true);
-  const [exportFormat, setExportFormat] = useState<"zoom" | "landscape">(
-    "zoom"
-  );
+  const [exportFormat, setExportFormat] = useState<"zoom" | "landscape">("zoom");
 
   useEffect(() => {
     if (urlParam) {
@@ -142,8 +135,7 @@ function PreviewContent() {
 
     const durationNum = duration ? parseFloat(duration) : 0;
     const startTime = startTimeParam != null ? parseFloat(startTimeParam) : 0;
-    const endTime =
-      endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
+    const endTime = endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
 
     const segments = transcript
       ? transcript
@@ -155,9 +147,7 @@ function PreviewContent() {
               text: text.trim(),
               start: index * segmentDuration,
               end: (index + 1) * segmentDuration,
-              language: /[\u0600-\u06FF]/.test(text)
-                ? ("ar" as const)
-                : ("en" as const),
+              language: /[\u0600-\u06FF]/.test(text) ? ("ar" as const) : ("en" as const),
             };
           })
       : [];
@@ -180,15 +170,10 @@ function PreviewContent() {
     if (startTimeParam == null || endTimeParam == null) return null;
     const startTime = parseFloat(startTimeParam);
     const endTime = parseFloat(endTimeParam);
-    if (
-      !Number.isFinite(startTime) ||
-      !Number.isFinite(endTime) ||
-      endTime <= startTime
-    )
+    if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime)
       return null;
 
-    let parsed: Array<{ text: string; start: number; end: number }> | null =
-      null;
+    let parsed: Array<{ text: string; start: number; end: number }> | null = null;
 
     // Load segments from localStorage/sessionStorage
     if (typeof window !== "undefined") {
@@ -219,8 +204,7 @@ function PreviewContent() {
     return fullTranscriptSegments.segments
       .filter(
         (seg) =>
-          seg.start < fullTranscriptSegments.reelEnd &&
-          seg.end > fullTranscriptSegments.reelStart
+          seg.start < fullTranscriptSegments.reelEnd && seg.end > fullTranscriptSegments.reelStart
       )
       .map((seg) => seg.text)
       .join(" ");
@@ -242,9 +226,7 @@ function PreviewContent() {
           position: { x: 540, y: 1632 }, // Center bottom (pixel coordinates for 1080x1920)
           style: DEFAULT_CAPTION_STYLE,
           isVisible: true,
-          language: /[\u0600-\u06FF]/.test(seg.text)
-            ? ("ar" as const)
-            : ("en" as const),
+          language: /[\u0600-\u06FF]/.test(seg.text) ? ("ar" as const) : ("en" as const),
         }));
     }
 
@@ -252,14 +234,11 @@ function PreviewContent() {
     if (transcript) {
       const durationNum = duration ? parseFloat(duration) : 0;
       const startTime = startTimeParam != null ? parseFloat(startTimeParam) : 0;
-      const endTime =
-        endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
+      const endTime = endTimeParam != null ? parseFloat(endTimeParam) : durationNum || 60;
       const clipDuration = endTime - startTime;
 
       // Split transcript into segments
-      const sentences = transcript
-        .split(/[.!?،؛]+/)
-        .filter((s) => s.trim().length > 0);
+      const sentences = transcript.split(/[.!?،؛]+/).filter((s) => s.trim().length > 0);
 
       if (sentences.length > 0) {
         const segmentDuration = clipDuration / sentences.length;
@@ -272,28 +251,19 @@ function PreviewContent() {
           position: { x: 540, y: 1632 }, // Center bottom (pixel coordinates for 1080x1920)
           style: DEFAULT_CAPTION_STYLE,
           isVisible: true,
-          language: /[\u0600-\u06FF]/.test(text)
-            ? ("ar" as const)
-            : ("en" as const),
+          language: /[\u0600-\u06FF]/.test(text) ? ("ar" as const) : ("en" as const),
         }));
       }
     }
 
     return [];
-  }, [
-    fullTranscriptSegments,
-    transcript,
-    duration,
-    startTimeParam,
-    endTimeParam,
-  ]);
+  }, [fullTranscriptSegments, transcript, duration, startTimeParam, endTimeParam]);
 
   const firstReelSegmentIndex = useMemo(() => {
     if (!fullTranscriptSegments) return -1;
     return fullTranscriptSegments.segments.findIndex(
       (seg) =>
-        seg.start < fullTranscriptSegments.reelEnd &&
-        seg.end > fullTranscriptSegments.reelStart
+        seg.start < fullTranscriptSegments.reelEnd && seg.end > fullTranscriptSegments.reelStart
     );
   }, [fullTranscriptSegments]);
 
@@ -307,8 +277,7 @@ function PreviewContent() {
         const elRect = el.getBoundingClientRect();
         const offsetFromVisibleTop = elRect.top - containerRect.top;
         const padding = 8;
-        const newScrollTop =
-          container.scrollTop + offsetFromVisibleTop - padding;
+        const newScrollTop = container.scrollTop + offsetFromVisibleTop - padding;
         container.scrollTo({
           top: Math.max(0, newScrollTop),
           behavior: "smooth",
@@ -340,18 +309,12 @@ function PreviewContent() {
         <Card className="w-full max-w-md shadow-card border-0 bg-gradient-card animate-fade-in">
           <CardContent className="p-8 text-center space-y-6">
             <div className="flex justify-center">
-              <img
-                src="/Transparent black.png"
-                alt="Reelify logo"
-                className="h-10 w-auto"
-              />
+              <img src="/Transparent black.png" alt="Reelify logo" className="h-10 w-auto" />
             </div>
             <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center">
               <Warning2 className="w-8 h-8 text-red-500" size={32} />
             </div>
-            <p className="text-lg font-medium text-foreground">
-              {t("videoUrlMissing")}
-            </p>
+            <p className="text-lg font-medium text-foreground">{t("videoUrlMissing")}</p>
             <Button
               className="bg-gradient-teal hover:shadow-teal transition-all duration-200"
               onClick={() => window.close()}
@@ -423,12 +386,10 @@ function PreviewContent() {
     endTimeParam != null && Number.isFinite(parseFloat(endTimeParam))
       ? parseFloat(endTimeParam)
       : null;
-  const isReelOnly =
-    reelStart != null && reelEnd != null && reelEnd > reelStart;
+  const isReelOnly = reelStart != null && reelEnd != null && reelEnd > reelStart;
 
   const playbackStart = isReelOnly && reelStart != null ? reelStart : 0;
-  const playbackEnd =
-    isReelOnly && reelEnd != null ? reelEnd : videoDuration || 0;
+  const playbackEnd = isReelOnly && reelEnd != null ? reelEnd : videoDuration || 0;
 
   const clampTime = (time: number): number => {
     const min = playbackStart;
@@ -509,9 +470,7 @@ function PreviewContent() {
                     </span>
                   )}
                 </div>
-                <h1 className="text-3xl font-bold text-foreground leading-snug">
-                  {title}
-                </h1>
+                <h1 className="text-3xl font-bold text-foreground leading-snug">{title}</h1>
               </div>
 
               <div className="flex justify-start">
@@ -525,45 +484,30 @@ function PreviewContent() {
                     if (typeof window !== "undefined") {
                       try {
                         // Try to load from sessionStorage/localStorage
-                        let stored =
-                          window.sessionStorage.getItem("reelify_segments");
+                        let stored = window.sessionStorage.getItem("reelify_segments");
                         if (!stored) {
-                          stored =
-                            window.localStorage.getItem("reelify_segments");
+                          stored = window.localStorage.getItem("reelify_segments");
                         }
                         if (stored) {
                           // Ensure it's in both storages
-                          window.localStorage.setItem(
-                            "reelify_segments",
-                            stored
-                          );
-                          window.sessionStorage.setItem(
-                            "reelify_segments",
-                            stored
-                          );
+                          window.localStorage.setItem("reelify_segments", stored);
+                          window.sessionStorage.setItem("reelify_segments", stored);
                           const parsed = JSON.parse(stored);
                           console.log(
                             "[Preview] Segments ready in localStorage for editor:",
                             Array.isArray(parsed) ? parsed.length : 0
                           );
                         } else {
-                          console.warn(
-                            "[Preview] No segments available for editor"
-                          );
+                          console.warn("[Preview] No segments available for editor");
                         }
                       } catch (e) {
-                        console.warn(
-                          "[Preview] Failed to prepare segments:",
-                          e
-                        );
+                        console.warn("[Preview] Failed to prepare segments:", e);
                       }
                     }
 
                     // Navigate to editor WITHOUT segments in URL (rely on localStorage to avoid 431 error)
                     const editorParams = new URLSearchParams({
-                      ...(url && !url.startsWith("blob:")
-                        ? { videoUrl: url }
-                        : {}),
+                      ...(url && !url.startsWith("blob:") ? { videoUrl: url } : {}),
                       startTime: startTimeParam ?? "0",
                       endTime: endTimeParam ?? duration ?? "60",
                       title,
@@ -628,9 +572,7 @@ function PreviewContent() {
                               {isReel ? (
                                 <span
                                   ref={
-                                    i === firstReelSegmentIndex
-                                      ? firstReelSegmentRef
-                                      : undefined
+                                    i === firstReelSegmentIndex ? firstReelSegmentRef : undefined
                                   }
                                   className="bg-amber-200/90 dark:bg-amber-400/40 text-foreground rounded px-1 py-0.5 font-medium"
                                   title={t("selectedClip")}
@@ -640,9 +582,7 @@ function PreviewContent() {
                               ) : (
                                 seg.text
                               )}
-                              {i < fullTranscriptSegments.segments.length - 1
-                                ? " "
-                                : ""}
+                              {i < fullTranscriptSegments.segments.length - 1 ? " " : ""}
                             </span>
                           );
                         })
@@ -667,9 +607,7 @@ function PreviewContent() {
                       <Button
                         variant={includeCaptions ? "default" : "outline"}
                         size="sm"
-                        className={`flex-1 ${
-                          includeCaptions ? "text-white" : ""
-                        }`}
+                        className={`flex-1 ${includeCaptions ? "text-white" : ""}`}
                         onClick={() => setIncludeCaptions(true)}
                       >
                         <DocumentText className="w-4 h-4 me-2" size={16} />
@@ -678,9 +616,7 @@ function PreviewContent() {
                       <Button
                         variant={!includeCaptions ? "default" : "outline"}
                         size="sm"
-                        className={`flex-1 ${
-                          !includeCaptions ? "text-white" : ""
-                        }`}
+                        className={`flex-1 ${!includeCaptions ? "text-white" : ""}`}
                         onClick={() => setIncludeCaptions(false)}
                       >
                         {tExport("withoutCaptions")}
@@ -698,21 +634,15 @@ function PreviewContent() {
                     <Button
                       variant={exportFormat === "zoom" ? "default" : "outline"}
                       size="sm"
-                      className={`flex-1 ${
-                        exportFormat === "zoom" ? "text-white" : ""
-                      }`}
+                      className={`flex-1 ${exportFormat === "zoom" ? "text-white" : ""}`}
                       onClick={() => setExportFormat("zoom")}
                     >
                       {tExport("zoom")}
                     </Button>
                     <Button
-                      variant={
-                        exportFormat === "landscape" ? "default" : "outline"
-                      }
+                      variant={exportFormat === "landscape" ? "default" : "outline"}
                       size="sm"
-                      className={`flex-1 ${
-                        exportFormat === "landscape" ? "text-white" : ""
-                      }`}
+                      className={`flex-1 ${exportFormat === "landscape" ? "text-white" : ""}`}
                       onClick={() => setExportFormat("landscape")}
                     >
                       {tExport("landscape")}
@@ -828,8 +758,7 @@ function PreviewContent() {
                     }
                   }}
                   onSeeked={(event) => {
-                    if (!isReelOnly || reelStart == null || reelEnd == null)
-                      return;
+                    if (!isReelOnly || reelStart == null || reelEnd == null) return;
                     const video = event.currentTarget;
                     if (video.currentTime < reelStart) {
                       video.currentTime = reelStart;
@@ -854,8 +783,7 @@ function PreviewContent() {
                 />
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-muted-foreground font-mono tabular-nums">
-                    {formatTime(currentTime)} /{" "}
-                    {formatTime(playbackEnd || videoDuration)}
+                    {formatTime(currentTime)} / {formatTime(playbackEnd || videoDuration)}
                   </span>
                   <div className="flex items-center gap-1">
                     <button

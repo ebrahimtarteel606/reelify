@@ -11,18 +11,12 @@ const USER_ID_COOKIE = "reelify_user_id";
 export async function GET(request: NextRequest) {
   const userId = request.cookies.get(USER_ID_COOKIE)?.value;
   if (!userId) {
-    return NextResponse.json(
-      { error: "Not authenticated" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const user = await getUserById(userId);
   if (!user) {
-    return NextResponse.json(
-      { error: "User not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   return NextResponse.json({

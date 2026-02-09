@@ -14,10 +14,7 @@ export async function GET() {
 
   if (!response.ok) {
     const details = await response.text();
-    return NextResponse.json(
-      { error: "Failed to fetch Gemini models", details },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch Gemini models", details }, { status: 500 });
   }
 
   const data = await response.json();
@@ -31,7 +28,7 @@ export async function GET() {
   return NextResponse.json({
     models: filtered.map((model: any) => ({
       name: model.name,
-      displayName: model.displayName
-    }))
+      displayName: model.displayName,
+    })),
   });
 }

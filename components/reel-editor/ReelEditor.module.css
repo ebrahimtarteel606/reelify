@@ -374,7 +374,10 @@
   background: hsl(var(--muted));
   color: hsl(var(--muted-foreground));
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .captionToggleBtn:hover {

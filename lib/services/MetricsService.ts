@@ -38,9 +38,7 @@ class MetricsService {
       });
       console.log("[Metrics] Axiom enabled - Gemini tracking active");
     } else {
-      console.log(
-        "[Metrics] Axiom not configured (metrics will only be logged)"
-      );
+      console.log("[Metrics] Axiom not configured (metrics will only be logged)");
     }
   }
 
@@ -81,10 +79,7 @@ class MetricsService {
     } catch (error: any) {
       // Silently ignore dataset errors - don't spam logs
       if (!error?.message?.includes("dataset not found")) {
-        console.error(
-          "[Metrics] Failed to send to Axiom:",
-          error?.message || error
-        );
+        console.error("[Metrics] Failed to send to Axiom:", error?.message || error);
       }
     }
   }
@@ -96,20 +91,13 @@ class MetricsService {
    * Note: Pricing is per 1M tokens in USD for Paid Tier (Standard)
    * Models with tiered pricing use <= 200k tokens threshold
    */
-  calculateGeminiCost(
-    model: string,
-    inputTokens: number,
-    outputTokens: number
-  ): number {
+  calculateGeminiCost(model: string, inputTokens: number, outputTokens: number): number {
     // Helper to determine pricing tier based on input token count
     const isLargePrompt = (tokens: number) => tokens > 200_000;
 
     // Pricing structure: { input: [small, large], output: [small, large] }
     // For models without tiered pricing, both values are the same
-    const pricing: Record<
-      string,
-      { input: [number, number]; output: [number, number] }
-    > = {
+    const pricing: Record<string, { input: [number, number]; output: [number, number] }> = {
       // Gemini 3 Pro Preview - tiered pricing
       "gemini-3-pro-preview": {
         input: [2.0, 4.0], // $2.00 (<=200k), $4.00 (>200k)

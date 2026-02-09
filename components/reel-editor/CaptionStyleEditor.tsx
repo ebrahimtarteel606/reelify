@@ -42,20 +42,14 @@ const FONT_WEIGHTS = [
 
 export function CaptionStyleEditor() {
   const t = useTranslations("captionStyleEditor");
-  const {
-    captions,
-    selectedCaptionId,
-    updateCaptionStyle,
-    setSelectedCaptionId,
-  } = useReelEditorStore();
+  const { captions, selectedCaptionId, updateCaptionStyle, setSelectedCaptionId } =
+    useReelEditorStore();
 
   const selectedCaption = captions.find((c) => c.id === selectedCaptionId);
   const style = selectedCaption?.style;
 
   // Local state for editing
-  const [localStyle, setLocalStyle] = useState<Partial<CaptionStyle>>(
-    style || {},
-  );
+  const [localStyle, setLocalStyle] = useState<Partial<CaptionStyle>>(style || {});
 
   // Update local style when selected caption changes
   useEffect(() => {
@@ -97,10 +91,7 @@ export function CaptionStyleEditor() {
     updateCaptionStyle(selectedCaption.id, newStyle);
   };
 
-  const handleColorChange = (
-    field: "color" | "backgroundColor",
-    value: string,
-  ) => {
+  const handleColorChange = (field: "color" | "backgroundColor", value: string) => {
     handleStyleChange({ [field]: value });
   };
 
@@ -165,12 +156,7 @@ export function CaptionStyleEditor() {
             min="12"
             max="120"
             value={localStyle.fontSize || 48}
-            onChange={(e) =>
-              handleNumberChange(
-                "fontSize",
-                Number.parseInt(e.target.value, 10),
-              )
-            }
+            onChange={(e) => handleNumberChange("fontSize", Number.parseInt(e.target.value, 10))}
             className={styles.slider}
           />
         </div>
@@ -231,9 +217,7 @@ export function CaptionStyleEditor() {
             <input
               type="color"
               value={localStyle.backgroundColor || "#000000"}
-              onChange={(e) =>
-                handleColorChange("backgroundColor", e.target.value)
-              }
+              onChange={(e) => handleColorChange("backgroundColor", e.target.value)}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
               className={styles.colorInput}
@@ -241,9 +225,7 @@ export function CaptionStyleEditor() {
             <input
               type="text"
               value={localStyle.backgroundColor || "#000000"}
-              onChange={(e) =>
-                handleColorChange("backgroundColor", e.target.value)
-              }
+              onChange={(e) => handleColorChange("backgroundColor", e.target.value)}
               onClick={(e) => e.stopPropagation()}
               onFocus={(e) => e.stopPropagation()}
               className={styles.colorTextInput}

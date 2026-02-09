@@ -39,9 +39,7 @@ export function ReelEditor({
     selectedCaptionId,
     setSelectedCaptionId,
   } = useReelEditorStore();
-  const [processedClipData, setProcessedClipData] = useState<
-    typeof clipData | null
-  >(null);
+  const [processedClipData, setProcessedClipData] = useState<typeof clipData | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
@@ -128,7 +126,7 @@ export function ReelEditor({
 
     try {
       const result = await ElevenLabsService.transcribeAudio(
-        clip.videoSourceUrl,
+        clip.videoSourceUrl
         // Language will be auto-detected
       );
 
@@ -148,8 +146,7 @@ export function ReelEditor({
       console.error("Transcription error:", error);
       setTranscriptionState({
         status: "error",
-        error:
-          error instanceof Error ? error.message : "Failed to transcribe video",
+        error: error instanceof Error ? error.message : "Failed to transcribe video",
       });
     }
   };
@@ -170,10 +167,7 @@ export function ReelEditor({
   };
 
   // Show transcription loader if transcribing
-  if (
-    transcriptionState.status === "loading" ||
-    transcriptionState.status === "error"
-  ) {
+  if (transcriptionState.status === "loading" || transcriptionState.status === "error") {
     return (
       <>
         <div className={`${styles.container} ${styles[theme]}`}>
@@ -181,11 +175,7 @@ export function ReelEditor({
             <div className={styles.loadingMessage}>{t("preparingEditor")}</div>
           </div>
         </div>
-        <TranscriptionLoader
-          state={transcriptionState}
-          onRetry={handleRetry}
-          onSkip={handleSkip}
-        />
+        <TranscriptionLoader state={transcriptionState} onRetry={handleRetry} onSkip={handleSkip} />
       </>
     );
   }
@@ -208,17 +198,10 @@ export function ReelEditor({
     // Don't deselect if clicking inside video container or sidebar (where style editor is)
     // Also don't deselect if clicking on moveable target or canvas (caption area)
     const isMoveableTarget =
-      target.closest('[class*="moveableTarget"]') ||
-      target.closest('[class*="moveable"]');
+      target.closest('[class*="moveableTarget"]') || target.closest('[class*="moveable"]');
     const isCanvas = target.tagName === "CANVAS";
 
-    if (
-      !videoContainer &&
-      !sidebar &&
-      !isMoveableTarget &&
-      !isCanvas &&
-      selectedCaptionId
-    ) {
+    if (!videoContainer && !sidebar && !isMoveableTarget && !isCanvas && selectedCaptionId) {
       setSelectedCaptionId(null);
     }
   };
@@ -230,10 +213,7 @@ export function ReelEditor({
         onDismiss={handleOnboardingDismiss}
         selectedCaptionId={selectedCaptionId}
       />
-      <div
-        className={`${styles.container} ${styles[theme]}`}
-        onClick={handleEditorClick}
-      >
+      <div className={`${styles.container} ${styles[theme]}`} onClick={handleEditorClick}>
         <div className={styles.editor}>
           <div className={styles.videoSection}>
             <div className={styles.videoContainer}>
@@ -242,10 +222,7 @@ export function ReelEditor({
                 data-format={exportFormat}
                 data-onboarding="video-area"
               >
-                <VideoPlayer
-                  videoUrl={currentClip.videoSourceUrl}
-                  format={exportFormat}
-                />
+                <VideoPlayer videoUrl={currentClip.videoSourceUrl} format={exportFormat} />
                 <CaptionCanvas videoWidth={1080} videoHeight={1920} />
               </div>
             </div>
@@ -260,9 +237,7 @@ export function ReelEditor({
               {/* Caption toggle: With / Without captions (same order as preview) */}
               {captions.length > 0 && (
                 <div className={styles.exportOptionsRow}>
-                  <span className={styles.exportOptionsLabel}>
-                    {tExport("captions")}
-                  </span>
+                  <span className={styles.exportOptionsLabel}>{tExport("captions")}</span>
                   <div className={styles.captionToggleGroup}>
                     <button
                       type="button"
@@ -284,13 +259,8 @@ export function ReelEditor({
                 </div>
               )}
               {/* Zoom / Landscape - directly under captions like preview */}
-              <div
-                className={styles.exportOptionsRow}
-                data-onboarding="format-toggle"
-              >
-                <span className={styles.exportOptionsLabel}>
-                  {tExport("exportFormat")}
-                </span>
+              <div className={styles.exportOptionsRow} data-onboarding="format-toggle">
+                <span className={styles.exportOptionsLabel}>{tExport("exportFormat")}</span>
                 <div className={styles.captionToggleGroup}>
                   <button
                     type="button"
@@ -310,26 +280,13 @@ export function ReelEditor({
                   </button>
                 </div>
               </div>
-              <div
-                className={styles.exportButtonWrapper}
-                data-onboarding="export-button"
-              >
-                <ExportButton
-                  onExportSuccess={onExportSuccess}
-                  onExportError={onExportError}
-                />
+              <div className={styles.exportButtonWrapper} data-onboarding="export-button">
+                <ExportButton onExportSuccess={onExportSuccess} onExportError={onExportError} />
               </div>
             </div>
 
-            <div
-              className={styles.sidebarContent}
-              data-onboarding="transcription-editor"
-            >
-              {selectedCaptionId ? (
-                <CaptionStyleEditor />
-              ) : (
-                <TranscriptionEditor />
-              )}
+            <div className={styles.sidebarContent} data-onboarding="transcription-editor">
+              {selectedCaptionId ? <CaptionStyleEditor /> : <TranscriptionEditor />}
             </div>
           </div>
         </div>

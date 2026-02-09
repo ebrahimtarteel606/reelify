@@ -13,10 +13,7 @@ interface ExportButtonProps {
   onExportError?: (error: Error) => void;
 }
 
-export function ExportButton({
-  onExportSuccess,
-  onExportError,
-}: ExportButtonProps) {
+export function ExportButton({ onExportSuccess, onExportError }: ExportButtonProps) {
   const t = useTranslations("exportButton");
   const tCommon = useTranslations("common");
   const {
@@ -50,9 +47,7 @@ export function ExportButton({
 
   // Determine button state
   const isProcessing = isExporting;
-  const statusText = isExporting
-    ? t("exporting", { progress: exportProgress })
-    : null;
+  const statusText = isExporting ? t("exporting", { progress: exportProgress }) : null;
 
   const handleExportStart = () => {
     setIsExporting(true);
@@ -86,11 +81,7 @@ export function ExportButton({
         disabled={!currentClip || isProcessing || isEditingTranscription}
         className={styles.button}
         aria-expanded={showPanel}
-        title={
-          isEditingTranscription
-            ? tCommon("disabledWhileEditingTranscription")
-            : undefined
-        }
+        title={isEditingTranscription ? tCommon("disabledWhileEditingTranscription") : undefined}
       >
         {isProcessing ? (
           <>
@@ -129,10 +120,7 @@ export function ExportButton({
       {/* Progress Bar */}
       {isProcessing && (
         <div className={styles.progressBar}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${exportProgress}%` }}
-          />
+          <div className={styles.progressFill} style={{ width: `${exportProgress}%` }} />
         </div>
       )}
     </div>

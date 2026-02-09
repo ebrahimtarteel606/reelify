@@ -101,9 +101,7 @@ export async function generateClipCandidates(
   ) {
     // Default to gemini-3-flash-preview (fastest and working)
     modelName = "gemini-3-flash-preview";
-    console.log(
-      `[Gemini] Using default model: ${modelName} (fastest available)`
-    );
+    console.log(`[Gemini] Using default model: ${modelName} (fastest available)`);
   }
 
   console.log(`[Gemini] Using model: ${modelName}`);
@@ -112,12 +110,7 @@ export async function generateClipCandidates(
 
   // Use all segments - don't filter anything from transcription
   const transcript = segments
-    .map(
-      (segment) =>
-        `[${segment.start.toFixed(2)} - ${segment.end.toFixed(2)}] ${
-          segment.text
-        }`
-    )
+    .map((segment) => `[${segment.start.toFixed(2)} - ${segment.end.toFixed(2)}] ${segment.text}`)
     .join("\n");
 
   // Language-specific preference labels
@@ -145,33 +138,22 @@ export async function generateClipCandidates(
         };
 
   const preferenceLines = [
-    preferences?.platform
-      ? `${preferenceLabels.platform}: ${preferences.platform}`
-      : null,
+    preferences?.platform ? `${preferenceLabels.platform}: ${preferences.platform}` : null,
     Number.isFinite(preferences?.preferredDuration)
       ? `${preferenceLabels.duration}: ${preferences?.preferredDuration} ${preferenceLabels.seconds}`
       : null,
-    preferences?.audience
-      ? `${preferenceLabels.audience}: ${preferences.audience}`
-      : null,
+    preferences?.audience ? `${preferenceLabels.audience}: ${preferences.audience}` : null,
     preferences?.tone ? `${preferenceLabels.tone}: ${preferences.tone}` : null,
-    preferences?.hookStyle
-      ? `${preferenceLabels.hookStyle}: ${preferences.hookStyle}`
-      : null,
-    preferences?.keyTopics
-      ? `${preferenceLabels.keyTopics}: ${preferences.keyTopics}`
-      : null,
+    preferences?.hookStyle ? `${preferenceLabels.hookStyle}: ${preferences.hookStyle}` : null,
+    preferences?.keyTopics ? `${preferenceLabels.keyTopics}: ${preferences.keyTopics}` : null,
     preferences?.callToAction
       ? `${preferenceLabels.callToAction}: ${preferences.callToAction}`
       : null,
   ].filter(Boolean);
 
-  const userPreferencesLabel =
-    outputLanguage === "en" ? "User preferences" : "تفضيلات المستخدم";
+  const userPreferencesLabel = outputLanguage === "en" ? "User preferences" : "تفضيلات المستخدم";
   const preferenceBlock =
-    preferenceLines.length > 0
-      ? `\n${userPreferencesLabel}:\n${preferenceLines.join("\n")}\n`
-      : "";
+    preferenceLines.length > 0 ? `\n${userPreferencesLabel}:\n${preferenceLines.join("\n")}\n` : "";
 
   // Get platform-specific recommendations
   const platformRecommendations: Record<string, string> = {
@@ -260,9 +242,7 @@ export async function generateClipCandidates(
 
       Selection priority:
       1) Strong hook in first 3–5 seconds${
-        hasMinimalPreferences
-          ? " (critical for all platforms)"
-          : ` (critical for ${platform})`
+        hasMinimalPreferences ? " (critical for all platforms)" : ` (critical for ${platform})`
       }.
       2) Clean sentence boundaries.
       3) Clear value/payoff.
@@ -294,11 +274,7 @@ export async function generateClipCandidates(
 
   let result;
   let text;
-  const fallbackModels = [
-    "gemini-1.5-pro",
-    "gemini-3-flash-preview",
-    "gemini-3-pro-preview",
-  ];
+  const fallbackModels = ["gemini-1.5-pro", "gemini-3-flash-preview", "gemini-3-pro-preview"];
   let currentModelName = modelName;
 
   // Configure generation to maximize outputs and speed
@@ -323,9 +299,7 @@ export async function generateClipCandidates(
       error instanceof Error &&
       (error.message.includes("404") || error.message.includes("not found"))
     ) {
-      console.warn(
-        `[Gemini] Model ${currentModelName} not available, trying fallback models...`
-      );
+      console.warn(`[Gemini] Model ${currentModelName} not available, trying fallback models...`);
 
       for (const fallbackModelName of fallbackModels) {
         if (currentModelName === fallbackModelName) continue; // Skip if already tried
@@ -341,14 +315,10 @@ export async function generateClipCandidates(
           });
           text = result.response.text();
           currentModelName = fallbackModelName;
-          console.log(
-            `[Gemini] Successfully used fallback model: ${fallbackModelName}`
-          );
+          console.log(`[Gemini] Successfully used fallback model: ${fallbackModelName}`);
           break;
         } catch (fallbackError) {
-          console.warn(
-            `[Gemini] Fallback model ${fallbackModelName} also failed, trying next...`
-          );
+          console.warn(`[Gemini] Fallback model ${fallbackModelName} also failed, trying next...`);
           continue;
         }
       }
@@ -376,11 +346,7 @@ export async function generateClipCandidates(
       const inputTokens = usageMetadata?.promptTokenCount || 0;
       const outputTokens = usageMetadata?.candidatesTokenCount || 0;
 
-      const costUSD = metrics.calculateGeminiCost(
-        currentModelName,
-        inputTokens,
-        outputTokens
-      );
+      const costUSD = metrics.calculateGeminiCost(currentModelName, inputTokens, outputTokens);
 
       tokenUsage = {
         model: currentModelName,
@@ -404,12 +370,8 @@ export async function generateClipCandidates(
 
   // Log scores if available
   if (parsed.length > 0 && parsed[0].score !== undefined) {
-    const scores = parsed
-      .map((c: any) => c.score)
-      .filter((s: any) => s !== undefined);
-    console.log(
-      `[Gemini] Score range: ${Math.min(...scores)} - ${Math.max(...scores)}`
-    );
+    const scores = parsed.map((c: any) => c.score).filter((s: any) => s !== undefined);
+    console.log(`[Gemini] Score range: ${Math.min(...scores)} - ${Math.max(...scores)}`);
   }
 
   const snapStartToSegment = (time: number) => {
@@ -442,14 +404,10 @@ export async function generateClipCandidates(
   const normalized = parsed.map((clip) => {
     const rawStart = Number(clip.start);
     const rawEnd = Number(clip.end);
-    const start = Number.isFinite(rawStart)
-      ? snapStartToSegment(rawStart)
-      : rawStart;
+    const start = Number.isFinite(rawStart) ? snapStartToSegment(rawStart) : rawStart;
     const end = Number.isFinite(rawEnd) ? snapEndToSegment(rawEnd) : rawEnd;
     const safeEnd = end > start ? end : rawEnd;
-    const score = Number.isFinite(Number(clip.score))
-      ? Number(clip.score)
-      : undefined;
+    const score = Number.isFinite(Number(clip.score)) ? Number(clip.score) : undefined;
     return {
       title: String(clip.title ?? "").trim(),
       start,
@@ -463,10 +421,7 @@ export async function generateClipCandidates(
   });
 
   const isBasicValid = (clip: ClipCandidate) =>
-    clip.title &&
-    Number.isFinite(clip.start) &&
-    Number.isFinite(clip.end) &&
-    clip.end > clip.start;
+    clip.title && Number.isFinite(clip.start) && Number.isFinite(clip.end) && clip.end > clip.start;
 
   const isDurationValid = (clip: ClipCandidate) => {
     const duration = clip.end - clip.start;
@@ -493,7 +448,6 @@ export async function generateClipCandidates(
 
   // Return all valid clips ranked from best to worst (as returned by Gemini)
   // Gemini already ranks them, so we just return them in order
-  const clips =
-    validClips.length > 0 ? validClips : normalized.filter(isBasicValid);
+  const clips = validClips.length > 0 ? validClips : normalized.filter(isBasicValid);
   return { clips, tokenUsage };
 }

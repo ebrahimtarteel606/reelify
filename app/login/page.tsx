@@ -66,18 +66,13 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="w-full max-w-sm">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-lg p-8 space-y-6"
-        >
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
           {/* Logo / Title */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
               Reelify
             </h1>
-            <p className="text-sm text-gray-500">
-              Enter your User ID to continue
-            </p>
+            <p className="text-sm text-gray-500">Enter your User ID to continue</p>
           </div>
 
           {/* Input */}

@@ -1,4 +1,4 @@
-import { TrimPoints, ReelClipInput } from '@/types';
+import { TrimPoints, ReelClipInput } from "@/types";
 
 /**
  * Validate trim points
@@ -8,20 +8,20 @@ export function validateTrimPoints(
   videoDuration: number
 ): { valid: boolean; error?: string } {
   if (trimPoints.startTime < 0) {
-    return { valid: false, error: 'Start time cannot be negative' };
+    return { valid: false, error: "Start time cannot be negative" };
   }
 
   if (trimPoints.endTime > videoDuration) {
-    return { valid: false, error: 'End time cannot exceed video duration' };
+    return { valid: false, error: "End time cannot exceed video duration" };
   }
 
   if (trimPoints.startTime >= trimPoints.endTime) {
-    return { valid: false, error: 'Start time must be less than end time' };
+    return { valid: false, error: "Start time must be less than end time" };
   }
 
   const duration = trimPoints.endTime - trimPoints.startTime;
   if (duration < 0.1) {
-    return { valid: false, error: 'Trim duration must be at least 0.1 seconds' };
+    return { valid: false, error: "Trim duration must be at least 0.1 seconds" };
   }
 
   return { valid: true };
@@ -32,15 +32,15 @@ export function validateTrimPoints(
  */
 export function validateClipInput(clipData: ReelClipInput): { valid: boolean; error?: string } {
   if (!clipData.clipId) {
-    return { valid: false, error: 'Clip ID is required' };
+    return { valid: false, error: "Clip ID is required" };
   }
 
   if (!clipData.videoSourceUrl) {
-    return { valid: false, error: 'Video source URL is required' };
+    return { valid: false, error: "Video source URL is required" };
   }
 
   if (clipData.sourceVideoDuration <= 0) {
-    return { valid: false, error: 'Video duration must be greater than 0' };
+    return { valid: false, error: "Video duration must be greater than 0" };
   }
 
   const trimValidation = validateTrimPoints(

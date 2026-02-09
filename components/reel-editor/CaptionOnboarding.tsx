@@ -3,14 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useReelEditorStore } from "@/lib/store/useReelEditorStore";
-import {
-  Brush2,
-  DocumentText,
-  ReceiveSquare,
-  Refresh2,
-  Timer1,
-  Video,
-} from "vuesax-icons-react";
+import { Brush2, DocumentText, ReceiveSquare, Refresh2, Timer1, Video } from "vuesax-icons-react";
 import styles from "./CaptionOnboarding.module.css";
 
 interface CaptionOnboardingProps {
@@ -59,28 +52,18 @@ export function CaptionOnboarding({
   useEffect(() => {
     if (!isVisible) return;
 
-    if (
-      currentStep === "video-area" &&
-      !selectedCaptionId &&
-      captions.length > 0
-    ) {
+    if (currentStep === "video-area" && !selectedCaptionId && captions.length > 0) {
       // Find the first visible caption
       const firstVisibleCaption = captions.find((caption) => caption.isVisible);
       if (firstVisibleCaption) {
         console.log(
           "[Onboarding] Auto-selecting caption for video-area step:",
-          firstVisibleCaption.id,
+          firstVisibleCaption.id
         );
         setSelectedCaptionId(firstVisibleCaption.id);
       }
     }
-  }, [
-    isVisible,
-    currentStep,
-    selectedCaptionId,
-    captions,
-    setSelectedCaptionId,
-  ]);
+  }, [isVisible, currentStep, selectedCaptionId, captions, setSelectedCaptionId]);
 
   // Automatically deselect caption when reaching transcription step
   // This ensures the transcription editor is shown instead of style editor
@@ -112,27 +95,21 @@ export function CaptionOnboarding({
         switch (currentStep) {
           case "video-area":
             // Point to video area
-            element = document.querySelector(
-              '[data-onboarding="video-area"]',
-            ) as HTMLElement;
+            element = document.querySelector('[data-onboarding="video-area"]') as HTMLElement;
             break;
           case "timeline":
             // Point to timeline
-            element = document.querySelector(
-              '[data-onboarding="timeline"]',
-            ) as HTMLElement;
+            element = document.querySelector('[data-onboarding="timeline"]') as HTMLElement;
             break;
           case "format-toggle":
             // Point to format toggle slider only (not the whole div)
             // Try to find the slider element within the format toggle
             const formatToggle = document.querySelector(
-              '[data-onboarding="format-toggle"]',
+              '[data-onboarding="format-toggle"]'
             ) as HTMLElement;
             if (formatToggle) {
               // Look for the slider element (it has class toggleSlider)
-              element = formatToggle.querySelector(
-                ".toggleSlider",
-              ) as HTMLElement;
+              element = formatToggle.querySelector(".toggleSlider") as HTMLElement;
               if (!element) {
                 // Fallback to the toggle button if slider not found
                 element = formatToggle.querySelector("button") as HTMLElement;
@@ -146,21 +123,17 @@ export function CaptionOnboarding({
           case "style-editor":
             // Point directly to the CaptionStyleEditor component in the sidebar
             // First try to find the style editor (only visible when caption is selected)
-            element = document.querySelector(
-              '[data-onboarding="style-editor"]',
-            ) as HTMLElement;
+            element = document.querySelector('[data-onboarding="style-editor"]') as HTMLElement;
             // Fallback to sidebar content area (where style editor is rendered)
             // This ensures we always have a target even if no caption is selected yet
             if (!element) {
               element = document.querySelector(
-                '[data-onboarding="transcription-editor"]',
+                '[data-onboarding="transcription-editor"]'
               ) as HTMLElement;
             }
             // Fallback to sidebar if still not found
             if (!element) {
-              element = document.querySelector(
-                '[data-onboarding="sidebar"]',
-              ) as HTMLElement;
+              element = document.querySelector('[data-onboarding="sidebar"]') as HTMLElement;
             }
             if (!element) {
               element = document.querySelector(".sidebar") as HTMLElement;
@@ -169,19 +142,17 @@ export function CaptionOnboarding({
           case "transcription":
             // Point to transcription editor content area
             element = document.querySelector(
-              '[data-onboarding="transcription-editor"]',
+              '[data-onboarding="transcription-editor"]'
             ) as HTMLElement;
             if (!element) {
               // Fallback to sidebar
-              element = document.querySelector(
-                '[data-onboarding="sidebar"]',
-              ) as HTMLElement;
+              element = document.querySelector('[data-onboarding="sidebar"]') as HTMLElement;
             }
             break;
           case "export":
             // Point to the actual export button (not the wrapper div)
             const exportWrapper = document.querySelector(
-              '[data-onboarding="export-button"]',
+              '[data-onboarding="export-button"]'
             ) as HTMLElement;
             if (exportWrapper) {
               // Find the actual button element inside the wrapper
@@ -209,10 +180,7 @@ export function CaptionOnboarding({
 
           // Check if element is visible
           if (rect.width === 0 || rect.height === 0) {
-            console.log(
-              "[Onboarding] Element has zero dimensions:",
-              currentStep,
-            );
+            console.log("[Onboarding] Element has zero dimensions:", currentStep);
             // Use fallback
             setPopoverPosition({
               top: window.innerHeight / 2 - actualPopoverHeight / 2,
@@ -236,25 +204,17 @@ export function CaptionOnboarding({
               // Position to the right of video area
               let top = elementCenterY - actualPopoverHeight / 2;
               let left = rect.right + extraPadding;
-              let pointerDirection: "top" | "bottom" | "left" | "right" =
-                "left";
+              let pointerDirection: "top" | "bottom" | "left" | "right" = "left";
 
               // Ensure popover stays within viewport vertically
               if (top < viewportPadding) {
                 top = viewportPadding;
-              } else if (
-                top + actualPopoverHeight >
-                window.innerHeight - viewportPadding
-              ) {
-                top =
-                  window.innerHeight - actualPopoverHeight - viewportPadding;
+              } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                top = window.innerHeight - actualPopoverHeight - viewportPadding;
               }
 
               // Ensure popover stays within viewport horizontally
-              if (
-                left + actualPopoverWidth >
-                window.innerWidth - viewportPadding
-              ) {
+              if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
                 // If not enough space on right, try left side
                 const spaceLeft = rect.left;
                 if (spaceLeft >= actualPopoverWidth + extraPadding) {
@@ -269,12 +229,8 @@ export function CaptionOnboarding({
                   // Ensure horizontal bounds
                   if (left < viewportPadding) {
                     left = viewportPadding;
-                  } else if (
-                    left + actualPopoverWidth >
-                    window.innerWidth - viewportPadding
-                  ) {
-                    left =
-                      window.innerWidth - actualPopoverWidth - viewportPadding;
+                  } else if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
+                    left = window.innerWidth - actualPopoverWidth - viewportPadding;
                   }
                 }
               }
@@ -288,18 +244,13 @@ export function CaptionOnboarding({
               if (spaceLeft >= actualPopoverWidth + extraPadding) {
                 let top = elementCenterY - actualPopoverHeight / 2;
                 let left = rect.left - actualPopoverWidth - extraPadding;
-                let pointerDirection: "top" | "bottom" | "left" | "right" =
-                  "right";
+                let pointerDirection: "top" | "bottom" | "left" | "right" = "right";
 
                 // Ensure popover stays within viewport
                 if (top < viewportPadding) {
                   top = viewportPadding;
-                } else if (
-                  top + actualPopoverHeight >
-                  window.innerHeight - viewportPadding
-                ) {
-                  top =
-                    window.innerHeight - actualPopoverHeight - viewportPadding;
+                } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                  top = window.innerHeight - actualPopoverHeight - viewportPadding;
                 }
 
                 setPopoverPosition({ top, left, pointerDirection });
@@ -319,18 +270,13 @@ export function CaptionOnboarding({
             if (spaceLeft >= actualPopoverWidth + extraPadding) {
               let top = elementCenterY - actualPopoverHeight / 2;
               let left = rect.left - actualPopoverWidth - extraPadding;
-              let pointerDirection: "top" | "bottom" | "left" | "right" =
-                "right";
+              let pointerDirection: "top" | "bottom" | "left" | "right" = "right";
 
               // Ensure popover stays within viewport vertically
               if (top < viewportPadding) {
                 top = viewportPadding;
-              } else if (
-                top + actualPopoverHeight >
-                window.innerHeight - viewportPadding
-              ) {
-                top =
-                  window.innerHeight - actualPopoverHeight - viewportPadding;
+              } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                top = window.innerHeight - actualPopoverHeight - viewportPadding;
               }
 
               // Ensure popover stays within viewport horizontally
@@ -354,25 +300,16 @@ export function CaptionOnboarding({
               if (spaceRight >= actualPopoverWidth + extraPadding) {
                 let top = elementCenterY - actualPopoverHeight / 2;
                 let left = rect.right + extraPadding;
-                let pointerDirection: "top" | "bottom" | "left" | "right" =
-                  "left";
+                let pointerDirection: "top" | "bottom" | "left" | "right" = "left";
 
                 // Ensure popover stays within viewport
                 if (top < viewportPadding) {
                   top = viewportPadding;
-                } else if (
-                  top + actualPopoverHeight >
-                  window.innerHeight - viewportPadding
-                ) {
-                  top =
-                    window.innerHeight - actualPopoverHeight - viewportPadding;
+                } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                  top = window.innerHeight - actualPopoverHeight - viewportPadding;
                 }
-                if (
-                  left + actualPopoverWidth >
-                  window.innerWidth - viewportPadding
-                ) {
-                  left =
-                    window.innerWidth - actualPopoverWidth - viewportPadding;
+                if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
+                  left = window.innerWidth - actualPopoverWidth - viewportPadding;
                 }
 
                 setPopoverPosition({ top, left, pointerDirection });
@@ -398,10 +335,7 @@ export function CaptionOnboarding({
               // Ensure popover stays within viewport vertically
               if (top < viewportPadding) {
                 top = viewportPadding;
-              } else if (
-                top + actualPopoverHeight >
-                window.innerHeight - viewportPadding
-              ) {
+              } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
                 top = window.innerHeight - actualPopoverHeight - viewportPadding;
               }
 
@@ -412,7 +346,7 @@ export function CaptionOnboarding({
                 return;
               }
             }
-            
+
             // If not enough space on left, try right side (pointing left)
             const spaceRight = window.innerWidth - rect.right;
             if (spaceRight >= actualPopoverWidth + extraPadding) {
@@ -423,10 +357,7 @@ export function CaptionOnboarding({
               // Ensure popover stays within viewport
               if (top < viewportPadding) {
                 top = viewportPadding;
-              } else if (
-                top + actualPopoverHeight >
-                window.innerHeight - viewportPadding
-              ) {
+              } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
                 top = window.innerHeight - actualPopoverHeight - viewportPadding;
               }
               if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
@@ -460,25 +391,16 @@ export function CaptionOnboarding({
               if (spaceRight >= actualPopoverWidth + extraPadding) {
                 let top = elementCenterY - actualPopoverHeight / 2;
                 let left = rect.right + extraPadding;
-                let pointerDirection: "top" | "bottom" | "left" | "right" =
-                  "left";
+                let pointerDirection: "top" | "bottom" | "left" | "right" = "left";
 
                 // Ensure popover stays within viewport
                 if (top < viewportPadding) {
                   top = viewportPadding;
-                } else if (
-                  top + actualPopoverHeight >
-                  window.innerHeight - viewportPadding
-                ) {
-                  top =
-                    window.innerHeight - actualPopoverHeight - viewportPadding;
+                } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                  top = window.innerHeight - actualPopoverHeight - viewportPadding;
                 }
-                if (
-                  left + actualPopoverWidth >
-                  window.innerWidth - viewportPadding
-                ) {
-                  left =
-                    window.innerWidth - actualPopoverWidth - viewportPadding;
+                if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
+                  left = window.innerWidth - actualPopoverWidth - viewportPadding;
                 }
 
                 setPopoverPosition({ top, left, pointerDirection });
@@ -488,17 +410,12 @@ export function CaptionOnboarding({
                 // Position to the left if right doesn't have space
                 let top = elementCenterY - actualPopoverHeight / 2;
                 let left = rect.left - actualPopoverWidth - extraPadding;
-                let pointerDirection: "top" | "bottom" | "left" | "right" =
-                  "right";
+                let pointerDirection: "top" | "bottom" | "left" | "right" = "right";
 
                 if (top < viewportPadding) {
                   top = viewportPadding;
-                } else if (
-                  top + actualPopoverHeight >
-                  window.innerHeight - viewportPadding
-                ) {
-                  top =
-                    window.innerHeight - actualPopoverHeight - viewportPadding;
+                } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                  top = window.innerHeight - actualPopoverHeight - viewportPadding;
                 }
 
                 setPopoverPosition({ top, left, pointerDirection });
@@ -514,17 +431,12 @@ export function CaptionOnboarding({
               if (spaceLeft >= actualPopoverWidth + extraPadding) {
                 let top = elementCenterY - actualPopoverHeight / 2;
                 let left = rect.left - actualPopoverWidth - extraPadding;
-                let pointerDirection: "top" | "bottom" | "left" | "right" =
-                  "right";
+                let pointerDirection: "top" | "bottom" | "left" | "right" = "right";
 
                 if (top < viewportPadding) {
                   top = viewportPadding;
-                } else if (
-                  top + actualPopoverHeight >
-                  window.innerHeight - viewportPadding
-                ) {
-                  top =
-                    window.innerHeight - actualPopoverHeight - viewportPadding;
+                } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                  top = window.innerHeight - actualPopoverHeight - viewportPadding;
                 }
 
                 if (left < viewportPadding) {
@@ -558,10 +470,7 @@ export function CaptionOnboarding({
               // Ensure popover stays within viewport horizontally
               if (left < viewportPadding) {
                 left = viewportPadding;
-              } else if (
-                left + actualPopoverWidth >
-                window.innerWidth - viewportPadding
-              ) {
+              } else if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
                 left = window.innerWidth - actualPopoverWidth - viewportPadding;
               }
 
@@ -572,16 +481,12 @@ export function CaptionOnboarding({
               // Position above button if not enough space below
               let top = rect.top - actualPopoverHeight - extraPadding;
               let left = elementCenterX - actualPopoverWidth / 2;
-              let pointerDirection: "top" | "bottom" | "left" | "right" =
-                "bottom";
+              let pointerDirection: "top" | "bottom" | "left" | "right" = "bottom";
 
               // Ensure popover stays within viewport horizontally
               if (left < viewportPadding) {
                 left = viewportPadding;
-              } else if (
-                left + actualPopoverWidth >
-                window.innerWidth - viewportPadding
-              ) {
+              } else if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
                 left = window.innerWidth - actualPopoverWidth - viewportPadding;
               }
 
@@ -610,20 +515,14 @@ export function CaptionOnboarding({
           // Ensure popover stays within viewport horizontally
           if (left < viewportPadding) {
             left = viewportPadding;
-          } else if (
-            left + actualPopoverWidth >
-            window.innerWidth - viewportPadding
-          ) {
+          } else if (left + actualPopoverWidth > window.innerWidth - viewportPadding) {
             left = window.innerWidth - actualPopoverWidth - viewportPadding;
           }
 
           // Ensure popover stays within viewport vertically
           if (top < viewportPadding) {
             top = viewportPadding;
-          } else if (
-            top + actualPopoverHeight >
-            window.innerHeight - viewportPadding
-          ) {
+          } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
             top = window.innerHeight - actualPopoverHeight - viewportPadding;
           }
 
@@ -634,36 +533,26 @@ export function CaptionOnboarding({
           console.log(
             "[Onboarding] Element not found for step:",
             currentStep,
-            "using fallback position",
+            "using fallback position"
           );
 
           // For style-editor step, try to use sidebar position even if style editor isn't visible
           if (currentStep === "style-editor") {
-            const sidebar = document.querySelector(
-              '[data-onboarding="sidebar"]',
-            ) as HTMLElement;
+            const sidebar = document.querySelector('[data-onboarding="sidebar"]') as HTMLElement;
             if (sidebar) {
               const sidebarRect = sidebar.getBoundingClientRect();
               const spaceLeft = sidebarRect.left;
               const extraPadding = 30;
 
               if (spaceLeft >= actualPopoverWidth + extraPadding) {
-                let top =
-                  sidebarRect.top +
-                  sidebarRect.height / 2 -
-                  actualPopoverHeight / 2;
+                let top = sidebarRect.top + sidebarRect.height / 2 - actualPopoverHeight / 2;
                 let left = sidebarRect.left - actualPopoverWidth - extraPadding;
-                let pointerDirection: "top" | "bottom" | "left" | "right" =
-                  "right";
+                let pointerDirection: "top" | "bottom" | "left" | "right" = "right";
 
                 if (top < viewportPadding) {
                   top = viewportPadding;
-                } else if (
-                  top + actualPopoverHeight >
-                  window.innerHeight - viewportPadding
-                ) {
-                  top =
-                    window.innerHeight - actualPopoverHeight - viewportPadding;
+                } else if (top + actualPopoverHeight > window.innerHeight - viewportPadding) {
+                  top = window.innerHeight - actualPopoverHeight - viewportPadding;
                 }
 
                 setPopoverPosition({ top, left, pointerDirection });
@@ -675,14 +564,8 @@ export function CaptionOnboarding({
 
           // Default fallback: center of screen
           setPopoverPosition({
-            top: Math.max(
-              viewportPadding,
-              window.innerHeight / 2 - actualPopoverHeight / 2,
-            ),
-            left: Math.max(
-              viewportPadding,
-              window.innerWidth / 2 - actualPopoverWidth / 2,
-            ),
+            top: Math.max(viewportPadding, window.innerHeight / 2 - actualPopoverHeight / 2),
+            left: Math.max(viewportPadding, window.innerWidth / 2 - actualPopoverWidth / 2),
             pointerDirection: "bottom",
           });
           setHighlightRect(null);
@@ -744,28 +627,18 @@ export function CaptionOnboarding({
   useEffect(() => {
     if (!isVisible) return;
 
-    if (
-      currentStep === "style-editor" &&
-      !selectedCaptionId &&
-      captions.length > 0
-    ) {
+    if (currentStep === "style-editor" && !selectedCaptionId && captions.length > 0) {
       // Find the first visible caption
       const firstVisibleCaption = captions.find((caption) => caption.isVisible);
       if (firstVisibleCaption) {
         console.log(
           "[Onboarding] Auto-selecting caption for style-editor step:",
-          firstVisibleCaption.id,
+          firstVisibleCaption.id
         );
         setSelectedCaptionId(firstVisibleCaption.id);
       }
     }
-  }, [
-    isVisible,
-    currentStep,
-    selectedCaptionId,
-    captions,
-    setSelectedCaptionId,
-  ]);
+  }, [isVisible, currentStep, selectedCaptionId, captions, setSelectedCaptionId]);
 
   // Skip steps that require a selected caption if none is selected
   const canShowStep = (step: OnboardingStep): boolean => {
@@ -803,15 +676,12 @@ export function CaptionOnboarding({
       "currentIndex:",
       currentIndex,
       "totalSteps:",
-      steps.length,
+      steps.length
     );
 
     // If current step is not found, start from beginning
     if (currentIndex === -1) {
-      console.warn(
-        "[Onboarding] Current step not found in steps array:",
-        currentStep,
-      );
+      console.warn("[Onboarding] Current step not found in steps array:", currentStep);
       setCurrentStep("video-area");
       return;
     }
@@ -873,12 +743,7 @@ export function CaptionOnboarding({
         if (currentIndex > 0) {
           // Go to previous step
           const prevStep = steps[currentIndex - 1];
-          console.log(
-            "[Onboarding] Escape pressed - going back from",
-            currentStep,
-            "to",
-            prevStep,
-          );
+          console.log("[Onboarding] Escape pressed - going back from", currentStep, "to", prevStep);
           setCurrentStep(prevStep);
         } else {
           // If at first step, dismiss onboarding
@@ -955,11 +820,7 @@ export function CaptionOnboarding({
 
   // Verify current step is valid
   if (!steps.includes(currentStep)) {
-    console.warn(
-      "[Onboarding] Invalid current step:",
-      currentStep,
-      "resetting to first step",
-    );
+    console.warn("[Onboarding] Invalid current step:", currentStep, "resetting to first step");
     setCurrentStep("video-area");
     return null;
   }
@@ -1062,11 +923,7 @@ export function CaptionOnboarding({
         <div className={styles.popoverHeader}>
           <span className={styles.icon}>{stepContent.icon}</span>
           <h3 className={styles.title}>{stepContent.title}</h3>
-          <button
-            className={styles.closeButton}
-            onClick={handleDismiss}
-            aria-label={t("close")}
-          >
+          <button className={styles.closeButton} onClick={handleDismiss} aria-label={t("close")}>
             ×
           </button>
         </div>

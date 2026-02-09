@@ -120,15 +120,12 @@ export function ExportPanel({
   const { authStatus, authenticate, logout } = useAuthStatus();
 
   // UI state
-  const [selectedPlatform, setSelectedPlatform] =
-    useState<SelectedPlatform>("download");
+  const [selectedPlatform, setSelectedPlatform] = useState<SelectedPlatform>("download");
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState(0);
-  const [exportedResult, setExportedResult] = useState<ReelExportResult | null>(
-    null
-  );
+  const [exportedResult, setExportedResult] = useState<ReelExportResult | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const panelRef = useRef<HTMLDivElement>(null);
@@ -174,9 +171,7 @@ export function ExportPanel({
   /**
    * Export video and return the result
    */
-  const handleExport = async (
-    withCaptions: boolean = true
-  ): Promise<ReelExportResult | null> => {
+  const handleExport = async (withCaptions: boolean = true): Promise<ReelExportResult | null> => {
     if (!videoUrl || isExporting) return null;
 
     // Warn about animations if present and captions are included
@@ -208,9 +203,7 @@ export function ExportPanel({
       };
 
       // Filter captions based on user choice
-      const captionsToExport = withCaptions
-        ? captions.filter((c) => c.isVisible)
-        : [];
+      const captionsToExport = withCaptions ? captions.filter((c) => c.isVisible) : [];
 
       console.log("[ExportPanel] Export config:", {
         videoUrl: videoUrl.substring(0, 50),
@@ -250,8 +243,7 @@ export function ExportPanel({
     } catch (error) {
       console.error("[ExportPanel] Export failed:", error);
       setIsExporting(false);
-      const errorMessage =
-        error instanceof Error ? error.message : "Export failed";
+      const errorMessage = error instanceof Error ? error.message : "Export failed";
       posthog.capture("export_failed", {
         error_message: errorMessage,
         export_format: exportFormat,
@@ -294,13 +286,9 @@ export function ExportPanel({
         : t("confirmPublishTo", {
             platform: PLATFORM_CONFIG[selectedPlatform].label,
           });
-    const captionsPart = includeCaptions
-      ? t("confirmWithCaptions")
-      : t("confirmWithoutCaptions");
+    const captionsPart = includeCaptions ? t("confirmWithCaptions") : t("confirmWithoutCaptions");
     const aspectPart =
-      exportFormat === "zoom"
-        ? t("confirmZoomAspect")
-        : t("confirmLandscapeAspect");
+      exportFormat === "zoom" ? t("confirmZoomAspect") : t("confirmLandscapeAspect");
     return `${prefix}${action} ${captionsPart} ${aspectPart}.`;
   };
 
@@ -415,8 +403,7 @@ export function ExportPanel({
       }
     } catch (error) {
       console.error("[ExportPanel] Publish failed:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Publishing failed";
+      const errorMessage = error instanceof Error ? error.message : "Publishing failed";
       posthog.capture("publish_failed", {
         platform: targetPlatform,
         error_message: errorMessage,
@@ -442,11 +429,7 @@ export function ExportPanel({
   const progressValue = isExporting ? exportProgress : publishProgress;
 
   // Available platforms to show in the grid
-  const availablePlatforms: SelectedPlatform[] = [
-    "download",
-    "youtube",
-    "facebook",
-  ];
+  const availablePlatforms: SelectedPlatform[] = ["download", "youtube", "facebook"];
 
   // Get the action button text based on selected platform
   const getActionButtonText = () => {
@@ -455,9 +438,7 @@ export function ExportPanel({
     }
     const isAuth = isAuthenticatedFor(selectedPlatform);
     const label = PLATFORM_CONFIG[selectedPlatform].label;
-    return isAuth
-      ? t("publishTo", { platform: label })
-      : t("connect", { platform: label });
+    return isAuth ? t("publishTo", { platform: label }) : t("connect", { platform: label });
   };
 
   if (!isOpen || !mounted || typeof document === "undefined" || !document.body) {
@@ -499,8 +480,7 @@ export function ExportPanel({
               {availablePlatforms.map((platform) => {
                 const config = PLATFORM_CONFIG[platform];
                 const isSelected = selectedPlatform === platform;
-                const isAuth =
-                  platform === "download" || isAuthenticatedFor(platform);
+                const isAuth = platform === "download" || isAuthenticatedFor(platform);
                 const isPublishable = PUBLISHABLE_PLATFORMS.includes(platform);
 
                 return (
@@ -512,13 +492,9 @@ export function ExportPanel({
                         : "bg-muted border-transparent hover:bg-muted/70 hover:-translate-y-0.5 hover:shadow-md"
                     }`}
                     onClick={() => setSelectedPlatform(platform)}
-                    style={
-                      isSelected ? { borderColor: config.color } : undefined
-                    }
+                    style={isSelected ? { borderColor: config.color } : undefined}
                   >
-                    <span className="text-[28px] leading-none">
-                      {config.icon}
-                    </span>
+                    <span className="text-[28px] leading-none">{config.icon}</span>
                     <span className="text-[11px] font-semibold text-foreground text-center">
                       {config.label}
                     </span>
@@ -540,23 +516,22 @@ export function ExportPanel({
           </div>
 
           {/* Connected Account Info */}
-          {selectedPlatform !== "download" &&
-            isAuthenticatedFor(selectedPlatform) && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-emerald-500/10 rounded-xl text-emerald-500 text-sm font-medium">
-                <TickCircle size={14} />
-                <span>
-                  {t("connectedTo", {
-                    platform: PLATFORM_CONFIG[selectedPlatform].label,
-                  })}
-                </span>
-                <button
-                  className="ml-auto text-muted-foreground text-xs underline hover:text-destructive transition-colors"
-                  onClick={() => handleLogout(selectedPlatform)}
-                >
-                  {t("disconnect")}
-                </button>
-              </div>
-            )}
+          {selectedPlatform !== "download" && isAuthenticatedFor(selectedPlatform) && (
+            <div className="flex items-center gap-2 px-4 py-3 bg-emerald-500/10 rounded-xl text-emerald-500 text-sm font-medium">
+              <TickCircle size={14} />
+              <span>
+                {t("connectedTo", {
+                  platform: PLATFORM_CONFIG[selectedPlatform].label,
+                })}
+              </span>
+              <button
+                className="ml-auto text-muted-foreground text-xs underline hover:text-destructive transition-colors"
+                onClick={() => handleLogout(selectedPlatform)}
+              >
+                {t("disconnect")}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Panel Footer */}

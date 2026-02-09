@@ -38,7 +38,12 @@ export async function GET(request: NextRequest) {
   // Aggregate usage per user
   const usageMap: Record<
     string,
-    { total_credits_used: number; total_duration: number; request_count: number; last_used: string | null }
+    {
+      total_credits_used: number;
+      total_duration: number;
+      request_count: number;
+      last_used: string | null;
+    }
   > = {};
 
   for (const event of usage ?? []) {
@@ -83,22 +88,13 @@ export async function POST(request: NextRequest) {
   const { display_name, email, phone, credits_remaining } = body;
 
   if (!display_name || typeof display_name !== "string") {
-    return NextResponse.json(
-      { error: "display_name is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "display_name is required" }, { status: 400 });
   }
   if (!email || typeof email !== "string" || !email.trim()) {
-    return NextResponse.json(
-      { error: "email is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "email is required" }, { status: 400 });
   }
   if (!phone || typeof phone !== "string" || !phone.trim()) {
-    return NextResponse.json(
-      { error: "phone is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "phone is required" }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();
@@ -150,7 +146,8 @@ export async function PATCH(request: NextRequest) {
     }
     allowed.phone = v;
   }
-  if (updates.credits_remaining !== undefined) allowed.credits_remaining = updates.credits_remaining;
+  if (updates.credits_remaining !== undefined)
+    allowed.credits_remaining = updates.credits_remaining;
 
   if (Object.keys(allowed).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

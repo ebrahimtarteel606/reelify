@@ -14,7 +14,7 @@ export class ReelCaptionRenderer {
     captions: Caption[],
     currentTime: number,
     videoWidth: number = 1080,
-    videoHeight: number = 1920,
+    videoHeight: number = 1920
   ): void {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -29,33 +29,19 @@ export class ReelCaptionRenderer {
     // Filter captions visible at current time
     const visibleAtTime = captions.filter(
       (caption) =>
-        caption.isVisible &&
-        currentTime >= caption.startTime &&
-        currentTime <= caption.endTime,
+        caption.isVisible && currentTime >= caption.startTime && currentTime <= caption.endTime
     );
 
     // If multiple captions overlap, prioritize the one that started most recently
     // Sort by startTime descending (most recent first)
-    const sortedCaptions = visibleAtTime.sort(
-      (a, b) => b.startTime - a.startTime,
-    );
+    const sortedCaptions = visibleAtTime.sort((a, b) => b.startTime - a.startTime);
 
     // Render only the most recent caption if multiple overlap
     if (sortedCaptions.length > 0) {
       const captionToRender = sortedCaptions[0];
       // Scale caption position to fit new dimensions
-      const scaledCaption = this.scaleCaptionPosition(
-        captionToRender,
-        videoWidth,
-        videoHeight,
-      );
-      this.renderCaptionWithAnimation(
-        ctx,
-        scaledCaption,
-        currentTime,
-        videoWidth,
-        videoHeight,
-      );
+      const scaledCaption = this.scaleCaptionPosition(captionToRender, videoWidth, videoHeight);
+      this.renderCaptionWithAnimation(ctx, scaledCaption, currentTime, videoWidth, videoHeight);
     }
   }
 
@@ -67,7 +53,7 @@ export class ReelCaptionRenderer {
     caption: Caption,
     currentTime: number,
     videoWidth: number,
-    videoHeight: number,
+    videoHeight: number
   ): void {
     // Always render captions (no time filtering)
     // Calculate animation progress for visual effects only
@@ -93,11 +79,7 @@ export class ReelCaptionRenderer {
     }
 
     // Apply spatial transformations
-    if (
-      transform.translateX !== 0 ||
-      transform.translateY !== 0 ||
-      transform.scale !== 1
-    ) {
+    if (transform.translateX !== 0 || transform.translateY !== 0 || transform.scale !== 1) {
       const centerX = caption.position.x;
       const centerY = caption.position.y;
 
@@ -135,7 +117,7 @@ export class ReelCaptionRenderer {
     ctx: CanvasRenderingContext2D,
     caption: Caption,
     videoWidth: number,
-    videoHeight: number,
+    videoHeight: number
   ): void {
     const { style, position } = caption;
     let { text } = caption;
@@ -144,8 +126,7 @@ export class ReelCaptionRenderer {
     text = this.applyTextTransform(text, style.textTransform);
 
     // Check if we have keyword highlights
-    const hasKeywords =
-      style.keywordHighlights && style.keywordHighlights.length > 0;
+    const hasKeywords = style.keywordHighlights && style.keywordHighlights.length > 0;
 
     if (hasKeywords) {
       this.renderCaptionWithKeywords(ctx, text, style, position, videoWidth);
@@ -157,11 +138,7 @@ export class ReelCaptionRenderer {
   /**
    * Wrap text into multiple lines based on max width
    */
-  private static wrapText(
-    ctx: CanvasRenderingContext2D,
-    text: string,
-    maxWidth: number,
-  ): string[] {
+  private static wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
     const words = text.split(" ");
     const lines: string[] = [];
     let currentLine = "";
@@ -193,7 +170,7 @@ export class ReelCaptionRenderer {
     text: string,
     style: Caption["style"],
     position: { x: number; y: number },
-    videoWidth?: number,
+    videoWidth?: number
   ): void {
     // Set font
     const fontStyle = style.fontStyle || "normal";
@@ -206,8 +183,8 @@ export class ReelCaptionRenderer {
     const maxTextWidth = style.maxWidth
       ? style.maxWidth - padding.left - padding.right
       : videoWidth
-      ? videoWidth * 0.8 - padding.left - padding.right
-      : 800; // Fallback width
+        ? videoWidth * 0.8 - padding.left - padding.right
+        : 800; // Fallback width
 
     // Wrap text into multiple lines
     const lines = this.wrapText(ctx, text, maxTextWidth);
@@ -215,17 +192,14 @@ export class ReelCaptionRenderer {
     // Calculate dimensions for multi-line text
     const lineHeight = style.fontSize * 1.2; // Line spacing
     const totalTextHeight = lines.length * lineHeight;
-    const maxLineWidth = Math.max(
-      ...lines.map((line) => ctx.measureText(line).width),
-    );
+    const maxLineWidth = Math.max(...lines.map((line) => ctx.measureText(line).width));
     const textWidth = maxLineWidth;
     const textHeight = totalTextHeight;
 
     // Calculate background dimensions
     const bgWidth = textWidth + padding.left + padding.right;
     // Use customHeight if set by user (from resize), otherwise calculate from text
-    const bgHeight =
-      style.customHeight || textHeight + padding.top + padding.bottom;
+    const bgHeight = style.customHeight || textHeight + padding.top + padding.bottom;
 
     // Calculate text position based on alignment
     const textAlign = style.textAlign || "center";
@@ -259,9 +233,7 @@ export class ReelCaptionRenderer {
     // Apply shadow if specified
     if (
       style.shadow &&
-      (style.shadow.blur > 0 ||
-        style.shadow.offsetX !== 0 ||
-        style.shadow.offsetY !== 0)
+      (style.shadow.blur > 0 || style.shadow.offsetX !== 0 || style.shadow.offsetY !== 0)
     ) {
       ctx.shadowColor = style.shadow.color;
       ctx.shadowOffsetX = style.shadow.offsetX;
@@ -313,7 +285,7 @@ export class ReelCaptionRenderer {
     fontStyle: string,
     fontWeight: string,
     fontSize: number,
-    fontFamily: string,
+    fontFamily: string
   ): Array<
     Array<{
       text: string;
@@ -350,10 +322,7 @@ export class ReelCaptionRenderer {
       const segmentWidth = ctx.measureText(segment.text).width;
 
       // Check if adding this segment would exceed max width
-      if (
-        currentLineWidth + segmentWidth > maxWidth &&
-        currentLine.length > 0
-      ) {
+      if (currentLineWidth + segmentWidth > maxWidth && currentLine.length > 0) {
         lines.push(currentLine);
         currentLine = [segment];
         currentLineWidth = segmentWidth;
@@ -378,7 +347,7 @@ export class ReelCaptionRenderer {
     text: string,
     style: Caption["style"],
     position: { x: number; y: number },
-    videoWidth?: number,
+    videoWidth?: number
   ): void {
     // Parse text into segments
     const segments = this.parseTextSegments(text, style.keywordHighlights!);
@@ -394,8 +363,8 @@ export class ReelCaptionRenderer {
     const maxTextWidth = style.maxWidth
       ? style.maxWidth - padding.left - padding.right
       : videoWidth
-      ? videoWidth * 0.8 - padding.left - padding.right
-      : 800; // Fallback width
+        ? videoWidth * 0.8 - padding.left - padding.right
+        : 800; // Fallback width
 
     // Wrap segments into multiple lines
     const wrappedLines = this.wrapSegments(
@@ -405,7 +374,7 @@ export class ReelCaptionRenderer {
       fontStyle,
       fontWeight,
       style.fontSize,
-      style.fontFamily,
+      style.fontFamily
     );
 
     // Calculate total dimensions
@@ -452,9 +421,7 @@ export class ReelCaptionRenderer {
     // Apply shadow if specified
     if (
       style.shadow &&
-      (style.shadow.blur > 0 ||
-        style.shadow.offsetX !== 0 ||
-        style.shadow.offsetY !== 0)
+      (style.shadow.blur > 0 || style.shadow.offsetX !== 0 || style.shadow.offsetY !== 0)
     ) {
       ctx.shadowColor = style.shadow.color;
       ctx.shadowOffsetX = style.shadow.offsetX;
@@ -500,18 +467,12 @@ export class ReelCaptionRenderer {
         ctx.font = segFont;
 
         const segWidth = ctx.measureText(segment.text).width;
-        const color =
-          segment.isKeyword && segment.color ? segment.color : style.color;
+        const color = segment.isKeyword && segment.color ? segment.color : style.color;
 
         // Draw keyword background if specified
         if (segment.isKeyword && segment.backgroundColor) {
           ctx.fillStyle = segment.backgroundColor;
-          ctx.fillRect(
-            currentX,
-            lineY - style.fontSize / 2,
-            segWidth,
-            style.fontSize,
-          );
+          ctx.fillRect(currentX, lineY - style.fontSize / 2, segWidth, style.fontSize);
         }
 
         // Draw stroke
@@ -543,7 +504,7 @@ export class ReelCaptionRenderer {
    */
   private static parseTextSegments(
     text: string,
-    keywords: NonNullable<Caption["style"]["keywordHighlights"]>,
+    keywords: NonNullable<Caption["style"]["keywordHighlights"]>
   ): Array<{
     text: string;
     isKeyword: boolean;
@@ -560,9 +521,7 @@ export class ReelCaptionRenderer {
 
       // Check each keyword
       for (const keyword of keywords) {
-        const keywordIndex = remainingText
-          .toLowerCase()
-          .indexOf(keyword.text.toLowerCase());
+        const keywordIndex = remainingText.toLowerCase().indexOf(keyword.text.toLowerCase());
 
         if (keywordIndex === 0) {
           // Found a keyword at the start
@@ -586,9 +545,7 @@ export class ReelCaptionRenderer {
         let nextKeywordIndex = remainingText.length;
 
         for (const keyword of keywords) {
-          const idx = remainingText
-            .toLowerCase()
-            .indexOf(keyword.text.toLowerCase());
+          const idx = remainingText.toLowerCase().indexOf(keyword.text.toLowerCase());
           if (idx > 0 && idx < nextKeywordIndex) {
             nextKeywordIndex = idx;
           }
@@ -613,7 +570,7 @@ export class ReelCaptionRenderer {
    */
   private static applyTextTransform(
     text: string,
-    transform?: "none" | "uppercase" | "lowercase" | "capitalize",
+    transform?: "none" | "uppercase" | "lowercase" | "capitalize"
   ): string {
     if (!transform || transform === "none") {
       return text;
@@ -627,10 +584,7 @@ export class ReelCaptionRenderer {
       case "capitalize":
         return text
           .split(" ")
-          .map(
-            (word) =>
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          )
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
           .join(" ");
       default:
         return text;
@@ -644,7 +598,7 @@ export class ReelCaptionRenderer {
   static scaleCaptionPosition(
     caption: Caption,
     targetWidth: number,
-    targetHeight: number,
+    targetHeight: number
   ): Caption {
     // Original dimensions (portrait - default)
     const originalWidth = 1080;
@@ -683,7 +637,7 @@ export class ReelCaptionRenderer {
   static updateCaptionVisibility(
     captions: Caption[],
     trimStart: number,
-    trimEnd: number,
+    trimEnd: number
   ): Caption[] {
     return captions.map((caption) => ({
       ...caption,

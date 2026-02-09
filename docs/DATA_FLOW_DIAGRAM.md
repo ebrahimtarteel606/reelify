@@ -134,17 +134,20 @@
 ## Detailed Tool Usage Per Step
 
 ### Step 1: Video Upload
+
 - **Tool**: Browser File API
 - **Input**: User-selected video file
 - **Output**: File object
 
 ### Step 2: Audio Extraction
+
 - **Tool**: FFmpeg WASM (`@ffmpeg/ffmpeg`)
 - **Command**: `-i input.mp4 -vn -ac 1 -ar 16000 -acodec libmp3lame -b:a 24k audio.mp3`
 - **Input**: Video file
 - **Output**: MP3 audio blob (16kHz, mono, 24k bitrate)
 
 ### Step 3: Audio Storage
+
 - **Tool**: IndexedDB (`lib/videoStorage.ts`)
 - **Database**: `reelify-video-storage`
 - **Store**: `audio` object store
@@ -152,12 +155,14 @@
 - **Output**: Stored in IndexedDB (client-side only, no server upload)
 
 ### Step 4: Preferences Collection
+
 - **Tool**: React state management
 - **Storage**: `POST /api/preferences` → File System (`data/user-preferences.json`)
 - **Input**: User form responses
 - **Output**: Preferences object
 
 ### Step 5: Processing Request
+
 - **Tool**: Fetch API
 - **Endpoint**: `POST /api/process`
 - **Format**: FormData (multipart/form-data)
@@ -165,6 +170,7 @@
 - **Output**: `{ clips, segments }`
 
 ### Step 6: Audio Temporary Storage
+
 - **Tool**: Node.js File System (`node:fs/promises`)
 - **Input**: Audio File from FormData
 - **Process**: Convert to Buffer, save to `data/temp-audio/audio-*.mp3`
@@ -172,6 +178,7 @@
 - **Cleanup**: Deleted after transcription
 
 ### Step 7: Transcription
+
 - **Provider**: Controlled by `TRANSCRIPTION_PROVIDER` env var (default: `elevenlabs`)
 - **Option A — ElevenLabs**:
   - Endpoint: `https://api.elevenlabs.io/v1/speech-to-text`
@@ -183,18 +190,20 @@
 - **Output**: `TranscriptSegment[]` with timestamps (all segments, no filtering)
 
 ### Step 8: AI Analysis
+
 - **Tool**: Google Gemini AI (`@google/generative-ai`)
 - **Model**: `gemini-3-flash-preview` (default, with fallbacks)
 - **Input**: Transcript + Preferences
-- **Process**: 
+- **Process**:
   - Auto-detect language/dialect
   - Filter clips with score >= 65%
   - Return all qualifying clips (no limit)
 - **Output**: `ClipCandidate[]` (all clips with score >= 65, titles/tags in same language/dialect)
 
 ### Step 9: Display Results
+
 - **Tool**: React state management
-- **Process**: 
+- **Process**:
   - Create ClipItem[] with metadata immediately
   - Use original video URL from IndexedDB
   - Show skeleton loaders for thumbnails
@@ -203,6 +212,7 @@
 - **Output**: Results screen displayed (non-blocking)
 
 ### Step 10: Thumbnail Generation (Background)
+
 - **Tool**: FFmpeg WASM
 - **Process**:
   1. Verify input file exists in FFmpeg filesystem
@@ -213,6 +223,7 @@
 - **Output**: Thumbnail image blobs
 
 ### Step 11: Store Thumbnails
+
 - **Tool**: IndexedDB (`lib/videoStorage.ts`)
 - **Database**: `reelify-video-storage`
 - **Store**: `thumbnails` object store
@@ -225,23 +236,23 @@
 
 ## API Endpoints Reference
 
-| Endpoint | Method | Purpose | Tools Used |
-|----------|--------|---------|------------|
-| `/api/preferences` | GET | Get user preferences | File System |
-| `/api/preferences` | POST | Save user preferences | File System |
-| `/api/process` | POST | Main processing pipeline | ElevenLabs API, Gemini API |
+| Endpoint           | Method | Purpose                  | Tools Used                 |
+| ------------------ | ------ | ------------------------ | -------------------------- |
+| `/api/preferences` | GET    | Get user preferences     | File System                |
+| `/api/preferences` | POST   | Save user preferences    | File System                |
+| `/api/process`     | POST   | Main processing pipeline | ElevenLabs API, Gemini API |
 
 ---
 
 ## External APIs
 
-| Service | Purpose | Endpoint | Authentication |
-|---------|---------|----------|----------------|
-| **ElevenLabs** | Speech-to-Text (provider: `elevenlabs`) | `api.elevenlabs.io/v1/speech-to-text` | `xi-api-key` header |
-| **ElevenLabs Model** | STT Model | `scribe_v2` (default) | Configurable via `ELEVENLABS_STT_MODEL` |
-| **Gemini Audio** | Speech-to-Text (provider: `gemini`) | `generativelanguage.googleapis.com` | API Key in request |
-| **Google Gemini** | AI Analysis (clip generation) | `generativelanguage.googleapis.com` | API Key in request |
-| **Gemini Model** | AI Model | `gemini-3-flash-preview` (default) | Configurable via `GEMINI_MODEL` |
+| Service              | Purpose                                 | Endpoint                              | Authentication                          |
+| -------------------- | --------------------------------------- | ------------------------------------- | --------------------------------------- |
+| **ElevenLabs**       | Speech-to-Text (provider: `elevenlabs`) | `api.elevenlabs.io/v1/speech-to-text` | `xi-api-key` header                     |
+| **ElevenLabs Model** | STT Model                               | `scribe_v2` (default)                 | Configurable via `ELEVENLABS_STT_MODEL` |
+| **Gemini Audio**     | Speech-to-Text (provider: `gemini`)     | `generativelanguage.googleapis.com`   | API Key in request                      |
+| **Google Gemini**    | AI Analysis (clip generation)           | `generativelanguage.googleapis.com`   | API Key in request                      |
+| **Gemini Model**     | AI Model                                | `gemini-3-flash-preview` (default)    | Configurable via `GEMINI_MODEL`         |
 
 ---
 

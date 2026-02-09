@@ -184,9 +184,7 @@ export function CaptionCanvas({
       const y = (e.clientY - canvasTop) * scaleY;
 
       // Helper function to check if a click is within a caption's bounds
-      const isClickWithinCaptionBounds = (
-        caption: (typeof captions)[0],
-      ): boolean => {
+      const isClickWithinCaptionBounds = (caption: (typeof captions)[0]): boolean => {
         // Use the actual canvas context for accurate measurements (matches renderer exactly)
         const ctx = canvas.getContext("2d");
         if (!ctx) return false;
@@ -230,15 +228,12 @@ export function CaptionCanvas({
 
         const lineHeight = fontSize * 1.2;
         const totalTextHeight = lines.length * lineHeight;
-        const maxLineWidth = Math.max(
-          ...lines.map((line) => ctx.measureText(line).width),
-        );
+        const maxLineWidth = Math.max(...lines.map((line) => ctx.measureText(line).width));
         const bgWidth = maxLineWidth + padding.left + padding.right;
 
         // Use custom height if set by user, otherwise calculate from text
         const customHeight = caption.style.customHeight;
-        const bgHeight =
-          customHeight || totalTextHeight + padding.top + padding.bottom;
+        const bgHeight = customHeight || totalTextHeight + padding.top + padding.bottom;
 
         const captionX = caption.position.x;
         const captionY = caption.position.y;
@@ -272,9 +267,7 @@ export function CaptionCanvas({
       });
 
       // Find caption at click position (using same calculation as renderer)
-      const clickedCaption = visibleCaptions.find((caption) =>
-        isClickWithinCaptionBounds(caption),
-      );
+      const clickedCaption = visibleCaptions.find((caption) => isClickWithinCaptionBounds(caption));
 
       // CRITICAL: If a caption is selected, check IMMEDIATELY if click is within its bounds
       // This must happen BEFORE deselecting to prevent the caption from disappearing
@@ -348,19 +341,16 @@ export function CaptionCanvas({
         // Only deselect if we're absolutely certain click is outside ALL captions
         // Final check: make sure we're not currently interacting
         // Log for debugging
-        console.log(
-          "[CaptionCanvas] Deselecting caption - click outside bounds",
-          {
-            clickX: x,
-            clickY: y,
-            selectedCaptionPos: {
-              x: currentSelectedCaption.position.x,
-              y: currentSelectedCaption.position.y,
-            },
-            isDragging: isDraggingRef.current,
-            isResizing: isResizingRef.current,
+        console.log("[CaptionCanvas] Deselecting caption - click outside bounds", {
+          clickX: x,
+          clickY: y,
+          selectedCaptionPos: {
+            x: currentSelectedCaption.position.x,
+            y: currentSelectedCaption.position.y,
           },
-        );
+          isDragging: isDraggingRef.current,
+          isResizing: isResizingRef.current,
+        });
 
         if (!isDraggingRef.current && !isResizingRef.current) {
           setSelectedCaptionId(null);
@@ -384,7 +374,7 @@ export function CaptionCanvas({
       selectedCaption,
       setSelectedCaptionId,
       targetRef,
-    ],
+    ]
   );
 
   // Handle escape key to deselect caption
@@ -394,8 +384,7 @@ export function CaptionCanvas({
         // Aggressively cleanup drag handle before deselecting
         // Check both targetRef and container directly to ensure cleanup
         if (targetRef.current) {
-          const dragHandle = (targetRef.current as any)
-            ?._dragHandle as HTMLDivElement;
+          const dragHandle = (targetRef.current as any)?._dragHandle as HTMLDivElement;
           if (dragHandle) {
             try {
               if (dragHandle.parentNode) {
@@ -403,10 +392,7 @@ export function CaptionCanvas({
               }
               delete (targetRef.current as any)._dragHandle;
             } catch (error) {
-              console.warn(
-                "[CaptionCanvas] Error removing drag handle on ESC:",
-                error,
-              );
+              console.warn("[CaptionCanvas] Error removing drag handle on ESC:", error);
             }
           }
         }
@@ -414,17 +400,12 @@ export function CaptionCanvas({
         // Also check container directly for any drag handles (fallback)
         if (containerRef.current) {
           // Use data attribute for more reliable selection
-          const dragHandles = containerRef.current.querySelectorAll(
-            '[data-drag-handle="true"]',
-          );
+          const dragHandles = containerRef.current.querySelectorAll('[data-drag-handle="true"]');
           dragHandles.forEach((handle) => {
             try {
               handle.remove();
             } catch (error) {
-              console.warn(
-                "[CaptionCanvas] Error removing drag handle from container:",
-                error,
-              );
+              console.warn("[CaptionCanvas] Error removing drag handle from container:", error);
             }
           });
         }
@@ -447,10 +428,7 @@ export function CaptionCanvas({
       // If a caption is selected, check if click is on moveable target
       if (selectedCaption && targetRef.current) {
         const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
-        if (
-          elementAtPoint === targetRef.current ||
-          targetRef.current.contains(elementAtPoint)
-        ) {
+        if (elementAtPoint === targetRef.current || targetRef.current.contains(elementAtPoint)) {
           // Click is on moveable target - stop React's onClick from firing
           e.stopImmediatePropagation();
           return;
@@ -500,14 +478,7 @@ export function CaptionCanvas({
     return () => {
       canvas.removeEventListener("click", handleNativeClick, true);
     };
-  }, [
-    selectedCaption,
-    canvasRef,
-    targetRef,
-    containerRef,
-    videoWidth,
-    videoHeight,
-  ]);
+  }, [selectedCaption, canvasRef, targetRef, containerRef, videoWidth, videoHeight]);
 
   // Update target position when caption position changes externally (without recreating Moveable)
   useEffect(() => {
@@ -517,7 +488,7 @@ export function CaptionCanvas({
         "[CaptionCanvas] Skipping external update - drag:",
         isDraggingRef.current,
         "resize:",
-        isResizingRef.current,
+        isResizingRef.current
       );
       return;
     }
@@ -557,10 +528,7 @@ export function CaptionCanvas({
     // IMPORTANT: Read customHeight but don't add it to dependency array to prevent recalculation loops
     const customHeight = selectedCaption.style.customHeight; // Custom height from user resize
 
-    console.log(
-      "[CaptionCanvas] External update - customHeight:",
-      customHeight,
-    );
+    console.log("[CaptionCanvas] External update - customHeight:", customHeight);
 
     // Measure text to get actual dimensions
     const tempCanvas = document.createElement("canvas");
@@ -591,14 +559,11 @@ export function CaptionCanvas({
 
       const lineHeight = fontSize * 1.2;
       const totalTextHeight = lines.length * lineHeight;
-      const maxLineWidth = Math.max(
-        ...lines.map((line) => tempCtx.measureText(line).width),
-      );
+      const maxLineWidth = Math.max(...lines.map((line) => tempCtx.measureText(line).width));
       const bgWidth = maxLineWidth + padding.left + padding.right;
 
       // Use custom height if set by user, otherwise calculate from text
-      const bgHeight =
-        customHeight || totalTextHeight + padding.top + padding.bottom;
+      const bgHeight = customHeight || totalTextHeight + padding.top + padding.bottom;
 
       console.log(
         "[CaptionCanvas] Calculated dimensions - bgWidth:",
@@ -606,7 +571,7 @@ export function CaptionCanvas({
         "bgHeight:",
         bgHeight,
         "using customHeight:",
-        !!customHeight,
+        !!customHeight
       );
 
       // Calculate position in canvas coordinates
@@ -636,8 +601,7 @@ export function CaptionCanvas({
       const currentHeight = Number.parseFloat(target.style.height) || 0;
 
       const positionChanged =
-        Math.abs(currentLeft - expectedLeft) > 1 ||
-        Math.abs(currentTop - expectedTop) > 1;
+        Math.abs(currentLeft - expectedLeft) > 1 || Math.abs(currentTop - expectedTop) > 1;
       const widthChanged = Math.abs(currentWidth - targetWidth) > 1;
       const heightChanged = Math.abs(currentHeight - targetHeight) > 1;
 
@@ -645,11 +609,7 @@ export function CaptionCanvas({
       // Only update height if it's not a custom height OR if it changed significantly (scale change)
       const shouldUpdateHeight = !customHeight || heightChanged;
 
-      if (
-        positionChanged ||
-        widthChanged ||
-        (heightChanged && shouldUpdateHeight)
-      ) {
+      if (positionChanged || widthChanged || (heightChanged && shouldUpdateHeight)) {
         console.log(
           "[CaptionCanvas] External update applying - position:",
           { expectedLeft, expectedTop },
@@ -658,7 +618,7 @@ export function CaptionCanvas({
           "customHeight:",
           customHeight,
           "shouldUpdateHeight:",
-          shouldUpdateHeight,
+          shouldUpdateHeight
         );
         // CRITICAL: Only update position if NOT resizing/dragging
         // During resize, we MUST keep left/top fixed to prevent resize handles from jumping
@@ -675,7 +635,7 @@ export function CaptionCanvas({
           // During resize/drag, DO NOT update position or size at all
           // This keeps the resize handles fixed and prevents jumping
           console.log(
-            "[CaptionCanvas] External update blocked - keeping position fixed during resize/drag",
+            "[CaptionCanvas] External update blocked - keeping position fixed during resize/drag"
           );
           return; // Exit early to prevent any updates
         }
@@ -699,11 +659,7 @@ export function CaptionCanvas({
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               // Double-check flags after animation frames to avoid race conditions
-              if (
-                moveableRef.current &&
-                !isResizingRef.current &&
-                !isDraggingRef.current
-              ) {
+              if (moveableRef.current && !isResizingRef.current && !isDraggingRef.current) {
                 moveableRef.current.updateRect();
               }
             });
@@ -743,13 +699,8 @@ export function CaptionCanvas({
       }
       // Cleanup drag handle first (it's appended to container, not target)
       if (targetRef.current) {
-        const dragHandle = (targetRef.current as any)
-          ?._dragHandle as HTMLDivElement;
-        if (
-          dragHandle &&
-          containerRef.current &&
-          containerRef.current.contains(dragHandle)
-        ) {
+        const dragHandle = (targetRef.current as any)?._dragHandle as HTMLDivElement;
+        if (dragHandle && containerRef.current && containerRef.current.contains(dragHandle)) {
           try {
             dragHandle.remove();
             delete (targetRef.current as any)._dragHandle;
@@ -824,8 +775,8 @@ export function CaptionCanvas({
     const maxWidth = selectedCaption.style.maxWidth
       ? selectedCaption.style.maxWidth
       : videoWidth
-      ? videoWidth * 0.8
-      : 800;
+        ? videoWidth * 0.8
+        : 800;
 
     // Use the actual canvas context for measurement to match renderer exactly
     const ctx = canvas.getContext("2d");
@@ -1031,10 +982,7 @@ export function CaptionCanvas({
       try {
         moveableRef.current.destroy();
       } catch (error) {
-        console.warn(
-          "[CaptionCanvas] Error destroying existing Moveable:",
-          error,
-        );
+        console.warn("[CaptionCanvas] Error destroying existing Moveable:", error);
       }
     }
 
@@ -1191,25 +1139,18 @@ export function CaptionCanvas({
             // Verify target is positioned correctly relative to container
             if (
               Math.abs(
-                targetRect.left -
-                  containerRect.left -
-                  Number.parseFloat(target.style.left || "0"),
+                targetRect.left - containerRect.left - Number.parseFloat(target.style.left || "0")
               ) > 5 ||
               Math.abs(
-                targetRect.top -
-                  containerRect.top -
-                  Number.parseFloat(target.style.top || "0"),
+                targetRect.top - containerRect.top - Number.parseFloat(target.style.top || "0")
               ) > 5
             ) {
-              console.warn(
-                "[CaptionCanvas] Target position mismatch detected!",
-                {
-                  styleLeft: target.style.left,
-                  styleTop: target.style.top,
-                  computedLeft: targetRect.left - containerRect.left,
-                  computedTop: targetRect.top - containerRect.top,
-                },
-              );
+              console.warn("[CaptionCanvas] Target position mismatch detected!", {
+                styleLeft: target.style.left,
+                styleTop: target.style.top,
+                computedLeft: targetRect.left - containerRect.left,
+                computedTop: targetRect.top - containerRect.top,
+              });
             }
           } else {
             console.error("[CaptionCanvas] Moveable initialization failed:", {
@@ -1243,8 +1184,7 @@ export function CaptionCanvas({
         const dragHandle = (target as any)?._dragHandle as HTMLDivElement;
         if (dragHandle) {
           const handleSize = Number.parseFloat(dragHandle.style.width) || 10;
-          const targetWidth =
-            width || Number.parseFloat(target.style.width) || 0;
+          const targetWidth = width || Number.parseFloat(target.style.width) || 0;
           // Use left/top from event (which accounts for transform) instead of getBoundingClientRect
           dragHandle.style.transform = "none"; // Don't use transform, use absolute positioning
           dragHandle.style.left = `${left + targetWidth}px`; // Align with right edge
@@ -1276,8 +1216,7 @@ export function CaptionCanvas({
         const dragHandle = (target as any)?._dragHandle as HTMLDivElement;
         if (dragHandle) {
           const handleSize = Number.parseFloat(dragHandle.style.width) || 10;
-          const targetWidth =
-            Number.parseFloat(target.style.width) || bgWidth * scaleX;
+          const targetWidth = Number.parseFloat(target.style.width) || bgWidth * scaleX;
           dragHandle.style.transform = "none"; // Clear transform
           dragHandle.style.left = `${left + targetWidth}px`; // Square's left edge aligns with rectangle's right edge
           dragHandle.style.top = `${top - handleSize}px`; // Square's bottom edge aligns with rectangle's top edge
@@ -1292,10 +1231,8 @@ export function CaptionCanvas({
         const currentScaleY = canvasHeight / videoHeight;
 
         // Get target dimensions
-        const targetWidth =
-          Number.parseFloat(target.style.width) || bgWidth * scaleX;
-        const targetHeight =
-          Number.parseFloat(target.style.height) || bgHeight * scaleY;
+        const targetWidth = Number.parseFloat(target.style.width) || bgWidth * scaleX;
+        const targetHeight = Number.parseFloat(target.style.height) || bgHeight * scaleY;
 
         // Calculate center position in container coordinates
         const centerXContainer = left + targetWidth / 2;
@@ -1317,11 +1254,7 @@ export function CaptionCanvas({
         // Final update to ensure position is correct
         // Use a delay to ensure resize/drag flags are cleared first
         setTimeout(() => {
-          if (
-            moveableRef.current &&
-            !isResizingRef.current &&
-            !isDraggingRef.current
-          ) {
+          if (moveableRef.current && !isResizingRef.current && !isDraggingRef.current) {
             moveableRef.current.updateRect();
           }
         }, 100);
@@ -1369,8 +1302,7 @@ export function CaptionCanvas({
         if (!isResizingRef.current) return;
 
         const eventData = e as any;
-        const { width, height, transform, drag, left, top, direction } =
-          eventData;
+        const { width, height, transform, drag, left, top, direction } = eventData;
 
         console.log("[CaptionCanvas] Resizing", {
           width,
@@ -1442,13 +1374,8 @@ export function CaptionCanvas({
         // Get position from drag or calculate from current position
         const drag = lastEvent?.drag || eventData?.drag;
         const left =
-          drag?.left !== undefined
-            ? drag.left
-            : Number.parseFloat(target.style.left) || 0;
-        const top =
-          drag?.top !== undefined
-            ? drag.top
-            : Number.parseFloat(target.style.top) || 0;
+          drag?.left !== undefined ? drag.left : Number.parseFloat(target.style.left) || 0;
+        const top = drag?.top !== undefined ? drag.top : Number.parseFloat(target.style.top) || 0;
 
         console.log("[CaptionCanvas] Final dimensions from target:", {
           width,
@@ -1485,12 +1412,7 @@ export function CaptionCanvas({
         const newWidth = width / currentScaleX;
         const newHeight = height / currentScaleY;
 
-        console.log(
-          "[CaptionCanvas] Saving dimensions - width:",
-          newWidth,
-          "height:",
-          newHeight,
-        );
+        console.log("[CaptionCanvas] Saving dimensions - width:", newWidth, "height:", newHeight);
 
         // Update both width and custom height in caption style
         updateCaptionStyle(selectedCaption.id, {
@@ -1558,18 +1480,14 @@ export function CaptionCanvas({
         try {
           moveableRef.current.destroy();
         } catch (error) {
-          console.warn(
-            "[CaptionCanvas] Error destroying Moveable in cleanup:",
-            error,
-          );
+          console.warn("[CaptionCanvas] Error destroying Moveable in cleanup:", error);
         }
         moveableRef.current = null;
       }
 
       // Cleanup drag handle first (before target cleanup)
       if (targetRef.current) {
-        const dragHandle = (targetRef.current as any)
-          ?._dragHandle as HTMLDivElement;
+        const dragHandle = (targetRef.current as any)?._dragHandle as HTMLDivElement;
         if (dragHandle) {
           try {
             if (dragHandle.parentNode) {
@@ -1577,10 +1495,7 @@ export function CaptionCanvas({
             }
             delete (targetRef.current as any)._dragHandle;
           } catch (error) {
-            console.warn(
-              "[CaptionCanvas] Error removing drag handle in cleanup:",
-              error,
-            );
+            console.warn("[CaptionCanvas] Error removing drag handle in cleanup:", error);
           }
         }
       }
@@ -1588,16 +1503,14 @@ export function CaptionCanvas({
       // Also check container directly for any drag handles (fallback)
       if (containerRef.current) {
         // Use data attribute for more reliable selection
-        const dragHandles = containerRef.current.querySelectorAll(
-          '[data-drag-handle="true"]',
-        );
+        const dragHandles = containerRef.current.querySelectorAll('[data-drag-handle="true"]');
         dragHandles.forEach((handle) => {
           try {
             handle.remove();
           } catch (error) {
             console.warn(
               "[CaptionCanvas] Error removing drag handle from container in cleanup:",
-              error,
+              error
             );
           }
         });
@@ -1612,43 +1525,25 @@ export function CaptionCanvas({
         try {
           // Remove event listeners
           const clickHandler = (targetRef.current as any)?._clickHandler;
-          const doubleClickHandler = (targetRef.current as any)
-            ?._doubleClickHandler;
-          const mousedownHandler = (targetRef.current as any)
-            ?._mousedownHandler;
-          const mousedownCaptureHandler = (targetRef.current as any)
-            ?._mousedownCaptureHandler;
+          const doubleClickHandler = (targetRef.current as any)?._doubleClickHandler;
+          const mousedownHandler = (targetRef.current as any)?._mousedownHandler;
+          const mousedownCaptureHandler = (targetRef.current as any)?._mousedownCaptureHandler;
           if (clickHandler) {
             targetRef.current.removeEventListener("click", clickHandler, true);
           }
           if (doubleClickHandler) {
-            targetRef.current.removeEventListener(
-              "dblclick",
-              doubleClickHandler,
-              true,
-            );
+            targetRef.current.removeEventListener("dblclick", doubleClickHandler, true);
           }
           if (mousedownHandler) {
-            targetRef.current.removeEventListener(
-              "mousedown",
-              mousedownHandler,
-              false,
-            );
+            targetRef.current.removeEventListener("mousedown", mousedownHandler, false);
           }
           if (mousedownCaptureHandler) {
-            targetRef.current.removeEventListener(
-              "mousedown",
-              mousedownCaptureHandler,
-              true,
-            );
+            targetRef.current.removeEventListener("mousedown", mousedownCaptureHandler, true);
           }
 
           targetRef.current.remove();
         } catch (error) {
-          console.warn(
-            "[CaptionCanvas] Error removing target in cleanup:",
-            error,
-          );
+          console.warn("[CaptionCanvas] Error removing target in cleanup:", error);
         }
         targetRef.current = null;
       }

@@ -1,18 +1,13 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { useReelEditorStore } from '@/lib/store/useReelEditorStore';
-import { ReelTrimController } from '@/lib/services/ReelTrimController';
-import { clampTime } from '@/lib/utils/reelEditorUtils';
+import { useCallback } from "react";
+import { useReelEditorStore } from "@/lib/store/useReelEditorStore";
+import { ReelTrimController } from "@/lib/services/ReelTrimController";
+import { clampTime } from "@/lib/utils/reelEditorUtils";
 
 export function useTrimPoints() {
-  const {
-    trimPoints,
-    sourceVideoDuration,
-    updateTrimStart,
-    updateTrimEnd,
-    setTrimPoints,
-  } = useReelEditorStore();
+  const { trimPoints, sourceVideoDuration, updateTrimStart, updateTrimEnd, setTrimPoints } =
+    useReelEditorStore();
 
   const updateStart = useCallback(
     (startTime: number) => {

@@ -24,9 +24,7 @@ const normalizeTime = (value?: number) => {
   return value > 1000 ? value / 1000 : value;
 };
 
-const buildSegmentsFromWords = (
-  words: ElevenLabsWord[]
-): TranscriptSegment[] => {
+const buildSegmentsFromWords = (words: ElevenLabsWord[]): TranscriptSegment[] => {
   const segments: TranscriptSegment[] = [];
   let currentWords: string[] = [];
   let segmentStart = 0;
@@ -66,9 +64,7 @@ const buildSegmentsFromWords = (
 };
 
 // Transcribe audio from Buffer (no file system needed)
-export async function transcribeAudioFromBuffer(
-  audioBuffer: Buffer
-): Promise<TranscriptSegment[]> {
+export async function transcribeAudioFromBuffer(audioBuffer: Buffer): Promise<TranscriptSegment[]> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     throw new Error("Missing ELEVENLABS_API_KEY");
@@ -93,9 +89,7 @@ export async function transcribeAudioFromBuffer(
   formData.append("file", audioBlob, "audio.opus");
 
   const requestStart = Date.now();
-  console.log(
-    `[ElevenLabs] Starting transcription request from buffer (${fileSizeMB}MB)`
-  );
+  console.log(`[ElevenLabs] Starting transcription request from buffer (${fileSizeMB}MB)`);
 
   const response = await fetch(API_URL, {
     method: "POST",
@@ -106,9 +100,7 @@ export async function transcribeAudioFromBuffer(
   });
 
   const requestTime = Date.now() - requestStart;
-  console.log(
-    `[ElevenLabs] Transcription request completed in ${requestTime}ms`
-  );
+  console.log(`[ElevenLabs] Transcription request completed in ${requestTime}ms`);
 
   if (!response.ok) {
     const details = await response.text();
@@ -121,8 +113,8 @@ export async function transcribeAudioFromBuffer(
     const words: ElevenLabsWord[] = Array.isArray(data?.words)
       ? data.words
       : Array.isArray(data?.word_timestamps)
-      ? data.word_timestamps
-      : [];
+        ? data.word_timestamps
+        : [];
 
     const segments: TranscriptSegment[] = Array.isArray(data?.segments)
       ? data.segments
@@ -154,8 +146,6 @@ export async function transcribeAudioFromUrl(
 
 // Keep original function for backward compatibility
 // Note: This function now uses transcribeAudioFromUrl which reads the file directly
-export async function transcribeAudio(
-  filePath: string
-): Promise<TranscriptSegment[]> {
+export async function transcribeAudio(filePath: string): Promise<TranscriptSegment[]> {
   return transcribeAudioFromUrl(filePath, "");
 }

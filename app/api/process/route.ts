@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { transcribeAudioFromBuffer } from "../../../lib/elevenlabs";
-import {
-  generateClipCandidates,
-  type OutputLanguage,
-} from "../../../lib/gemini";
+import { generateClipCandidates, type OutputLanguage } from "../../../lib/gemini";
 import { loadPreferences, type QAPreferences } from "../../../lib/qaStore";
 import { metrics } from "../../../lib/services/MetricsService";
 import { chargeCredits, getUserById } from "../../../lib/supabase";
@@ -16,9 +13,7 @@ const MAX_VIDEO_DURATION_SECONDS = 2 * 60 * 60; // 7200s
 
 // Accept FormData with audio file (client-side storage)
 export async function POST(request: Request) {
-  const requestId = `req-${Date.now()}-${Math.random()
-    .toString(36)
-    .substr(2, 9)}`;
+  const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   try {
     const startTime = Date.now();
     console.log(`[API] Starting process request (ID: ${requestId})`);
@@ -28,9 +23,7 @@ export async function POST(request: Request) {
     const audioFile = formData.get("audio") as File | null;
     const preferencesStr = formData.get("preferences") as string | null;
     const userId = formData.get("user_id") as string | null;
-    const sourceDurationStr = formData.get("source_duration_seconds") as
-      | string
-      | null;
+    const sourceDurationStr = formData.get("source_duration_seconds") as string | null;
 
     // Get locale from cookie for output language
     const cookieStore = await cookies();
@@ -39,10 +32,7 @@ export async function POST(request: Request) {
     console.log(`[API] Output language: ${outputLanguage}`);
 
     if (!audioFile) {
-      return NextResponse.json(
-        { error: "Missing audio file" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing audio file" }, { status: 400 });
     }
 
     // ── Credit system enforcement ────────────────────────────
@@ -50,9 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
     }
 
-    const sourceDuration = sourceDurationStr
-      ? Math.ceil(Number(sourceDurationStr))
-      : 0;
+    const sourceDuration = sourceDurationStr ? Math.ceil(Number(sourceDurationStr)) : 0;
     if (!sourceDuration || sourceDuration <= 0) {
       return NextResponse.json(
         { error: "Missing or invalid source_duration_seconds" },
@@ -77,9 +65,7 @@ export async function POST(request: Request) {
     // Atomically check credits + charge
     const chargeResult = await chargeCredits(userId, sourceDuration);
     if (!chargeResult.ok) {
-      console.log(
-        `[API] Credit check failed for user ${userId}: ${chargeResult.error}`
-      );
+      console.log(`[API] Credit check failed for user ${userId}: ${chargeResult.error}`);
       return NextResponse.json({ error: chargeResult.error }, { status: 403 });
     }
     console.log(
@@ -103,9 +89,7 @@ export async function POST(request: Request) {
     const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
     const audioParseTime = Date.now() - audioParseStart;
     const audioSizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
-    console.log(
-      `[API] Audio received: ${audioSizeMB}MB (parse: ${audioParseTime}ms)`
-    );
+    console.log(`[API] Audio received: ${audioSizeMB}MB (parse: ${audioParseTime}ms)`);
 
     // Load preferences in parallel with transcription (optimization)
     const preferencesPromise = (async () => {
@@ -134,15 +118,10 @@ export async function POST(request: Request) {
     console.log(
       `[API] Audio benchmark: parse=${audioBenchmark.parseMs}ms, transcribe=${audioBenchmark.transcribeMs}ms, size=${audioBenchmark.sizeMB}MB, segments=${audioBenchmark.segments}`
     );
-    console.log(
-      `[API] Transcription: ${transcriptionTime}ms (${segments.length} segments)`
-    );
+    console.log(`[API] Transcription: ${transcriptionTime}ms (${segments.length} segments)`);
 
     if (segments.length === 0) {
-      return NextResponse.json(
-        { error: "Transcript was empty" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Transcript was empty" }, { status: 400 });
     }
 
     // Get preferences (already loaded in parallel)
@@ -156,15 +135,10 @@ export async function POST(request: Request) {
       outputLanguage
     );
     const geminiTime = Date.now() - geminiStart;
-    console.log(
-      `[API] Gemini analysis: ${geminiTime}ms (${clipCandidates.length} clips)`
-    );
+    console.log(`[API] Gemini analysis: ${geminiTime}ms (${clipCandidates.length} clips)`);
 
     // Calculate audio character count from transcription segments
-    const audioCharacters = segments.reduce(
-      (sum, segment) => sum + segment.text.length,
-      0
-    );
+    const audioCharacters = segments.reduce((sum, segment) => sum + segment.text.length, 0);
 
     // Track Gemini request with all required metrics
     if (tokenUsage) {
@@ -195,8 +169,7 @@ export async function POST(request: Request) {
       benchmark: { audio: audioBenchmark },
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Processing failed";
+    const message = error instanceof Error ? error.message : "Processing failed";
 
     const clientErrorMessages = [
       "Missing ELEVENLABS_API_KEY",

@@ -1,5 +1,5 @@
-import { ReelClipInput, Caption } from '@/types';
-import { validateClipInput } from '@/lib/utils/validationUtils';
+import { ReelClipInput, Caption } from "@/types";
+import { validateClipInput } from "@/lib/utils/validationUtils";
 
 export class ReelClipDataProcessor {
   /**
@@ -40,7 +40,9 @@ export class ReelClipDataProcessor {
   /**
    * Convert transcription segments to caption format
    */
-  static segmentsToCaptions(segments: NonNullable<ReelClipInput['transcription']>['segments']): Caption[] {
+  static segmentsToCaptions(
+    segments: NonNullable<ReelClipInput["transcription"]>["segments"]
+  ): Caption[] {
     return segments.map((segment, index) => ({
       id: `caption-${index}`,
       text: segment.text,
@@ -49,10 +51,10 @@ export class ReelClipDataProcessor {
       position: { x: 540, y: 1500 }, // Default position (center-bottom for 9:16)
       style: {
         fontSize: 48,
-        fontFamily: 'Arial',
-        color: '#FFFFFF',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        textAlign: 'center',
+        fontFamily: "Arial",
+        color: "#FFFFFF",
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        textAlign: "center",
         padding: { top: 10, right: 20, bottom: 10, left: 20 },
       },
       isVisible: true,
@@ -63,8 +65,8 @@ export class ReelClipDataProcessor {
   /**
    * Detect text direction (RTL for Arabic, LTR for English)
    */
-  static detectTextDirection(text: string): 'rtl' | 'ltr' {
+  static detectTextDirection(text: string): "rtl" | "ltr" {
     const arabicRegex = /[\u0600-\u06FF]/;
-    return arabicRegex.test(text) ? 'rtl' : 'ltr';
+    return arabicRegex.test(text) ? "rtl" : "ltr";
   }
 }

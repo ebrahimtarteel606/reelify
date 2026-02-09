@@ -6,7 +6,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const nextConfig = {
   // Use Babel instead of SWC if SWC fails
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
   // Ensure FFmpeg.wasm works in browser
   webpack: (config, { isServer }) => {
@@ -24,7 +24,7 @@ const nextConfig = {
   },
   // Optimize for video handling
   experimental: {
-    optimizePackageImports: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+    optimizePackageImports: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
   // Note: COEP headers removed to allow cross-origin resources (Vercel Blob Storage)
   // Modern FFmpeg.wasm doesn't require COEP for basic operations

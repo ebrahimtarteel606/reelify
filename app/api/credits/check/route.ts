@@ -17,10 +17,7 @@ export async function POST(request: Request) {
         : 0;
 
     if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: "Missing user_id" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "Missing user_id" }, { status: 400 });
     }
     if (!durationSeconds) {
       return NextResponse.json(
@@ -31,10 +28,7 @@ export async function POST(request: Request) {
 
     const user = await getUserById(userId);
     if (!user) {
-      return NextResponse.json(
-        { ok: false, error: "User not found" },
-        { status: 403 }
-      );
+      return NextResponse.json({ ok: false, error: "User not found" }, { status: 403 });
     }
 
     const durationMinutes = Math.ceil(durationSeconds / 60);
@@ -47,9 +41,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "Invalid request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 }

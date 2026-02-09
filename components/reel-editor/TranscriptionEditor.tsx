@@ -13,17 +13,15 @@ export function TranscriptionEditor() {
   const trimStart = useReelEditorStore((state) => state.trimPoints.startTime);
   const trimEnd = useReelEditorStore((state) => state.trimPoints.endTime);
   const setCaptions = useReelEditorStore((state) => state.setCaptions);
-  const setIsEditingTranscription = useReelEditorStore(
-    (state) => state.setIsEditingTranscription,
-  );
+  const setIsEditingTranscription = useReelEditorStore((state) => state.setIsEditingTranscription);
   const hasUserEditedTranscription = useReelEditorStore(
-    (state) => state.hasUserEditedTranscription,
+    (state) => state.hasUserEditedTranscription
   );
   const setHasUserEditedTranscription = useReelEditorStore(
-    (state) => state.setHasUserEditedTranscription,
+    (state) => state.setHasUserEditedTranscription
   );
   const restoreOriginalTranscriptionForCurrentTrim = useReelEditorStore(
-    (state) => state.restoreOriginalTranscriptionForCurrentTrim,
+    (state) => state.restoreOriginalTranscriptionForCurrentTrim
   );
   const [isEditing, setIsEditing] = useState(false);
 
@@ -36,8 +34,7 @@ export function TranscriptionEditor() {
 
   // Get a key that changes when trim points change (for forcing recalculation)
   const trimKey = useReelEditorStore(
-    (state) =>
-      `${state.trimPoints.startTime.toFixed(2)}-${state.trimPoints.endTime.toFixed(2)}`,
+    (state) => `${state.trimPoints.startTime.toFixed(2)}-${state.trimPoints.endTime.toFixed(2)}`
   );
 
   // Calculate transcription text from visible captions (memoized for performance)
@@ -48,8 +45,7 @@ export function TranscriptionEditor() {
       trimRange: `${trimStart.toFixed(2)}s - ${trimEnd.toFixed(2)}s`,
       trimKey,
       hasClipTranscription: !!currentClip?.transcription,
-      clipTranscriptionSegments:
-        currentClip?.transcription?.segments.length || 0,
+      clipTranscriptionSegments: currentClip?.transcription?.segments.length || 0,
     });
 
     // If we have captions, use them directly (they're already filtered by the store)
@@ -58,9 +54,7 @@ export function TranscriptionEditor() {
       const visibleCaptions = captions
         .filter(
           (caption) =>
-            caption.isVisible &&
-            caption.startTime < trimEnd &&
-            caption.endTime > trimStart,
+            caption.isVisible && caption.startTime < trimEnd && caption.endTime > trimStart
         )
         .sort((a, b) => a.startTime - b.startTime);
 
@@ -107,32 +101,24 @@ export function TranscriptionEditor() {
                 end: Number(seg.end) || 0,
                 language:
                   seg.language ||
-                  ((/[\u0600-\u06FF]/.test(String(seg.text)) ? "ar" : "en") as
-                    | "ar"
-                    | "en"),
+                  ((/[\u0600-\u06FF]/.test(String(seg.text)) ? "ar" : "en") as "ar" | "en"),
               }))
               .filter((seg) => seg.text.length > 0);
             console.log(
               `[TranscriptionEditor] Loaded segments from ${source}:`,
-              allSegments.length,
+              allSegments.length
             );
           }
         }
       } catch (error) {
-        console.warn(
-          "[TranscriptionEditor] Failed to read segments from storage:",
-          error,
-        );
+        console.warn("[TranscriptionEditor] Failed to read segments from storage:", error);
       }
     }
 
     // Fallback to currentClip transcription
     if (allSegments.length === 0 && currentClip?.transcription?.segments) {
       allSegments = currentClip.transcription.segments;
-      console.log(
-        "[TranscriptionEditor] Loaded segments from currentClip:",
-        allSegments.length,
-      );
+      console.log("[TranscriptionEditor] Loaded segments from currentClip:", allSegments.length);
     }
 
     // Filter segments by trim range
@@ -162,9 +148,7 @@ export function TranscriptionEditor() {
     // Force recalculation when sessionStorage changes (in case segments are updated)
     const handleStorageChange = () => {
       // This will trigger useMemo to recalculate
-      console.log(
-        "[TranscriptionEditor] sessionStorage changed, will recalculate on next render",
-      );
+      console.log("[TranscriptionEditor] sessionStorage changed, will recalculate on next render");
     };
 
     if (typeof window !== "undefined") {
@@ -227,8 +211,7 @@ export function TranscriptionEditor() {
             padding: { top: 10, right: 20, bottom: 10, left: 20 },
           };
 
-    const existingPosition =
-      captions.length > 0 ? captions[0].position : { x: 540, y: 1500 };
+    const existingPosition = captions.length > 0 ? captions[0].position : { x: 540, y: 1500 };
 
     // Create new captions from edited text within trim range
     // IMPORTANT: Create deep copies of style and position to avoid reference sharing
@@ -245,15 +228,9 @@ export function TranscriptionEditor() {
         style: {
           ...existingStyle,
           // Deep copy nested objects
-          padding: existingStyle.padding
-            ? { ...existingStyle.padding }
-            : undefined,
-          animation: existingStyle.animation
-            ? { ...existingStyle.animation }
-            : undefined,
-          shadow: existingStyle.shadow
-            ? { ...existingStyle.shadow }
-            : undefined,
+          padding: existingStyle.padding ? { ...existingStyle.padding } : undefined,
+          animation: existingStyle.animation ? { ...existingStyle.animation } : undefined,
+          shadow: existingStyle.shadow ? { ...existingStyle.shadow } : undefined,
           keywordHighlights: existingStyle.keywordHighlights
             ? [...existingStyle.keywordHighlights]
             : undefined,
@@ -350,21 +327,16 @@ export function TranscriptionEditor() {
       <div className={styles.info}>
         <p className={styles.infoText}>
           {
-            captions.filter(
-              (c) =>
-                c.isVisible && c.startTime < trimEnd && c.endTime > trimStart,
-            ).length
+            captions.filter((c) => c.isVisible && c.startTime < trimEnd && c.endTime > trimStart)
+              .length
           }{" "}
-          {t("visibleSegments")} •{" "}
-          {transcriptionText.split(" ").filter((w) => w.length > 0).length}{" "}
+          {t("visibleSegments")} • {transcriptionText.split(" ").filter((w) => w.length > 0).length}{" "}
           {t("words")}
           {captions.length > 0 && captions[0].language && (
             <span>
               {" "}
               • {t("language")}:{" "}
-              {captions[0].language === "ar"
-                ? t("languageArabic")
-                : t("languageEnglish")}
+              {captions[0].language === "ar" ? t("languageArabic") : t("languageEnglish")}
             </span>
           )}
         </p>

@@ -8,16 +8,16 @@ export function secondsToTimecode(seconds: number, showHours: boolean = false): 
   const milliseconds = Math.floor((seconds % 1) * 1000);
 
   if (showHours || hours > 0) {
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`;
   }
-  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`;
 }
 
 /**
  * Parse timecode string to seconds
  */
 export function timecodeToSeconds(timecode: string): number {
-  const parts = timecode.split(':');
+  const parts = timecode.split(":");
   let seconds = 0;
 
   if (parts.length === 3) {

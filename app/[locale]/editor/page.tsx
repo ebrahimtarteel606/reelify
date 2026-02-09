@@ -68,8 +68,7 @@ function EditorContent() {
 
   useEffect(() => {
     const validateAndLoadVideo = async () => {
-      const shouldUseIndexedDB =
-        !videoUrlParam || videoUrlParam.startsWith("blob:");
+      const shouldUseIndexedDB = !videoUrlParam || videoUrlParam.startsWith("blob:");
 
       if (shouldUseIndexedDB) {
         const newBlobUrl = await getVideoBlobUrl();
@@ -153,9 +152,7 @@ function EditorContent() {
     if (!videoUrl) return null;
 
     const startTime = startTimeParam ? Number.parseFloat(startTimeParam) : 0;
-    const endTime = endTimeParam
-      ? Number.parseFloat(endTimeParam)
-      : Math.max(videoDuration, 60);
+    const endTime = endTimeParam ? Number.parseFloat(endTimeParam) : Math.max(videoDuration, 60);
 
     let segments: Array<{
       text: string;
@@ -183,11 +180,7 @@ function EditorContent() {
             data.length > 0 &&
             data.every(
               (s: unknown) =>
-                typeof s === "object" &&
-                s !== null &&
-                "start" in s &&
-                "end" in s &&
-                "text" in s
+                typeof s === "object" && s !== null && "start" in s && "end" in s && "text" in s
             )
           ) {
             segments = (
@@ -205,13 +198,10 @@ function EditorContent() {
                 seg.language === "ar" || seg.language === "en"
                   ? seg.language
                   : /[\u0600-\u06FF]/.test(String(seg.text))
-                  ? ("ar" as const)
-                  : ("en" as const),
+                    ? ("ar" as const)
+                    : ("en" as const),
             }));
-            console.log(
-              `[Editor] Loaded segments from ${source}:`,
-              segments.length
-            );
+            console.log(`[Editor] Loaded segments from ${source}:`, segments.length);
 
             // Ensure both storages have the data
             if (source === "localStorage") {
@@ -235,9 +225,7 @@ function EditorContent() {
             text: text.trim(),
             start: startTime + index * segmentDuration,
             end: startTime + (index + 1) * segmentDuration,
-            language: /[\u0600-\u06FF]/.test(text)
-              ? ("ar" as const)
-              : ("en" as const),
+            language: /[\u0600-\u06FF]/.test(text) ? ("ar" as const) : ("en" as const),
           };
         });
     }
@@ -254,14 +242,7 @@ function EditorContent() {
         description: transcript,
       },
     };
-  }, [
-    videoUrl,
-    startTimeParam,
-    endTimeParam,
-    transcript,
-    videoDuration,
-    editedTitle,
-  ]);
+  }, [videoUrl, startTimeParam, endTimeParam, transcript, videoDuration, editedTitle]);
 
   // Track editor opened once clip data is ready (must be before early returns)
   useEffect(() => {
@@ -269,8 +250,7 @@ function EditorContent() {
       posthog.capture("editor_opened", {
         clip_duration: Math.round(clipData.endTime - clipData.startTime),
         has_transcription: !!clipData.transcription,
-        transcription_segments_count:
-          clipData.transcription?.segments.length ?? 0,
+        transcription_segments_count: clipData.transcription?.segments.length ?? 0,
       });
     }
   }, [clipData]);
@@ -283,9 +263,7 @@ function EditorContent() {
           <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
             <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-lg text-muted-foreground">
-            {t("restoringSession")}
-          </p>
+          <p className="text-lg text-muted-foreground">{t("restoringSession")}</p>
         </div>
       </div>
     );
@@ -297,26 +275,17 @@ function EditorContent() {
         <Card className="w-full max-w-md shadow-card border-0 bg-gradient-card animate-fade-in">
           <CardContent className="p-8 text-center space-y-6">
             <div className="flex justify-center">
-              <img
-                src="/Transparent black.png"
-                alt="Reelify logo"
-                className="h-10 w-auto"
-              />
+              <img src="/Transparent black.png" alt="Reelify logo" className="h-10 w-auto" />
             </div>
             <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center">
               <Warning2 className="w-8 h-8 text-red-500" size={32} />
             </div>
-            <p className="text-lg font-medium text-foreground">
-              {t("videoUrlMissing")}
-            </p>
+            <p className="text-lg font-medium text-foreground">{t("videoUrlMissing")}</p>
             <Button
               className="bg-gradient-teal hover:shadow-teal transition-all duration-200"
               onClick={() => {
                 if (typeof globalThis.window !== "undefined") {
-                  globalThis.sessionStorage.setItem(
-                    "reelify_navigation_back",
-                    "true"
-                  );
+                  globalThis.sessionStorage.setItem("reelify_navigation_back", "true");
                 }
                 globalThis.history.back();
               }}
@@ -393,10 +362,7 @@ function EditorContent() {
           <Button
             onClick={() => {
               if (typeof globalThis.window !== "undefined") {
-                globalThis.sessionStorage.setItem(
-                  "reelify_navigation_back",
-                  "true"
-                );
+                globalThis.sessionStorage.setItem("reelify_navigation_back", "true");
               }
               globalThis.history.back();
             }}

@@ -187,9 +187,7 @@
 .timeDisplay {
   display: flex;
   align-items: baseline;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   font-size: 10px;
   font-weight: 500;
   color: #999;

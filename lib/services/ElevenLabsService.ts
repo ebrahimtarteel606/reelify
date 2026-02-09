@@ -1,6 +1,6 @@
 /**
  * ElevenLabs API Service for transcription and audio processing
- * 
+ *
  * To use this service, you need to:
  * 1. Get an API key from https://elevenlabs.io
  * 2. Set ELEVENLABS_API_KEY in your environment variables
@@ -10,47 +10,47 @@ export interface ElevenLabsTranscriptionSegment {
   text: string;
   start: number; // Timestamp in seconds
   end: number; // Timestamp in seconds
-  language: 'ar' | 'en';
+  language: "ar" | "en";
 }
 
 export interface ElevenLabsTranscriptionResult {
   segments: ElevenLabsTranscriptionSegment[];
-  language: 'ar' | 'en';
+  language: "ar" | "en";
 }
 
 export class ElevenLabsService {
-  private static readonly API_BASE_URL = 'https://api.elevenlabs.io/v1';
-  
+  private static readonly API_BASE_URL = "https://api.elevenlabs.io/v1";
+
   /**
    * Get API key from environment variables
    */
   private static getApiKey(): string {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Client-side: you might want to use a secure method to store this
       // For now, we'll use an environment variable that should be set at build time
-      return process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || '';
+      return process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || "";
     }
-    return process.env.ELEVENLABS_API_KEY || '';
+    return process.env.ELEVENLABS_API_KEY || "";
   }
 
   /**
    * Transcribe audio/video file using backend API
    * This calls our Next.js API route which handles the transcription server-side
-   * 
+   *
    * @param audioUrl URL or file path to the audio/video file
    * @param language Language code ('ar' for Arabic, 'en' for English) - optional for auto-detection
    * @returns Transcription result with segments
    */
   static async transcribeAudio(
     audioUrl: string,
-    language?: 'ar' | 'en'
+    language?: "ar" | "en"
   ): Promise<ElevenLabsTranscriptionResult> {
     try {
       // Call our backend API route which handles transcription server-side
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           videoUrl: audioUrl,
@@ -59,34 +59,34 @@ export class ElevenLabsService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
         throw new Error(errorData.error || `Transcription failed: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       // Data should already be in the correct format from our API
       return {
         segments: data.segments || [],
-        language: data.language || 'en',
+        language: data.language || "en",
       };
     } catch (error) {
-      console.error('Transcription error:', error);
-      
+      console.error("Transcription error:", error);
+
       if (error instanceof Error) {
         throw error;
       }
-      
-      throw new Error('Failed to transcribe audio. Please check your setup and try again.');
+
+      throw new Error("Failed to transcribe audio. Please check your setup and try again.");
     }
   }
 
   /**
    * Detect language from text (simple heuristic)
    */
-  private static detectLanguage(text: string): 'ar' | 'en' {
+  private static detectLanguage(text: string): "ar" | "en" {
     const arabicRegex = /[\u0600-\u06FF]/;
-    return arabicRegex.test(text) ? 'ar' : 'en';
+    return arabicRegex.test(text) ? "ar" : "en";
   }
 
   /**
@@ -94,11 +94,11 @@ export class ElevenLabsService {
    */
   private static groupWordsIntoSegments(
     words: any[],
-    language: 'ar' | 'en'
+    language: "ar" | "en"
   ): ElevenLabsTranscriptionSegment[] {
     const segments: ElevenLabsTranscriptionSegment[] = [];
     let currentSegment: { text: string; start: number; words: any[] } = {
-      text: '',
+      text: "",
       start: 0,
       words: [],
     };
@@ -107,7 +107,7 @@ export class ElevenLabsService {
     const maxSegmentDuration = 5; // Maximum 5 seconds per segment
 
     words.forEach((word, index) => {
-      const wordText = word.text || word.word || '';
+      const wordText = word.text || word.word || "";
       const wordStart = word.start || word.start_time || 0;
       const wordEnd = word.end || word.end_time || wordStart + 0.5;
 
@@ -116,7 +116,7 @@ export class ElevenLabsService {
       }
 
       currentSegment.words.push(word);
-      currentSegment.text += (currentSegment.text ? ' ' : '') + wordText;
+      currentSegment.text += (currentSegment.text ? " " : "") + wordText;
 
       const duration = wordEnd - currentSegment.start;
       const endsWithPunctuation = sentenceEnders.test(wordText);
@@ -130,7 +130,7 @@ export class ElevenLabsService {
           language: language,
         });
 
-        currentSegment = { text: '', start: 0, words: [] };
+        currentSegment = { text: "", start: 0, words: [] };
       }
     });
 
@@ -139,7 +139,7 @@ export class ElevenLabsService {
 
   /**
    * Generate speech from text using ElevenLabs TTS
-   * 
+   *
    * @param text Text to convert to speech
    * @param voiceId ElevenLabs voice ID
    * @param language Language code
@@ -147,44 +147,39 @@ export class ElevenLabsService {
    */
   static async textToSpeech(
     text: string,
-    voiceId: string = 'default',
-    language: 'ar' | 'en' = 'en'
+    voiceId: string = "default",
+    language: "ar" | "en" = "en"
   ): Promise<string> {
     const apiKey = this.getApiKey();
-    
+
     if (!apiKey) {
-      throw new Error('ElevenLabs API key not found');
+      throw new Error("ElevenLabs API key not found");
     }
 
     try {
-      const response = await fetch(
-        `${this.API_BASE_URL}/text-to-speech/${voiceId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: text,
-            language: language,
-            model_id: 'eleven_multilingual_v2', // Use multilingual model for Arabic support
-          }),
-        }
-      );
+      const response = await fetch(`${this.API_BASE_URL}/text-to-speech/${voiceId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: text,
+          language: language,
+          model_id: "eleven_multilingual_v2", // Use multilingual model for Arabic support
+        }),
+      });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+        const error = await response.json().catch(() => ({ message: "Unknown error" }));
         throw new Error(`ElevenLabs TTS error: ${error.message || response.statusText}`);
       }
 
       const audioBlob = await response.blob();
       return URL.createObjectURL(audioBlob);
     } catch (error) {
-      console.error('ElevenLabs TTS error:', error);
-      throw error instanceof Error 
-        ? error 
-        : new Error('Failed to generate speech with ElevenLabs');
+      console.error("ElevenLabs TTS error:", error);
+      throw error instanceof Error ? error : new Error("Failed to generate speech with ElevenLabs");
     }
   }
 
@@ -193,15 +188,15 @@ export class ElevenLabsService {
    */
   static async getVoices(): Promise<any[]> {
     const apiKey = this.getApiKey();
-    
+
     if (!apiKey) {
-      throw new Error('ElevenLabs API key not found');
+      throw new Error("ElevenLabs API key not found");
     }
 
     try {
       const response = await fetch(`${this.API_BASE_URL}/voices`, {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
       });
 
@@ -212,10 +207,8 @@ export class ElevenLabsService {
       const data = await response.json();
       return data.voices || [];
     } catch (error) {
-      console.error('Error fetching ElevenLabs voices:', error);
-      throw error instanceof Error 
-        ? error 
-        : new Error('Failed to fetch voices from ElevenLabs');
+      console.error("Error fetching ElevenLabs voices:", error);
+      throw error instanceof Error ? error : new Error("Failed to fetch voices from ElevenLabs");
     }
   }
 }

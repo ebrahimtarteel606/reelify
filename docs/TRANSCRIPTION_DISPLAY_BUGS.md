@@ -7,13 +7,15 @@ Two bugs are preventing transcription segments from showing in the Preview and E
 ## Bug 1: `normalizeTime` corrupts timestamps beyond 1000 seconds
 
 ### File
+
 `lib/elevenlabs.ts` — line 21
 
 ### The problem
+
 ```typescript
 const normalizeTime = (value?: number) => {
   if (typeof value !== "number" || Number.isNaN(value)) return 0;
-  return value > 1000 ? value / 1000 : value;   // <-- THIS LINE
+  return value > 1000 ? value / 1000 : value; // <-- THIS LINE
 };
 ```
 
@@ -22,6 +24,7 @@ ElevenLabs `scribe_v2` returns timestamps **in seconds**. The function incorrect
 ### Proof (from `samples.json`, Sample 1)
 
 The exact segment where it breaks:
+
 ```
 "start": 999.127,        ← correct (< 1000, untouched)
 "end":   1.001397,        ← WRONG — should be 1001.397 (÷ 1000)
@@ -33,15 +36,18 @@ After this point every timestamp is compressed into the 1.0–4.6 range. That's 
 - Clips whose `start` > 1000 s (e.g. 3822 s) → `preview: false`, `editor: false` — no segment timestamps anywhere near 3822 s exist anymore.
 
 ### Fix
+
 Remove the division. The value is already in seconds:
+
 ```typescript
 const normalizeTime = (value?: number) => {
   if (typeof value !== "number" || Number.isNaN(value)) return 0;
-  return value;   // scribe_v2 returns seconds — no conversion needed
+  return value; // scribe_v2 returns seconds — no conversion needed
 };
 ```
 
 ### Important
+
 All previously processed videos have corrupted timestamps baked into `sessionStorage` / `localStorage`. After deploying the fix the video **must be re-processed from scratch** (upload → transcribe → generate clips) to get correct data.
 
 ---
@@ -71,10 +77,12 @@ window.open(previewUrl, "_blank", "noreferrer");
 #### 2b. `useMemo` reads storage too early (SSR/hydration timing)
 
 **Files:**
+
 - `app/[locale]/preview/page.tsx` — `fullTranscriptSegments` memo (~line 148)
 - `app/[locale]/editor/page.tsx` — `clipData` memo (~line 161)
 
 Both memos read `sessionStorage` / `localStorage` inside `useMemo`, but:
+
 - During SSR, `window` is `undefined` → returns `null`
 - The dependency arrays only include URL params (`startTimeParam`, `endTimeParam`), which don't change between SSR and hydration, so the memo **never re-runs on the client**.
 
@@ -82,7 +90,9 @@ Both memos read `sessionStorage` / `localStorage` inside `useMemo`, but:
 
 ```typescript
 const [storageReady, setStorageReady] = useState(false);
-useEffect(() => { setStorageReady(true); }, []);
+useEffect(() => {
+  setStorageReady(true);
+}, []);
 
 const fullTranscriptSegments = useMemo(() => {
   if (!storageReady) return null;
@@ -126,21 +136,23 @@ Upload page ──(audio)──▸ /api/process
 ```
 
 ### Key storage locations
-| Key | Contents |
-|-----|----------|
+
+| Key                                  | Contents                                    |
+| ------------------------------------ | ------------------------------------------- |
 | `reelify_segments` (session + local) | Full transcription `[{ text, start, end }]` |
-| `reelify_clips` (session) | Clip candidates from Gemini |
-| `reelify_video_url` (session) | Original video URL |
+| `reelify_clips` (session)            | Clip candidates from Gemini                 |
+| `reelify_video_url` (session)        | Original video URL                          |
 
 ### Key files to look at
-| File | Role |
-|------|------|
-| `lib/elevenlabs.ts` | Transcription + `normalizeTime` |
-| `app/[locale]/page.tsx` | Home page, storage writes, `window.open` |
-| `app/[locale]/preview/page.tsx` | Preview, `fullTranscriptSegments` memo |
-| `app/[locale]/editor/page.tsx` | Editor, `clipData` memo |
-| `components/reel-editor/TranscriptionEditor.tsx` | Text display in editor |
-| `lib/store/useReelEditorStore.ts` | Zustand store, `setCurrentClip`, `setTrimPoints` |
+
+| File                                             | Role                                             |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `lib/elevenlabs.ts`                              | Transcription + `normalizeTime`                  |
+| `app/[locale]/page.tsx`                          | Home page, storage writes, `window.open`         |
+| `app/[locale]/preview/page.tsx`                  | Preview, `fullTranscriptSegments` memo           |
+| `app/[locale]/editor/page.tsx`                   | Editor, `clipData` memo                          |
+| `components/reel-editor/TranscriptionEditor.tsx` | Text display in editor                           |
+| `lib/store/useReelEditorStore.ts`                | Zustand store, `setCurrentClip`, `setTrimPoints` |
 
 ---
 

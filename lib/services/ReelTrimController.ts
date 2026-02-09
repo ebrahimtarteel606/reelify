@@ -1,5 +1,5 @@
-import { TrimPoints } from '@/types';
-import { validateTrimPoints, clamp } from '@/lib/utils/validationUtils';
+import { TrimPoints } from "@/types";
+import { validateTrimPoints, clamp } from "@/lib/utils/validationUtils";
 
 export class ReelTrimController {
   /**
@@ -46,11 +46,7 @@ export class ReelTrimController {
   /**
    * Snap time to trim boundaries
    */
-  static snapToTrimBoundary(
-    time: number,
-    trimPoints: TrimPoints,
-    threshold: number = 0.5
-  ): number {
+  static snapToTrimBoundary(time: number, trimPoints: TrimPoints, threshold: number = 0.5): number {
     if (Math.abs(time - trimPoints.startTime) < threshold) {
       return trimPoints.startTime;
     }

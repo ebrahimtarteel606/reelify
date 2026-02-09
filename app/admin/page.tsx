@@ -72,7 +72,7 @@ export default function AdminDashboard() {
 
   const headers = useCallback(
     () => ({ "Content-Type": "application/json", "x-admin-secret": secret }),
-    [secret],
+    [secret]
   );
 
   // ── Fetch users ─────────────────────────────────────────────
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
         setUsageLoading(false);
       }
     },
-    [secret],
+    [secret]
   );
 
   useEffect(() => {
@@ -229,12 +229,8 @@ export default function AdminDashboard() {
           onSubmit={handleLogin}
           className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm space-y-6"
         >
-          <h1 className="text-2xl font-bold text-center text-gray-900">
-            Admin Dashboard
-          </h1>
-          <p className="text-sm text-gray-500 text-center">
-            Enter your admin password to continue
-          </p>
+          <h1 className="text-2xl font-bold text-center text-gray-900">Admin Dashboard</h1>
+          <p className="text-sm text-gray-500 text-center">Enter your admin password to continue</p>
           <input
             type="password"
             placeholder="Admin password"
@@ -243,9 +239,7 @@ export default function AdminDashboard() {
             className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent"
             autoFocus
           />
-          {authError && (
-            <p className="text-sm text-red-500 text-center">{authError}</p>
-          )}
+          {authError && <p className="text-sm text-red-500 text-center">{authError}</p>}
           <button
             type="submit"
             disabled={!secret || loading}
@@ -264,9 +258,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">
-            Reelify Admin
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900">Reelify Admin</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => fetchUsers()}
@@ -290,19 +282,14 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Summary cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <SummaryCard
-            label="Total Users"
-            value={users.length}
-          />
+          <SummaryCard label="Total Users" value={users.length} />
           <SummaryCard
             label="Total Requests"
             value={users.reduce((s, u) => s + u.usage.request_count, 0)}
           />
           <SummaryCard
             label="Total Credits Used"
-            value={fmtMin(
-              users.reduce((s, u) => s + u.usage.total_credits_used, 0),
-            )}
+            value={fmtMin(users.reduce((s, u) => s + u.usage.total_credits_used, 0))}
           />
         </div>
 
@@ -357,9 +344,7 @@ export default function AdminDashboard() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">
-                  Credits (min)
-                </label>
+                <label className="text-xs font-medium text-gray-500">Credits (min)</label>
                 <input
                   type="number"
                   value={newCredits}
@@ -398,9 +383,7 @@ export default function AdminDashboard() {
                     className={`hover:bg-gray-50 transition-colors ${selectedUserId === user.id ? "bg-pink-50" : ""}`}
                   >
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {user.display_name}
-                      </div>
+                      <div className="font-medium text-gray-900">{user.display_name}</div>
                       <button
                         onClick={() => copyId(user.id)}
                         className="text-xs text-gray-400 hover:text-gray-600 font-mono transition-colors"
@@ -438,9 +421,7 @@ export default function AdminDashboard() {
                         <input
                           type="number"
                           value={editCredits}
-                          onChange={(e) =>
-                            setEditCredits(Number(e.target.value))
-                          }
+                          onChange={(e) => setEditCredits(Number(e.target.value))}
                           className="w-24 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
                         />
                       ) : (
@@ -454,9 +435,7 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4 text-gray-600">
                       {fmtMin(user.usage.total_credits_used)}
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {user.usage.request_count}
-                    </td>
+                    <td className="px-6 py-4 text-gray-600">{user.usage.request_count}</td>
                     <td className="px-6 py-4 text-gray-500 text-xs">
                       {formatDate(user.usage.last_used)}
                     </td>
@@ -491,9 +470,7 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             onClick={() =>
-                              setSelectedUserId(
-                                selectedUserId === user.id ? null : user.id,
-                              )
+                              setSelectedUserId(selectedUserId === user.id ? null : user.id)
                             }
                             className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                           >
@@ -512,10 +489,7 @@ export default function AdminDashboard() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-12 text-center text-gray-400"
-                    >
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                       No users yet. Create one to get started.
                     </td>
                   </tr>
@@ -530,18 +504,13 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
               <h2 className="font-semibold text-gray-900">
-                Usage History —{" "}
-                {users.find((u) => u.id === selectedUserId)?.display_name}
+                Usage History — {users.find((u) => u.id === selectedUserId)?.display_name}
               </h2>
             </div>
             {usageLoading ? (
-              <div className="px-6 py-8 text-center text-gray-400">
-                Loading...
-              </div>
+              <div className="px-6 py-8 text-center text-gray-400">Loading...</div>
             ) : usageEvents.length === 0 ? (
-              <div className="px-6 py-8 text-center text-gray-400">
-                No usage events yet.
-              </div>
+              <div className="px-6 py-8 text-center text-gray-400">No usage events yet.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -561,9 +530,7 @@ export default function AdminDashboard() {
                         <td className="px-6 py-3 text-gray-700">
                           {fmtMin(ev.source_duration_minutes)}
                         </td>
-                        <td className="px-6 py-3 text-gray-700">
-                          {fmtMin(ev.credits_charged)}
-                        </td>
+                        <td className="px-6 py-3 text-gray-700">{fmtMin(ev.credits_charged)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -578,18 +545,10 @@ export default function AdminDashboard() {
 }
 
 // ── Summary card component ──────────────────────────────────────
-function SummaryCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number;
-}) {
+function SummaryCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-        {label}
-      </p>
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
     </div>
   );

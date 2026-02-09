@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { useEffect, useState } from "react";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export function useFFmpeg() {
   const [ffmpeg, setFFmpeg] = useState<FFmpeg | null>(null);
@@ -20,7 +20,7 @@ export function useFFmpeg() {
         const ffmpegInstance = new FFmpeg();
 
         // Load FFmpeg core files from CDN
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.0/dist/umd';
+        const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.0/dist/umd";
 
         await ffmpegInstance.load({
           coreURL: `${baseURL}/ffmpeg-core.js`,
@@ -31,7 +31,7 @@ export function useFFmpeg() {
         setFFmpeg(ffmpegInstance);
         setLoaded(true);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load FFmpeg'));
+        setError(err instanceof Error ? err : new Error("Failed to load FFmpeg"));
       } finally {
         setLoading(false);
       }

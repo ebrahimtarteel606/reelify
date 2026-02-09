@@ -31,31 +31,32 @@ async function deleteFile(ffmpeg: FFmpeg, name: string) {
   }
 }
 
-export async function extractAudioWav(
-  ffmpeg: FFmpeg,
-  inputName: string,
-  outputName: string,
-) {
+export async function extractAudioWav(ffmpeg: FFmpeg, inputName: string, outputName: string) {
   // Use Opus compression for smallest file size (16k bitrate, 16kHz mono)
   await ffmpeg.exec([
     "-i",
     inputName,
     "-vn",
-    "-ac", "1",
-    "-ar", "12000",
-    "-c:a", "libopus",
-    "-application", "voip",
-    "-vbr", "on",
-    "-b:a", "8k",
-    "-compression_level", "10",
+    "-ac",
+    "1",
+    "-ar",
+    "12000",
+    "-c:a",
+    "libopus",
+    "-application",
+    "voip",
+    "-vbr",
+    "on",
+    "-b:a",
+    "8k",
+    "-compression_level",
+    "10",
     outputName,
   ]);
   const audioData = await ffmpeg.readFile(outputName);
   await deleteFile(ffmpeg, outputName); // Free memory
   const audioBytes =
-    typeof audioData === "string"
-      ? new TextEncoder().encode(audioData)
-      : audioData;
+    typeof audioData === "string" ? new TextEncoder().encode(audioData) : audioData;
   const audioBlobPart = audioBytes as BlobPart;
   return new Blob([audioBlobPart], { type: "audio/ogg" });
 }
@@ -65,7 +66,7 @@ export async function clipVideoSegment(
   inputName: string,
   outputName: string,
   start: number,
-  end: number,
+  end: number
 ) {
   const safeStart = Math.max(0, start);
   const safeEnd = Math.max(safeStart, end);
@@ -88,10 +89,7 @@ export async function clipVideoSegment(
   ]);
   const clipData = await ffmpeg.readFile(outputName);
   await deleteFile(ffmpeg, outputName); // Free memory
-  const clipBytes =
-    typeof clipData === "string"
-      ? new TextEncoder().encode(clipData)
-      : clipData;
+  const clipBytes = typeof clipData === "string" ? new TextEncoder().encode(clipData) : clipData;
   const clipBlobPart = clipBytes as BlobPart;
   return new Blob([clipBlobPart], { type: "video/mp4" });
 }
@@ -100,7 +98,7 @@ export async function extractThumbnail(
   ffmpeg: FFmpeg,
   inputName: string,
   outputName: string,
-  timestamp: number,
+  timestamp: number
 ) {
   const safeTimestamp = Math.max(0, timestamp);
   // Extract thumbnail efficiently with memory optimizations:
@@ -124,9 +122,7 @@ export async function extractThumbnail(
   const thumbData = await ffmpeg.readFile(outputName);
   await deleteFile(ffmpeg, outputName); // Free memory immediately
   const thumbBytes =
-    typeof thumbData === "string"
-      ? new TextEncoder().encode(thumbData)
-      : thumbData;
+    typeof thumbData === "string" ? new TextEncoder().encode(thumbData) : thumbData;
   const thumbBlobPart = thumbBytes as BlobPart;
   return new Blob([thumbBlobPart], { type: "image/jpeg" });
 }

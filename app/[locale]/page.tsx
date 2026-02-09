@@ -21,12 +21,7 @@ import {
 } from "@/lib/videoStorage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import Image from "next/image";
 import {
@@ -79,13 +74,7 @@ type TranscriptSegment = {
   text: string;
 };
 
-type PlatformKey =
-  | "instagram"
-  | "tiktok"
-  | "youtube"
-  | "snapchat"
-  | "facebook"
-  | "linkedin";
+type PlatformKey = "instagram" | "tiktok" | "youtube" | "snapchat" | "facebook" | "linkedin";
 
 type IconType = Icon;
 
@@ -109,9 +98,7 @@ export default function HomePage() {
   const [status, setStatus] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
   const [error, setError] = useState<string>("");
-  const [screen, setScreen] = useState<
-    "upload" | "form" | "loading" | "results"
-  >("upload");
+  const [screen, setScreen] = useState<"upload" | "form" | "loading" | "results">("upload");
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [platform, setPlatform] = useState<PlatformKey>("instagram");
@@ -185,8 +172,7 @@ export default function HomePage() {
     linkedin: 45,
   };
 
-  const [currentRecommendationIndex, setCurrentRecommendationIndex] =
-    useState<number>(0);
+  const [currentRecommendationIndex, setCurrentRecommendationIndex] = useState<number>(0);
 
   // Get recommendations - show all platforms when skipQuestions is true
   const currentRecommendations = useMemo(() => {
@@ -221,9 +207,7 @@ export default function HomePage() {
   } | null>(null);
   const [backgroundError, setBackgroundError] = useState<string>("");
   const [backgroundProcessing, setBackgroundProcessing] = useState(false);
-  const [thumbnailGenerating, setThumbnailGenerating] = useState<Set<number>>(
-    new Set()
-  );
+  const [thumbnailGenerating, setThumbnailGenerating] = useState<Set<number>>(new Set());
 
   const backgroundResultRef = useRef(backgroundResult);
   const backgroundErrorRef = useRef(backgroundError);
@@ -252,9 +236,7 @@ export default function HomePage() {
     if (screen === "loading") {
       if (currentRecommendations.length > 1) {
         const interval = setInterval(() => {
-          setCurrentRecommendationIndex(
-            (prev) => (prev + 1) % currentRecommendations.length
-          );
+          setCurrentRecommendationIndex((prev) => (prev + 1) % currentRecommendations.length);
         }, 4000);
 
         return () => clearInterval(interval);
@@ -274,16 +256,11 @@ export default function HomePage() {
     const isRefresh = navEntry?.type === "reload";
 
     if (isRefresh) {
-      const hasActiveSession =
-        globalThis.sessionStorage.getItem("reelify_clips") !== null;
+      const hasActiveSession = globalThis.sessionStorage.getItem("reelify_clips") !== null;
       if (hasActiveSession) {
-        console.log(
-          "[IndexedDB] Page refreshed but active session exists, preserving storage..."
-        );
+        console.log("[IndexedDB] Page refreshed but active session exists, preserving storage...");
       } else {
-        console.log(
-          "[IndexedDB] Page refreshed with no active session, clearing storage..."
-        );
+        console.log("[IndexedDB] Page refreshed with no active session, clearing storage...");
         void clearAllStorage();
       }
     }
@@ -304,27 +281,21 @@ export default function HomePage() {
   useEffect(() => {
     if (typeof globalThis.window === "undefined") return;
 
-    const navigationState = globalThis.sessionStorage.getItem(
-      "reelify_navigation_back"
-    );
+    const navigationState = globalThis.sessionStorage.getItem("reelify_navigation_back");
 
     if (navigationState === "true" && screen === "upload") {
       const storedClips = globalThis.sessionStorage.getItem("reelify_clips");
       const storedScreen = globalThis.sessionStorage.getItem("reelify_screen");
-      const storedVideoUrl =
-        globalThis.sessionStorage.getItem("reelify_video_url");
+      const storedVideoUrl = globalThis.sessionStorage.getItem("reelify_video_url");
 
       if (storedClips && storedVideoUrl && storedScreen === "results") {
         try {
           const parsedClips = JSON.parse(storedClips);
           if (Array.isArray(parsedClips) && parsedClips.length > 0) {
-            const storedSegments =
-              globalThis.sessionStorage.getItem("reelify_segments");
+            const storedSegments = globalThis.sessionStorage.getItem("reelify_segments");
             if (storedSegments) {
               try {
-                const parsedSegments = JSON.parse(
-                  storedSegments
-                ) as TranscriptSegment[];
+                const parsedSegments = JSON.parse(storedSegments) as TranscriptSegment[];
                 if (Array.isArray(parsedSegments)) setSegments(parsedSegments);
               } catch {
                 // Ignore invalid segments
@@ -383,22 +354,14 @@ export default function HomePage() {
       await ffmpeg.readFile(inputName);
       console.log("[Thumbnails] Input file verified in FFmpeg filesystem");
     } catch (error) {
-      console.warn(
-        "[Thumbnails] Input file not found in FFmpeg filesystem, re-writing...",
-        error
-      );
+      console.warn("[Thumbnails] Input file not found in FFmpeg filesystem, re-writing...", error);
       if (videoFile) {
         try {
           await writeInputFile(ffmpeg, inputName, videoFile);
           console.log("[Thumbnails] Input file re-written successfully");
         } catch (rewriteError) {
-          console.error(
-            "[Thumbnails] Failed to re-write input file:",
-            rewriteError
-          );
-          throw new Error(
-            "Failed to prepare video file for thumbnail generation"
-          );
+          console.error("[Thumbnails] Failed to re-write input file:", rewriteError);
+          throw new Error("Failed to prepare video file for thumbnail generation");
         }
       } else {
         throw new Error("Video file not available for thumbnail generation");
@@ -432,19 +395,12 @@ export default function HomePage() {
             await new Promise((resolve) => setTimeout(resolve, 2000 * retries));
           } else {
             console.log(
-              `[Thumbnails] Generating thumbnail ${index + 1}/${
-                clips.length
-              } at ${clip.start}s`
+              `[Thumbnails] Generating thumbnail ${index + 1}/${clips.length} at ${clip.start}s`
             );
           }
 
           const thumbName = `thumb-${crypto.randomUUID()}.jpg`;
-          const thumbBlob = await extractThumbnail(
-            ffmpeg,
-            inputName,
-            thumbName,
-            clip.start
-          );
+          const thumbBlob = await extractThumbnail(ffmpeg, inputName, thumbName, clip.start);
 
           const clipKey = `thumb-${clip.start}-${clip.end}`;
           const blobUrl = URL.createObjectURL(thumbBlob);
@@ -482,9 +438,7 @@ export default function HomePage() {
           if (isMemoryError && retries < maxRetries) {
             retries++;
             console.warn(
-              `[Thumbnails] Memory error for thumbnail ${
-                index + 1
-              }, will retry...`,
+              `[Thumbnails] Memory error for thumbnail ${index + 1}, will retry...`,
               error
             );
             // Wait progressively longer before retrying
@@ -525,18 +479,11 @@ export default function HomePage() {
 
     if (thumbnailData.length > 0) {
       try {
-        console.log(
-          "[Thumbnails] Storing",
-          thumbnailData.length,
-          "thumbnails in IndexedDB"
-        );
+        console.log("[Thumbnails] Storing", thumbnailData.length, "thumbnails in IndexedDB");
         await storeThumbnails(thumbnailData);
         console.log("[Thumbnails] Successfully stored thumbnails in IndexedDB");
       } catch (error) {
-        console.error(
-          "[Thumbnails] Failed to store thumbnails in IndexedDB:",
-          error
-        );
+        console.error("[Thumbnails] Failed to store thumbnails in IndexedDB:", error);
       }
     }
 
@@ -566,9 +513,7 @@ export default function HomePage() {
 
     const fileSizeMB = videoFile.size / (1024 * 1024);
     console.log(
-      `[Background Processing] Starting audio extraction for ${fileSizeMB.toFixed(
-        2
-      )}MB file`
+      `[Background Processing] Starting audio extraction for ${fileSizeMB.toFixed(2)}MB file`
     );
 
     try {
@@ -576,9 +521,7 @@ export default function HomePage() {
       setStatus(tLoading("loadingTools"));
       const loadStart = Date.now();
       const ffmpeg = await getFfmpeg();
-      console.log(
-        `[Background Processing] FFmpeg loaded in ${Date.now() - loadStart}ms`
-      );
+      console.log(`[Background Processing] FFmpeg loaded in ${Date.now() - loadStart}ms`);
 
       setProgress(10);
       setStatus(tLoading("readingFile"));
@@ -599,9 +542,9 @@ export default function HomePage() {
       const audioBlob = await extractAudioWav(ffmpeg, inputName, audioName);
       const extractTime = Date.now() - extractStart;
       console.log(
-        `[Background Processing] Audio extraction completed in ${(
-          extractTime / 1000
-        ).toFixed(1)}s (${(audioBlob.size / 1024 / 1024).toFixed(2)}MB)`
+        `[Background Processing] Audio extraction completed in ${(extractTime / 1000).toFixed(
+          1
+        )}s (${(audioBlob.size / 1024 / 1024).toFixed(2)}MB)`
       );
 
       setProgress(20);
@@ -619,14 +562,9 @@ export default function HomePage() {
         audioUrl: audioBlobUrl,
       });
 
-      console.log(
-        `[Background Processing] Background processing completed successfully`
-      );
+      console.log(`[Background Processing] Background processing completed successfully`);
     } catch (err) {
-      console.error(
-        "[Background Processing] Error during background processing:",
-        err
-      );
+      console.error("[Background Processing] Error during background processing:", err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error("[Background Processing] Error details:", {
         message: errorMessage,
@@ -727,9 +665,7 @@ export default function HomePage() {
           if (attempts % 300 === 0) {
             const waitedSeconds = attempts / 10;
             console.log(
-              `[Background Processing] Still waiting... (${waitedSeconds.toFixed(
-                0
-              )}s elapsed)`
+              `[Background Processing] Still waiting... (${waitedSeconds.toFixed(0)}s elapsed)`
             );
           }
         }
@@ -764,14 +700,8 @@ export default function HomePage() {
       const originalVideoUrl = videoBlobUrl;
 
       if (typeof globalThis.window !== "undefined") {
-        globalThis.sessionStorage.setItem(
-          "reelify_video_url",
-          originalVideoUrl
-        );
-        globalThis.sessionStorage.setItem(
-          "reelify_video_name",
-          file?.name || "video.mp4"
-        );
+        globalThis.sessionStorage.setItem("reelify_video_url", originalVideoUrl);
+        globalThis.sessionStorage.setItem("reelify_video_name", file?.name || "video.mp4");
         globalThis.sessionStorage.setItem("reelify_platform", platform);
       }
 
@@ -808,9 +738,9 @@ export default function HomePage() {
       // Credit system: attach user ID and video duration
       const storedUserId =
         typeof globalThis.window !== "undefined"
-          ? globalThis.localStorage.getItem("reelify_user_id") ??
+          ? (globalThis.localStorage.getItem("reelify_user_id") ??
             document.cookie.match(/reelify_user_id=([^;]+)/)?.[1] ??
-            ""
+            "")
           : "";
       if (storedUserId) {
         formData.append("user_id", storedUserId);
@@ -819,10 +749,7 @@ export default function HomePage() {
         if (videoDuration > MAX_VIDEO_DURATION_SECONDS) {
           throw new Error(t("videoTooLong"));
         }
-        formData.append(
-          "source_duration_seconds",
-          String(Math.ceil(videoDuration))
-        );
+        formData.append("source_duration_seconds", String(Math.ceil(videoDuration)));
       }
 
       let progressValue = 20;
@@ -844,13 +771,8 @@ export default function HomePage() {
       if (!response.ok) {
         const serverError = payload?.error ?? "";
         const isTooLong =
-          typeof serverError === "string" &&
-          serverError.toLowerCase().includes("video too long");
-        throw new Error(
-          isTooLong
-            ? t("videoTooLong")
-            : serverError || tLoading("analysisError")
-        );
+          typeof serverError === "string" && serverError.toLowerCase().includes("video too long");
+        throw new Error(isTooLong ? t("videoTooLong") : serverError || tLoading("analysisError"));
       }
 
       const candidates = Array.isArray(payload?.clips) ? payload.clips : [];
@@ -876,10 +798,7 @@ export default function HomePage() {
 
       for (const candidate of candidates) {
         const duration = Math.max(0, candidate.end - candidate.start);
-        const clipTranscript = getClipTranscript(
-          candidate.start,
-          candidate.end
-        );
+        const clipTranscript = getClipTranscript(candidate.start, candidate.end);
 
         uploadedClips.push({
           title: candidate.title,
@@ -949,21 +868,14 @@ export default function HomePage() {
               return clip;
             });
             if (typeof globalThis.window !== "undefined") {
-              globalThis.sessionStorage.setItem(
-                "reelify_clips",
-                JSON.stringify(updatedClips)
-              );
+              globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(updatedClips));
             }
             return updatedClips;
           });
         }
       )
         .then((thumbnails) => {
-          console.log(
-            "[Thumbnails] Generated thumbnails:",
-            thumbnails.length,
-            "URLs"
-          );
+          console.log("[Thumbnails] Generated thumbnails:", thumbnails.length, "URLs");
           // Final update to ensure all thumbnails are set
           setClips((prevClips) => {
             const updatedClips = prevClips.map((clip, index) => {
@@ -979,10 +891,7 @@ export default function HomePage() {
               };
             });
             if (typeof globalThis.window !== "undefined") {
-              globalThis.sessionStorage.setItem(
-                "reelify_clips",
-                JSON.stringify(updatedClips)
-              );
+              globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(updatedClips));
             }
             return updatedClips;
           });
@@ -996,18 +905,9 @@ export default function HomePage() {
         });
 
       if (typeof globalThis.window !== "undefined") {
-        globalThis.sessionStorage.setItem(
-          "reelify_clips",
-          JSON.stringify(uploadedClips)
-        );
-        globalThis.sessionStorage.setItem(
-          "reelify_segments",
-          JSON.stringify(segments)
-        );
-        globalThis.localStorage.setItem(
-          "reelify_segments",
-          JSON.stringify(segments)
-        );
+        globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(uploadedClips));
+        globalThis.sessionStorage.setItem("reelify_segments", JSON.stringify(segments));
+        globalThis.localStorage.setItem("reelify_segments", JSON.stringify(segments));
         globalThis.sessionStorage.setItem("reelify_screen", "results");
       }
     } catch (err) {
@@ -1174,9 +1074,7 @@ export default function HomePage() {
   const hookStyleOptions = [
     {
       value: t("hookStyles.directQuestion"),
-      icon: (
-        <MessageQuestion size={28} variant="Bold" className="text-primary" />
-      ),
+      icon: <MessageQuestion size={28} variant="Bold" className="text-primary" />,
     },
     {
       value: t("hookStyles.strongNumber"),
@@ -1241,25 +1139,13 @@ export default function HomePage() {
         {/* Logout confirmation dialog */}
         <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
           <DialogContent className="gap-5 sm:max-w-md">
-            <DialogTitle className="text-xl">
-              {tCommon("logoutConfirmTitle")}
-            </DialogTitle>
-            <DialogDescription>
-              {tCommon("logoutConfirmMessage")}
-            </DialogDescription>
+            <DialogTitle className="text-xl">{tCommon("logoutConfirmTitle")}</DialogTitle>
+            <DialogDescription>{tCommon("logoutConfirmMessage")}</DialogDescription>
             <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowLogoutConfirm(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setShowLogoutConfirm(false)}>
                 {tCommon("cancel")}
               </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleLogout}
-              >
+              <Button type="button" variant="destructive" onClick={handleLogout}>
                 {tCommon("logout")}
               </Button>
             </div>
@@ -1280,10 +1166,7 @@ export default function HomePage() {
         {screen === "upload" && (
           <Card className="shadow-card border-0 bg-gradient-card animate-fade-in hover:shadow-card-hover transition-all duration-500">
             <CardContent className="p-10">
-              <form
-                className="flex flex-col items-center gap-8"
-                onSubmit={onUploadSubmit}
-              >
+              <form className="flex flex-col items-center gap-8" onSubmit={onUploadSubmit}>
                 <div className="w-full">
                   <label
                     htmlFor="video"
@@ -1294,13 +1177,9 @@ export default function HomePage() {
                         <CloudAdd className="w-8 h-8 text-primary" size={32} />
                       </div>
                       <p className="mb-2 text-base text-foreground">
-                        <span className="font-semibold text-primary">
-                          {t("uploadLabel")}
-                        </span>
+                        <span className="font-semibold text-primary">{t("uploadLabel")}</span>
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t("uploadFormats")}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{t("uploadFormats")}</p>
                     </div>
                     <input
                       id="video"
@@ -1330,10 +1209,7 @@ export default function HomePage() {
                         const tempVideo = document.createElement("video");
                         tempVideo.preload = "metadata";
                         tempVideo.onloadedmetadata = async () => {
-                          if (
-                            tempVideo.duration &&
-                            Number.isFinite(tempVideo.duration)
-                          ) {
+                          if (tempVideo.duration && Number.isFinite(tempVideo.duration)) {
                             const durationSec = tempVideo.duration;
                             if (durationSec > MAX_VIDEO_DURATION_SECONDS) {
                               setFile(null);
@@ -1345,44 +1221,31 @@ export default function HomePage() {
                             }
                             const storedUserId =
                               typeof globalThis.window !== "undefined"
-                                ? globalThis.localStorage.getItem(
-                                    "reelify_user_id"
-                                  ) ??
-                                  document.cookie.match(
-                                    /reelify_user_id=([^;]+)/
-                                  )?.[1] ??
-                                  ""
+                                ? (globalThis.localStorage.getItem("reelify_user_id") ??
+                                  document.cookie.match(/reelify_user_id=([^;]+)/)?.[1] ??
+                                  "")
                                 : "";
                             if (storedUserId) {
                               try {
-                                const checkRes = await fetch(
-                                  "/api/credits/check",
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      user_id: storedUserId,
-                                      duration_seconds: durationSec,
-                                    }),
-                                  }
-                                );
+                                const checkRes = await fetch("/api/credits/check", {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    user_id: storedUserId,
+                                    duration_seconds: durationSec,
+                                  }),
+                                });
                                 const checkPayload = await checkRes.json();
-                                if (
-                                  !checkRes.ok ||
-                                  checkPayload?.ok === false
-                                ) {
+                                if (!checkRes.ok || checkPayload?.ok === false) {
                                   setFile(null);
                                   setVideoDuration(0);
                                   setIsValidatingVideo(false);
                                   setError(
-                                    checkPayload?.error
-                                      ?.toLowerCase?.()
-                                      .includes("insufficient")
+                                    checkPayload?.error?.toLowerCase?.().includes("insufficient")
                                       ? t("insufficientCredits")
-                                      : checkPayload?.error ??
-                                          t("insufficientCredits")
+                                      : (checkPayload?.error ?? t("insufficientCredits"))
                                   );
                                   URL.revokeObjectURL(tempUrl);
                                   return;
@@ -1414,12 +1277,8 @@ export default function HomePage() {
                     />
                   </label>
                   <div className="mt-3 space-y-1 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {t("maxFileSize")}
-                    </p>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {t("maxDuration")}
-                    </p>
+                    <p className="text-sm font-medium text-muted-foreground">{t("maxFileSize")}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t("maxDuration")}</p>
                   </div>
                   {file && (
                     <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in-scale">
@@ -1447,11 +1306,7 @@ export default function HomePage() {
                 >
                   {tCommon("continue")}
                 </Button>
-                {error && (
-                  <p className="text-sm text-destructive animate-fade-in">
-                    {error}
-                  </p>
-                )}
+                {error && <p className="text-sm text-destructive animate-fade-in">{error}</p>}
               </form>
             </CardContent>
           </Card>
@@ -1498,9 +1353,7 @@ export default function HomePage() {
                     aria-checked={skipQuestions}
                     onClick={() => setSkipQuestions((prev) => !prev)}
                     className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors ${
-                      skipQuestions
-                        ? "bg-primary border-primary"
-                        : "bg-background border-border"
+                      skipQuestions ? "bg-primary border-primary" : "bg-background border-border"
                     }`}
                   >
                     <span
@@ -1544,9 +1397,7 @@ export default function HomePage() {
               {backgroundError && (
                 <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200 animate-fade-in">
                   <Warning2 className="w-5 h-5 text-red-500" size={20} />
-                  <span className="text-sm font-medium text-red-600">
-                    {backgroundError}
-                  </span>
+                  <span className="text-sm font-medium text-red-600">{backgroundError}</span>
                 </div>
               )}
 
@@ -1605,9 +1456,7 @@ export default function HomePage() {
                   </div>
 
                   {error && (
-                    <p className="text-sm text-destructive text-center animate-fade-in">
-                      {error}
-                    </p>
+                    <p className="text-sm text-destructive text-center animate-fade-in">{error}</p>
                   )}
 
                   {/* Step 1: Platform */}
@@ -1623,8 +1472,7 @@ export default function HomePage() {
                             onClick={() => {
                               setPlatform(option.value);
                               const recommendedDuration =
-                                recommendedDurationMap[option.value] ??
-                                preferredDuration;
+                                recommendedDurationMap[option.value] ?? preferredDuration;
                               setPreferredDuration(recommendedDuration);
                               posthog.capture("platform_selected", {
                                 platform: option.value,
@@ -1648,14 +1496,9 @@ export default function HomePage() {
                               variant="Bold"
                               aria-hidden
                             />
-                            <span className="font-semibold text-lg">
-                              {option.label}
-                            </span>
+                            <span className="font-semibold text-lg">{option.label}</span>
                             {platform === option.value && (
-                              <TickCircle
-                                className="w-6 h-6 text-primary ms-auto"
-                                size={24}
-                              />
+                              <TickCircle className="w-6 h-6 text-primary ms-auto" size={24} />
                             )}
                           </button>
                         );
@@ -1668,9 +1511,7 @@ export default function HomePage() {
                     <div className="space-y-4 animate-fade-in">
                       <p className="text-sm text-muted-foreground text-center">
                         {t("durationRecommendation", {
-                          duration:
-                            recommendedDurationMap[platform] ??
-                            preferredDuration,
+                          duration: recommendedDurationMap[platform] ?? preferredDuration,
                           platform: t(`platforms.${platform}`),
                         })}
                       </p>
@@ -1728,14 +1569,9 @@ export default function HomePage() {
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <span className="text-3xl">{option.icon}</span>
-                          <span className="font-semibold text-lg">
-                            {option.value}
-                          </span>
+                          <span className="font-semibold text-lg">{option.value}</span>
                           {audience === option.value && (
-                            <TickCircle
-                              className="w-6 h-6 text-primary ms-auto"
-                              size={24}
-                            />
+                            <TickCircle className="w-6 h-6 text-primary ms-auto" size={24} />
                           )}
                         </button>
                       ))}
@@ -1761,18 +1597,14 @@ export default function HomePage() {
                         />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>
-                            {audienceSkipped
-                              ? t("questionSkipped")
-                              : t("audienceCustomHint")}
+                            {audienceSkipped ? t("questionSkipped") : t("audienceCustomHint")}
                           </span>
                           <button
                             type="button"
                             onClick={() => {
                               setAudience("");
                               setAudienceSkipped(true);
-                              setStep((current) =>
-                                Math.min(totalSteps, current + 1)
-                              );
+                              setStep((current) => Math.min(totalSteps, current + 1));
                             }}
                             className="text-primary hover:underline font-medium"
                           >
@@ -1803,14 +1635,9 @@ export default function HomePage() {
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <span className="text-3xl">{option.icon}</span>
-                          <span className="font-semibold text-lg">
-                            {option.value}
-                          </span>
+                          <span className="font-semibold text-lg">{option.value}</span>
                           {tone === option.value && (
-                            <TickCircle
-                              className="w-6 h-6 text-primary ms-auto"
-                              size={24}
-                            />
+                            <TickCircle className="w-6 h-6 text-primary ms-auto" size={24} />
                           )}
                         </button>
                       ))}
@@ -1835,19 +1662,13 @@ export default function HomePage() {
                           className="w-full rounded-xl border border-border bg-background/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                         />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>
-                            {toneSkipped
-                              ? t("questionSkipped")
-                              : t("toneCustomHint")}
-                          </span>
+                          <span>{toneSkipped ? t("questionSkipped") : t("toneCustomHint")}</span>
                           <button
                             type="button"
                             onClick={() => {
                               setTone("");
                               setToneSkipped(true);
-                              setStep((current) =>
-                                Math.min(totalSteps, current + 1)
-                              );
+                              setStep((current) => Math.min(totalSteps, current + 1));
                             }}
                             className="text-primary hover:underline font-medium"
                           >
@@ -1880,14 +1701,9 @@ export default function HomePage() {
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <span className="text-3xl">{option.icon}</span>
-                          <span className="font-semibold text-lg">
-                            {option.value}
-                          </span>
+                          <span className="font-semibold text-lg">{option.value}</span>
                           {hookStyle === option.value && (
-                            <TickCircle
-                              className="w-6 h-6 text-primary ms-auto"
-                              size={24}
-                            />
+                            <TickCircle className="w-6 h-6 text-primary ms-auto" size={24} />
                           )}
                         </button>
                       ))}
@@ -1913,9 +1729,7 @@ export default function HomePage() {
                         />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>
-                            {hookStyleSkipped
-                              ? t("questionSkipped")
-                              : t("hookStyleCustomHint")}
+                            {hookStyleSkipped ? t("questionSkipped") : t("hookStyleCustomHint")}
                           </span>
                           <button
                             type="button"
@@ -1925,9 +1739,7 @@ export default function HomePage() {
                               if (step >= totalSteps) {
                                 void onStartProcessing();
                               } else {
-                                setStep((current) =>
-                                  Math.min(totalSteps, current + 1)
-                                );
+                                setStep((current) => Math.min(totalSteps, current + 1));
                               }
                             }}
                             className="text-primary hover:underline font-medium"
@@ -1945,13 +1757,9 @@ export default function HomePage() {
                       type="button"
                       variant="ghost"
                       size="lg"
-                      onClick={() =>
-                        setStep((current) => Math.max(1, current - 1))
-                      }
+                      onClick={() => setStep((current) => Math.max(1, current - 1))}
                       disabled={step === 1}
-                      className={`text-base px-6 ${
-                        step === 1 ? "invisible" : "hover:bg-muted"
-                      }`}
+                      className={`text-base px-6 ${step === 1 ? "invisible" : "hover:bg-muted"}`}
                     >
                       {t("previous")}
                     </Button>
@@ -1959,11 +1767,7 @@ export default function HomePage() {
                       <Button
                         type="button"
                         size="lg"
-                        onClick={() =>
-                          setStep((current) =>
-                            Math.min(totalSteps, current + 1)
-                          )
-                        }
+                        onClick={() => setStep((current) => Math.min(totalSteps, current + 1))}
                         className="text-base px-8 text-white bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                       >
                         {t("next")}
@@ -2012,8 +1816,7 @@ export default function HomePage() {
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-primary mb-2">
                             {skipQuestions
-                              ? tLoading("tipsForAllPlatforms") ||
-                                "Tips for all platforms"
+                              ? tLoading("tipsForAllPlatforms") || "Tips for all platforms"
                               : tLoading("tipsFor", {
                                   platform: t(`platforms.${platform}`),
                                 })}
@@ -2026,21 +1829,16 @@ export default function HomePage() {
                           </p>
                           {currentRecommendations.length > 1 && (
                             <div className="flex gap-1.5 mt-3 justify-center">
-                              {currentRecommendations.map(
-                                (rec: string, index: number) => (
-                                  <div
-                                    key={`rec-${platform}-${index}-${rec.substring(
-                                      0,
-                                      10
-                                    )}`}
-                                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                                      index === currentRecommendationIndex
-                                        ? "w-6 bg-primary"
-                                        : "w-1.5 bg-primary/30"
-                                    }`}
-                                  />
-                                )
-                              )}
+                              {currentRecommendations.map((rec: string, index: number) => (
+                                <div
+                                  key={`rec-${platform}-${index}-${rec.substring(0, 10)}`}
+                                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                                    index === currentRecommendationIndex
+                                      ? "w-6 bg-primary"
+                                      : "w-1.5 bg-primary/30"
+                                  }`}
+                                />
+                              ))}
                             </div>
                           )}
                         </div>
@@ -2055,9 +1853,7 @@ export default function HomePage() {
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    {progress}%
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">{progress}%</p>
                 </div>
               </CardContent>
             </Card>
@@ -2093,12 +1889,8 @@ export default function HomePage() {
               <div className="w-16 h-16 mx-auto rounded-full bg-gradient-teal flex items-center justify-center animate-bounce-soft">
                 <TickCircle className="w-8 h-8 text-white" size={32} />
               </div>
-              <h2 className="text-3xl font-bold text-foreground">
-                {tResults("clipsReady")}
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                {tResults("selectClip")}
-              </p>
+              <h2 className="text-3xl font-bold text-foreground">{tResults("clipsReady")}</h2>
+              <p className="text-lg text-muted-foreground">{tResults("selectClip")}</p>
             </div>
             {clips.length === 0 ? (
               <p className="text-base text-muted-foreground text-center">
@@ -2108,9 +1900,7 @@ export default function HomePage() {
               <div className="grid gap-8 grid-cols-2 lg:grid-cols-3">
                 {clips.map((clip, index) => {
                   const previewParams: Record<string, string> = {
-                    ...(clip.url && !clip.url.startsWith("blob:")
-                      ? { url: clip.url }
-                      : {}),
+                    ...(clip.url && !clip.url.startsWith("blob:") ? { url: clip.url } : {}),
                     startTime: String(clip.start),
                     endTime: String(clip.end),
                     title: clip.title,
@@ -2137,14 +1927,8 @@ export default function HomePage() {
                     if (segments.length > 0) {
                       try {
                         const segmentsJson = JSON.stringify(segments);
-                        globalThis.sessionStorage.setItem(
-                          "reelify_segments",
-                          segmentsJson
-                        );
-                        globalThis.localStorage.setItem(
-                          "reelify_segments",
-                          segmentsJson
-                        );
+                        globalThis.sessionStorage.setItem("reelify_segments", segmentsJson);
+                        globalThis.localStorage.setItem("reelify_segments", segmentsJson);
                         console.log(
                           "[Results] Saved segments to storage before navigation:",
                           segments.length
@@ -2167,9 +1951,7 @@ export default function HomePage() {
                         href={previewUrl}
                         onClick={handlePreviewClick}
                         className={`${wrapperClass} block`}
-                        aria-label={`${tResults("previewAndEdit")}: ${
-                          clip.title
-                        }`}
+                        aria-label={`${tResults("previewAndEdit")}: ${clip.title}`}
                       >
                         {clip.thumbnail ? (
                           <img
@@ -2179,12 +1961,9 @@ export default function HomePage() {
                             onError={(e) => {
                               const loadThumbnail = async () => {
                                 const clipKey = `thumb-${clip.start}-${clip.end}`;
-                                const thumbnailUrl = await getThumbnailBlobUrl(
-                                  clipKey
-                                );
+                                const thumbnailUrl = await getThumbnailBlobUrl(clipKey);
                                 if (thumbnailUrl) {
-                                  (e.target as HTMLImageElement).src =
-                                    thumbnailUrl;
+                                  (e.target as HTMLImageElement).src = thumbnailUrl;
                                 }
                               };
                               void loadThumbnail();
@@ -2198,9 +1977,7 @@ export default function HomePage() {
                               <div className="flex flex-col items-center gap-2">
                                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                                 <span className="text-xs text-muted-foreground">
-                                  {thumbnailGenerating.has(index)
-                                    ? "Generating..."
-                                    : "Loading..."}
+                                  {thumbnailGenerating.has(index) ? "Generating..." : "Loading..."}
                                 </span>
                               </div>
                             </div>
@@ -2209,11 +1986,7 @@ export default function HomePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100 shadow-xl">
-                            <Play
-                              className="w-7 h-7 text-primary"
-                              size={28}
-                              variant="Bold"
-                            />
+                            <Play className="w-7 h-7 text-primary" size={28} variant="Bold" />
                           </div>
                         </div>
                         <div className="absolute bottom-3 start-3 px-2.5 py-1 rounded-lg bg-black/70 text-white text-xs font-medium backdrop-blur-sm">
@@ -2236,11 +2009,7 @@ export default function HomePage() {
                           asChild
                           className="w-full h-12 text-white text-base font-semibold bg-gradient-teal hover:shadow-teal hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl"
                         >
-                          <a
-                            href={previewUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
+                          <a href={previewUrl} target="_blank" rel="noopener noreferrer">
                             <Eye className="w-5 h-5 me-2" size={20} />
                             {tResults("previewAndEdit")}
                           </a>
@@ -2257,17 +2026,11 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="mt-12 pt-8 border-t border-border/30 animate-fade-in">
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <Link
-              href={`/${locale}/privacy`}
-              className="hover:text-primary transition-colors"
-            >
+            <Link href={`/${locale}/privacy`} className="hover:text-primary transition-colors">
               {tCommon("privacyPolicy")}
             </Link>
             <span>•</span>
-            <Link
-              href={`/${locale}/terms`}
-              className="hover:text-primary transition-colors"
-            >
+            <Link href={`/${locale}/terms`} className="hover:text-primary transition-colors">
               {tCommon("termsAndConditions")}
             </Link>
           </div>

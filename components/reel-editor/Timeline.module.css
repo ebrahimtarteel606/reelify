@@ -6,7 +6,8 @@
   flex-shrink: 0;
   overflow-x: auto;
   max-height: 200px;
-  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.06),
+  box-shadow:
+    0 4px 10px -2px rgba(0, 0, 0, 0.06),
     0 18px 40px -12px rgba(0, 0, 0, 0.12);
   animation: fadeIn 0.6s ease-out forwards;
 }
@@ -31,7 +32,7 @@
   margin-bottom: 12px;
   font-size: 11px;
   color: hsl(var(--muted-foreground));
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 @keyframes fadeIn {
@@ -174,7 +175,9 @@
 
 .markerThumb:focus {
   outline: none;
-  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.4), 0 0 0 3px rgba(255, 107, 122, 0.3);
+  box-shadow:
+    0 4px 12px rgba(255, 107, 122, 0.4),
+    0 0 0 3px rgba(255, 107, 122, 0.3);
 }
 
 .markerThumb:active {
@@ -330,7 +333,7 @@
 
 .infoValue {
   color: hsl(var(--foreground));
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
   font-size: 13px;
 }
@@ -342,7 +345,7 @@
   gap: 6px;
   padding: 6px 10px;
   min-width: 100px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
   font-size: 13px;
   color: hsl(var(--foreground));
@@ -389,7 +392,7 @@
   width: 100%;
   max-width: 120px;
   padding: 6px 10px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
   font-size: 13px;
   color: hsl(var(--foreground));
