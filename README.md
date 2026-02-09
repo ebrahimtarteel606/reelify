@@ -1,6 +1,6 @@
 # Reelify Arabic Reels v 0.0
 
-تحويل الفيديوهات العربية إلى مقاطع قصيرة جاهزة للنشر باستخدام ElevenLabs وGemini وFFmpeg.wasm.
+تحويل الفيديوهات العربية إلى مقاطع قصيرة جاهزة للنشر باستخدام ElevenLabs وGemini وFFmpeg.wasm.ss
 
 ## المتطلبات
 
