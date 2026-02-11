@@ -326,7 +326,7 @@ function EditorContent() {
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between max-w-7xl mx-auto gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Link href={`/${locale}`}>
+            <Link href={`/${locale}/app`}>
               <img
                 src="/Transparent white1.png"
                 alt="Reelify logo"

@@ -42,6 +42,20 @@ create table if not exists usage_events (
 create index if not exists idx_usage_events_user_id on usage_events(user_id);
 create index if not exists idx_usage_events_created_at on usage_events(created_at desc);
 
+-- Demo requests: landing page registrations
+create table if not exists demo_requests (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  phone text not null,
+  help_text text not null,
+  locale text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_demo_requests_created_at on demo_requests(created_at desc);
+
 -- RPC: atomically check credits, charge, and log usage.
 -- p_duration_minutes is the video length rounded up to the next whole minute.
 -- Max video duration (2 hours) is enforced at the API layer, not here.

@@ -26,8 +26,21 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow /admin and /login through without user auth
+  // Allow /admin and /login through without user auth or locale redirect
   if (pathname.startsWith("/admin") || pathname.startsWith("/login")) {
+    return NextResponse.next();
+  }
+
+  // For the root path "/", use intlMiddleware to detect browser language and redirect to /en or /ar
+  if (pathname === "/") {
+    return intlMiddleware(request);
+  }
+
+  // Allow locale landing pages, privacy, and terms through without user auth
+  if (
+    locales.some((locale) => pathname === `/${locale}` || pathname === `/${locale}/`) ||
+    locales.some((locale) => pathname === `/${locale}/privacy` || pathname === `/${locale}/terms`)
+  ) {
     return NextResponse.next();
   }
 

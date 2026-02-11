@@ -9,6 +9,7 @@
     "continue": "Continue",
     "save": "Save",
     "cancel": "Cancel",
+    "login": "Log in",
     "seconds": "seconds",
     "home": "Home",
     "privacyPolicy": "Privacy Policy",
@@ -417,5 +418,116 @@
     "language": "Language",
     "arabic": "العربية",
     "english": "English"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Closed beta access",
+      "title": "Turn long videos into Reels in Seconds",
+      "subtitle": "Reelify analyzes your video and generates high-impact clips ready for social.",
+      "point1": "Cut editing time by turning 1 long video into multiple short clips.",
+      "point2": "Pick your platform, tone, and audience — Reelify does the rest.",
+      "point3": "Export, preview, and publish in a streamlined workflow.",
+      "primaryCta": "Register for demo",
+      "secondaryCta": "Watch demo",
+      "note": "We review every request and invite teams that are the best fit.",
+      "kicker": "Demo workflow",
+      "kickerSubtitle": "See the exact steps from upload to ready-to-post clips.",
+      "stat1": {
+        "label": "Average setup",
+        "value": "Under 5 minutes"
+      },
+      "stat2": {
+        "label": "Output",
+        "value": "Multiple clips per video"
+      }
+    },
+    "video": {
+      "title": "Product demo",
+      "subtitle": "Watch the full workflow: upload, pick goals, and export ready-to-post clips.",
+      "badge": "AI highlights",
+      "cta": "Get access to the demo",
+      "caption": "A quick walkthrough of the end-to-end workflow.",
+      "flowLabel": "Step",
+      "flow": {
+        "step1": "Upload a long video",
+        "step2": "Choose goals + tone",
+        "step3": "Export short clips"
+      },
+      "points": {
+        "point1": "Highlights are ranked by engagement potential.",
+        "point2": "Clips include titles, hooks, and tags.",
+        "point3": "Preview, edit, and publish with one flow."
+      }
+    },
+    "howItWorks": {
+      "step1": {
+        "title": "Upload your long video",
+        "description": "Drop a podcast, webinar, or any long-form content."
+      },
+      "step2": {
+        "title": "Answer a few questions",
+        "description": "Tell us your platform, tone, and audience goals."
+      },
+      "step3": {
+        "title": "Get ready-to-post clips",
+        "description": "Preview, edit, and export your top moments in minutes."
+      }
+    },
+    "features": {
+      "title": "Features & Benefits",
+      "subtitle": "Everything you need to turn long-form content into short-form growth.",
+      "valueBadge": "Built for growth teams",
+      "items": {
+        "feature1": {
+          "title": "Smart highlight detection",
+          "description": "Automatically finds the most engaging moments."
+        },
+        "feature2": {
+          "title": "Platform-ready formats",
+          "description": "Optimized for Reels, Shorts, TikTok, and more."
+        },
+        "feature3": {
+          "title": "Captions and transcripts",
+          "description": "Clear captions to keep viewers watching without sound."
+        },
+        "feature4": {
+          "title": "Fast review workflow",
+          "description": "Preview clips, trim, and refine in a few clicks."
+        },
+        "feature5": {
+          "title": "Consistent brand voice",
+          "description": "Tailor the tone and hooks to match your style."
+        },
+        "feature6": {
+          "title": "Scale content output",
+          "description": "Produce more clips from every recording."
+        }
+      }
+    },
+    "cta": {
+      "title": "Request early access",
+      "subtitle": "Tell us about your team and we’ll schedule a demo.",
+      "reviewNote": "We review submissions and select who gets access."
+    },
+    "form": {
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone number",
+      "help": "How will Reelify help you?",
+      "placeholders": {
+        "name": "Your name",
+        "email": "you@company.com",
+        "phone": "+1 555 000 0000",
+        "help": "Example: We need 10 short clips per week from webinars."
+      },
+      "submit": "Submit request",
+      "submitting": "Submitting...",
+      "success": "Thanks! We’ll review your request and contact you soon.",
+      "errors": {
+        "required": "Please complete all fields.",
+        "email": "Please enter a valid email address.",
+        "generic": "Something went wrong. Please try again."
+      }
+    }
   }
 }

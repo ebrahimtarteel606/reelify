@@ -441,7 +441,7 @@ function PreviewContent() {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Logo */}
         <div className="flex items-center justify-center mb-6">
-          <Link href={`/${locale}`}>
+          <Link href={`/${locale}/app`}>
             <Image
               src="/Transparent white1.png"
               alt="Reelify"
