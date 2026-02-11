@@ -26,8 +26,14 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow /admin and /login through without user auth
-  if (pathname.startsWith("/admin") || pathname.startsWith("/login")) {
+  // Allow /admin, /login, and landing routes through without user auth
+  if (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/login") ||
+    pathname === "/" ||
+    locales.some((locale) => pathname === `/${locale}` || pathname === `/${locale}/`) ||
+    locales.some((locale) => pathname === `/${locale}/privacy` || pathname === `/${locale}/terms`)
+  ) {
     return NextResponse.next();
   }
 

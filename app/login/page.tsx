@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 import posthog from "posthog-js";
+import { defaultLocale } from "../../i18n/config";
 
 function LoginForm() {
   const router = useRouter();
@@ -54,7 +56,7 @@ function LoginForm() {
       localStorage.setItem("reelify_user_id", trimmed);
 
       // Redirect to the intended destination or home
-      const next = searchParams.get("next") || "/";
+      const next = searchParams.get("next") || `/${defaultLocale}/app`;
       router.push(next);
     } catch {
       posthog.capture("login_failed", { error_message: "Network error" });
@@ -115,6 +117,13 @@ function LoginForm() {
           <p className="text-xs text-gray-400 text-center">
             Don&apos;t have a User ID? Contact your administrator.
           </p>
+
+          <Link
+            href={`/${defaultLocale}#demo-form`}
+            className="w-full inline-flex items-center justify-center rounded-xl border border-pink-200 px-4 py-3 text-sm font-semibold text-pink-600 hover:bg-pink-50 transition-colors"
+          >
+            Register for demo
+          </Link>
         </form>
       </div>
     </div>
