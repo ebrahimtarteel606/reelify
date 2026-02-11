@@ -31,6 +31,19 @@ interface UsageEvent {
   created_at: string;
 }
 
+interface DemoRequest {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  help_text: string;
+  locale: string | null;
+  status: string;
+  created_at: string;
+}
+
+type Tab = "users" | "demo-requests";
+
 // ── Helpers ────────────────────────────────────────────────────
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -41,6 +54,15 @@ function fmtMin(m: number) {
   return m === 1 ? "1 min" : `${m} min`;
 }
 
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  contacted: "bg-blue-100 text-blue-800",
+  converted: "bg-green-100 text-green-800",
+  dismissed: "bg-gray-100 text-gray-600",
+};
+
+const STATUS_OPTIONS = ["pending", "contacted", "converted", "dismissed"];
+
 // ── Component ──────────────────────────────────────────────────
 export default function AdminDashboard() {
   // Auth
@@ -48,9 +70,18 @@ export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState(false);
   const [authError, setAuthError] = useState("");
 
-  // Data
+  // Tab
+  const [activeTab, setActiveTab] = useState<Tab>("users");
+
+  // Data – Users
   const [users, setUsers] = useState<CreditUser[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Data – Demo Requests
+  const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([]);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoStatusFilter, setDemoStatusFilter] = useState<string>("all");
+  const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
 
   // Create user form
   const [showCreate, setShowCreate] = useState(false);
@@ -94,6 +125,53 @@ export default function AdminDashboard() {
     }
   }, [secret]);
 
+  // ── Fetch demo requests ────────────────────────────────────
+  const fetchDemoRequests = useCallback(async () => {
+    setDemoLoading(true);
+    try {
+      const res = await fetch("/api/admin/demo-requests", {
+        headers: { "x-admin-secret": secret },
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setDemoRequests(data.demo_requests ?? []);
+    } catch {
+      setDemoRequests([]);
+    } finally {
+      setDemoLoading(false);
+    }
+  }, [secret]);
+
+  // Load demo requests when tab switches
+  useEffect(() => {
+    if (authenticated && activeTab === "demo-requests") {
+      fetchDemoRequests();
+    }
+  }, [authenticated, activeTab, fetchDemoRequests]);
+
+  // ── Update demo request status ─────────────────────────────
+  const updateDemoStatus = async (id: string, status: string) => {
+    await fetch("/api/admin/demo-requests", {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify({ id, status }),
+    });
+    posthog.capture("admin_demo_status_updated", { id, status });
+    await fetchDemoRequests();
+  };
+
+  // ── Delete demo request ────────────────────────────────────
+  const deleteDemoRequest = async (id: string) => {
+    if (!confirm("Delete this demo request?")) return;
+    await fetch(`/api/admin/demo-requests?id=${id}`, {
+      method: "DELETE",
+      headers: headers(),
+    });
+    posthog.capture("admin_demo_deleted", { id });
+    if (expandedRequestId === id) setExpandedRequestId(null);
+    await fetchDemoRequests();
+  };
+
   // ── Usage events for a user ──────────────────────────────────
   const fetchUsage = useCallback(
     async (userId: string) => {
@@ -123,7 +201,7 @@ export default function AdminDashboard() {
     await fetchUsers();
   };
 
-  // ── Auto logout after 1 minute of inactivity (admin only) ───
+  // ── Auto logout after 5 minutes of inactivity ───────────────
   const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logoutFromInactivity = useCallback(() => {
@@ -221,6 +299,20 @@ export default function AdminDashboard() {
     navigator.clipboard.writeText(id);
   };
 
+  // ── Filtered demo requests ──────────────────────────────────
+  const filteredDemoRequests =
+    demoStatusFilter === "all"
+      ? demoRequests
+      : demoRequests.filter((r) => r.status === demoStatusFilter);
+
+  const demoCounts = {
+    all: demoRequests.length,
+    pending: demoRequests.filter((r) => r.status === "pending").length,
+    contacted: demoRequests.filter((r) => r.status === "contacted").length,
+    converted: demoRequests.filter((r) => r.status === "converted").length,
+    dismissed: demoRequests.filter((r) => r.status === "dismissed").length,
+  };
+
   // ── Auth gate ────────────────────────────────────────────────
   if (!authenticated) {
     return (
@@ -261,7 +353,10 @@ export default function AdminDashboard() {
           <h1 className="text-xl font-bold text-gray-900">Reelify Admin</h1>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => fetchUsers()}
+              onClick={() => {
+                if (activeTab === "users") fetchUsers();
+                else fetchDemoRequests();
+              }}
               className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
             >
               Refresh
@@ -277,267 +372,463 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Tab navigation */}
+        <div className="max-w-7xl mx-auto px-6">
+          <nav className="flex gap-1">
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors relative ${
+                activeTab === "users"
+                  ? "text-pink-600 bg-gray-50"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50/50"
+              }`}
+            >
+              Users
+              {activeTab === "users" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-500 rounded-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("demo-requests")}
+              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors relative flex items-center gap-2 ${
+                activeTab === "demo-requests"
+                  ? "text-pink-600 bg-gray-50"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50/50"
+              }`}
+            >
+              Demo Requests
+              {demoCounts.pending > 0 && (
+                <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold rounded-full bg-yellow-100 text-yellow-800 min-w-[20px]">
+                  {demoCounts.pending}
+                </span>
+              )}
+              {activeTab === "demo-requests" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-500 rounded-full" />
+              )}
+            </button>
+          </nav>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Summary cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <SummaryCard label="Total Users" value={users.length} />
-          <SummaryCard
-            label="Total Requests"
-            value={users.reduce((s, u) => s + u.usage.request_count, 0)}
-          />
-          <SummaryCard
-            label="Total Credits Used"
-            value={fmtMin(users.reduce((s, u) => s + u.usage.total_credits_used, 0))}
-          />
-        </div>
-
-        {/* Users table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Users</h2>
-            <button
-              onClick={() => setShowCreate(!showCreate)}
-              className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium hover:shadow-md transition-all"
-            >
-              {showCreate ? "Cancel" : "+ New User"}
-            </button>
-          </div>
-
-          {/* Create user form */}
-          {showCreate && (
-            <form
-              onSubmit={handleCreate}
-              className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex flex-wrap items-end gap-4"
-            >
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">Name</label>
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="User name"
-                  required
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">Email</label>
-                <input
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="user@example.com"
-                  required
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">Phone</label>
-                <input
-                  type="tel"
-                  value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
-                  placeholder="+1234567890"
-                  required
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">Credits (min)</label>
-                <input
-                  type="number"
-                  value={newCredits}
-                  onChange={(e) => setNewCredits(Number(e.target.value))}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg w-28 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
-              >
-                Create
-              </button>
-            </form>
-          )}
-
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                  <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Phone</th>
-                  <th className="px-6 py-3">Credits Left</th>
-                  <th className="px-6 py-3">Used</th>
-                  <th className="px-6 py-3">Requests</th>
-                  <th className="px-6 py-3">Last Active</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className={`hover:bg-gray-50 transition-colors ${selectedUserId === user.id ? "bg-pink-50" : ""}`}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{user.display_name}</div>
-                      <button
-                        onClick={() => copyId(user.id)}
-                        className="text-xs text-gray-400 hover:text-gray-600 font-mono transition-colors"
-                        title="Click to copy user ID"
-                      >
-                        {user.id.slice(0, 8)}...
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {editingId === user.id ? (
-                        <input
-                          type="email"
-                          value={editEmail}
-                          onChange={(e) => setEditEmail(e.target.value)}
-                          className="w-44 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                        />
-                      ) : (
-                        <span className="text-gray-700">{user.email}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {editingId === user.id ? (
-                        <input
-                          type="tel"
-                          value={editPhone}
-                          onChange={(e) => setEditPhone(e.target.value)}
-                          className="w-36 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                        />
-                      ) : (
-                        <span className="text-gray-700">{user.phone}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {editingId === user.id ? (
-                        <input
-                          type="number"
-                          value={editCredits}
-                          onChange={(e) => setEditCredits(Number(e.target.value))}
-                          className="w-24 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                        />
-                      ) : (
-                        <span
-                          className={`font-medium ${user.credits_remaining <= 1 ? "text-red-500" : "text-gray-700"}`}
-                        >
-                          {fmtMin(user.credits_remaining)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {fmtMin(user.usage.total_credits_used)}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{user.usage.request_count}</td>
-                    <td className="px-6 py-4 text-gray-500 text-xs">
-                      {formatDate(user.usage.last_used)}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      {editingId === user.id ? (
-                        <>
-                          <button
-                            onClick={() => handleSaveEdit(user.id)}
-                            className="px-3 py-1 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditingId(user.id);
-                              setEditEmail(user.email);
-                              setEditPhone(user.phone);
-                              setEditCredits(user.credits_remaining);
-                            }}
-                            className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() =>
-                              setSelectedUserId(selectedUserId === user.id ? null : user.id)
-                            }
-                            className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                          >
-                            {selectedUserId === user.id ? "Hide" : "Usage"}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user.id)}
-                            className="px-3 py-1 text-xs rounded-lg text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {users.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
-                      No users yet. Create one to get started.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Usage events drawer */}
-        {selectedUserId && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900">
-                Usage History — {users.find((u) => u.id === selectedUserId)?.display_name}
-              </h2>
+        {/* ─── Users Tab ──────────────────────────────────────── */}
+        {activeTab === "users" && (
+          <>
+            {/* Summary cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <SummaryCard label="Total Users" value={users.length} />
+              <SummaryCard
+                label="Total Requests"
+                value={users.reduce((s, u) => s + u.usage.request_count, 0)}
+              />
+              <SummaryCard
+                label="Total Credits Used"
+                value={fmtMin(users.reduce((s, u) => s + u.usage.total_credits_used, 0))}
+              />
             </div>
-            {usageLoading ? (
-              <div className="px-6 py-8 text-center text-gray-400">Loading...</div>
-            ) : usageEvents.length === 0 ? (
-              <div className="px-6 py-8 text-center text-gray-400">No usage events yet.</div>
-            ) : (
+
+            {/* Users table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h2 className="font-semibold text-gray-900">Users</h2>
+                <button
+                  onClick={() => setShowCreate(!showCreate)}
+                  className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium hover:shadow-md transition-all"
+                >
+                  {showCreate ? "Cancel" : "+ New User"}
+                </button>
+              </div>
+
+              {/* Create user form */}
+              {showCreate && (
+                <form
+                  onSubmit={handleCreate}
+                  className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex flex-wrap items-end gap-4"
+                >
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500">Name</label>
+                    <input
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="User name"
+                      required
+                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500">Email</label>
+                    <input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="user@example.com"
+                      required
+                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500">Phone</label>
+                    <input
+                      type="tel"
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      placeholder="+1234567890"
+                      required
+                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500">Credits (min)</label>
+                    <input
+                      type="number"
+                      value={newCredits}
+                      onChange={(e) => setNewCredits(Number(e.target.value))}
+                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg w-28 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+                  >
+                    Create
+                  </button>
+                </form>
+              )}
+
+              {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                      <th className="px-6 py-3">Date</th>
-                      <th className="px-6 py-3">Duration</th>
-                      <th className="px-6 py-3">Credits Charged</th>
+                      <th className="px-6 py-3">Name</th>
+                      <th className="px-6 py-3">Email</th>
+                      <th className="px-6 py-3">Phone</th>
+                      <th className="px-6 py-3">Credits Left</th>
+                      <th className="px-6 py-3">Used</th>
+                      <th className="px-6 py-3">Requests</th>
+                      <th className="px-6 py-3">Last Active</th>
+                      <th className="px-6 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {usageEvents.map((ev) => (
-                      <tr key={ev.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-3 text-gray-500 text-xs">
-                          {formatDate(ev.created_at)}
+                    {users.map((user) => (
+                      <tr
+                        key={user.id}
+                        className={`hover:bg-gray-50 transition-colors ${selectedUserId === user.id ? "bg-pink-50" : ""}`}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900">{user.display_name}</div>
+                          <button
+                            onClick={() => copyId(user.id)}
+                            className="text-xs text-gray-400 hover:text-gray-600 font-mono transition-colors"
+                            title="Click to copy user ID"
+                          >
+                            {user.id.slice(0, 8)}...
+                          </button>
                         </td>
-                        <td className="px-6 py-3 text-gray-700">
-                          {fmtMin(ev.source_duration_minutes)}
+                        <td className="px-6 py-4 text-gray-700">
+                          {editingId === user.id ? (
+                            <input
+                              type="email"
+                              value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              className="w-44 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                            />
+                          ) : (
+                            <span className="text-gray-700">{user.email}</span>
+                          )}
                         </td>
-                        <td className="px-6 py-3 text-gray-700">{fmtMin(ev.credits_charged)}</td>
+                        <td className="px-6 py-4 text-gray-700">
+                          {editingId === user.id ? (
+                            <input
+                              type="tel"
+                              value={editPhone}
+                              onChange={(e) => setEditPhone(e.target.value)}
+                              className="w-36 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                            />
+                          ) : (
+                            <span className="text-gray-700">{user.phone}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {editingId === user.id ? (
+                            <input
+                              type="number"
+                              value={editCredits}
+                              onChange={(e) => setEditCredits(Number(e.target.value))}
+                              className="w-24 px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                            />
+                          ) : (
+                            <span
+                              className={`font-medium ${user.credits_remaining <= 1 ? "text-red-500" : "text-gray-700"}`}
+                            >
+                              {fmtMin(user.credits_remaining)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {fmtMin(user.usage.total_credits_used)}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">{user.usage.request_count}</td>
+                        <td className="px-6 py-4 text-gray-500 text-xs">
+                          {formatDate(user.usage.last_used)}
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          {editingId === user.id ? (
+                            <>
+                              <button
+                                onClick={() => handleSaveEdit(user.id)}
+                                className="px-3 py-1 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingId(user.id);
+                                  setEditEmail(user.email);
+                                  setEditPhone(user.phone);
+                                  setEditCredits(user.credits_remaining);
+                                }}
+                                className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setSelectedUserId(selectedUserId === user.id ? null : user.id)
+                                }
+                                className="px-3 py-1 text-xs rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                              >
+                                {selectedUserId === user.id ? "Hide" : "Usage"}
+                              </button>
+                              <button
+                                onClick={() => handleDelete(user.id)}
+                                className="px-3 py-1 text-xs rounded-lg text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </td>
                       </tr>
                     ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                          No users yet. Create one to get started.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Usage events drawer */}
+            {selectedUserId && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <h2 className="font-semibold text-gray-900">
+                    Usage History — {users.find((u) => u.id === selectedUserId)?.display_name}
+                  </h2>
+                </div>
+                {usageLoading ? (
+                  <div className="px-6 py-8 text-center text-gray-400">Loading...</div>
+                ) : usageEvents.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-gray-400">No usage events yet.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                          <th className="px-6 py-3">Date</th>
+                          <th className="px-6 py-3">Duration</th>
+                          <th className="px-6 py-3">Credits Charged</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {usageEvents.map((ev) => (
+                          <tr key={ev.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-3 text-gray-500 text-xs">
+                              {formatDate(ev.created_at)}
+                            </td>
+                            <td className="px-6 py-3 text-gray-700">
+                              {fmtMin(ev.source_duration_minutes)}
+                            </td>
+                            <td className="px-6 py-3 text-gray-700">
+                              {fmtMin(ev.credits_charged)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
+          </>
+        )}
+
+        {/* ─── Demo Requests Tab ──────────────────────────────── */}
+        {activeTab === "demo-requests" && (
+          <>
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <SummaryCard label="Total Requests" value={demoCounts.all} />
+              <SummaryCard label="Pending" value={demoCounts.pending} />
+              <SummaryCard label="Contacted" value={demoCounts.contacted} />
+              <SummaryCard label="Converted" value={demoCounts.converted} />
+            </div>
+
+            {/* Demo requests table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+                <h2 className="font-semibold text-gray-900">Demo Requests</h2>
+                {/* Status filter pills */}
+                <div className="flex items-center gap-1.5">
+                  {(["all", ...STATUS_OPTIONS] as const).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setDemoStatusFilter(status)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors capitalize ${
+                        demoStatusFilter === status
+                          ? "bg-pink-500 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {status}{" "}
+                      <span className="opacity-70">
+                        ({demoCounts[status as keyof typeof demoCounts] ?? 0})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {demoLoading ? (
+                <div className="px-6 py-12 text-center text-gray-400">Loading...</div>
+              ) : filteredDemoRequests.length === 0 ? (
+                <div className="px-6 py-12 text-center text-gray-400">
+                  {demoStatusFilter === "all"
+                    ? "No demo requests yet."
+                    : `No ${demoStatusFilter} requests.`}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                        <th className="px-6 py-3">Name</th>
+                        <th className="px-6 py-3">Email</th>
+                        <th className="px-6 py-3">Phone</th>
+                        <th className="px-6 py-3">Locale</th>
+                        <th className="px-6 py-3">Status</th>
+                        <th className="px-6 py-3">Date</th>
+                        <th className="px-6 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {filteredDemoRequests.map((req) => (
+                        <>
+                          <tr
+                            key={req.id}
+                            className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+                              expandedRequestId === req.id ? "bg-pink-50" : ""
+                            }`}
+                            onClick={() =>
+                              setExpandedRequestId(
+                                expandedRequestId === req.id ? null : req.id
+                              )
+                            }
+                          >
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-gray-900">{req.name}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <a
+                                href={`mailto:${req.email}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-pink-600 hover:text-pink-700 hover:underline"
+                              >
+                                {req.email}
+                              </a>
+                            </td>
+                            <td className="px-6 py-4 text-gray-700">
+                              <a
+                                href={`tel:${req.phone}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="hover:text-pink-600 hover:underline"
+                              >
+                                {req.phone}
+                              </a>
+                            </td>
+                            <td className="px-6 py-4 text-gray-500 text-xs uppercase">
+                              {req.locale ?? "—"}
+                            </td>
+                            <td className="px-6 py-4">
+                              <select
+                                value={req.status}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => updateDemoStatus(req.id, e.target.value)}
+                                className={`text-xs font-semibold px-2.5 py-1 rounded-full border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+                                  STATUS_STYLES[req.status] ?? "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {STATUS_OPTIONS.map((s) => (
+                                  <option key={s} value={s} className="capitalize">
+                                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-6 py-4 text-gray-500 text-xs">
+                              {formatDate(req.created_at)}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteDemoRequest(req.id);
+                                }}
+                                className="px-3 py-1 text-xs rounded-lg text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                          {/* Expanded help text row */}
+                          {expandedRequestId === req.id && (
+                            <tr key={`${req.id}-detail`}>
+                              <td colSpan={7} className="px-6 py-4 bg-gray-50">
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Message
+                                  </p>
+                                  <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                                    {req.help_text}
+                                  </p>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </main>
     </div>
