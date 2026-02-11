@@ -21,6 +21,11 @@ interface CreditUser {
   credits_remaining: number;
   created_at: string;
   usage: UserUsage;
+  title?: string;
+  company?: string;
+  notes?: string;
+  priority?: string;
+  source?: string;
 }
 
 interface UsageEvent {
@@ -100,6 +105,9 @@ export default function AdminDashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [usageEvents, setUsageEvents] = useState<UsageEvent[]>([]);
   const [usageLoading, setUsageLoading] = useState(false);
+
+  // User detail card (eye icon)
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
   const headers = useCallback(
     () => ({ "Content-Type": "application/json", "x-admin-secret": secret }),
@@ -593,6 +601,16 @@ export default function AdminDashboard() {
                           ) : (
                             <>
                               <button
+                                onClick={() => setDetailUserId(user.id)}
+                                className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+                                title="View details"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditingId(user.id);
                                   setEditEmail(user.email);
@@ -633,6 +651,115 @@ export default function AdminDashboard() {
                 </table>
               </div>
             </div>
+
+            {/* User detail card (eye icon modal) */}
+            {detailUserId && (() => {
+              const user = users.find((u) => u.id === detailUserId);
+              if (!user) return null;
+              return (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+                  onClick={() => setDetailUserId(null)}
+                >
+                  <div
+                    className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-md w-full max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                      <h2 className="font-semibold text-gray-900">User details</h2>
+                      <button
+                        onClick={() => setDetailUserId(null)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                        aria-label="Close"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="px-6 py-4 space-y-4">
+                      <div>
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Name</div>
+                        <div className="text-gray-900 font-medium">{user.display_name}</div>
+                      </div>
+                      {user.title ? (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Title</div>
+                          <div className="text-gray-700">{user.title}</div>
+                        </div>
+                      ) : null}
+                      <div>
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Email</div>
+                        <div className="text-gray-700">{user.email}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Phone</div>
+                        <div className="text-gray-700">{user.phone || "—"}</div>
+                      </div>
+                      {user.company ? (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Company</div>
+                          <div className="text-gray-700">{user.company}</div>
+                        </div>
+                      ) : null}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Credits left</div>
+                          <div className="text-gray-700">{fmtMin(user.credits_remaining)}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Credits used</div>
+                          <div className="text-gray-700">{fmtMin(user.usage.total_credits_used)}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Requests</div>
+                          <div className="text-gray-700">{user.usage.request_count}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Last active</div>
+                          <div className="text-gray-700 text-sm">{formatDate(user.usage.last_used)}</div>
+                        </div>
+                      </div>
+                      {user.priority ? (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Priority</div>
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${user.priority === "High" ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-700"}`}>
+                            {user.priority}
+                          </span>
+                        </div>
+                      ) : null}
+                      {user.source ? (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Source</div>
+                          <div className="text-gray-700">{user.source}</div>
+                        </div>
+                      ) : null}
+                      <div>
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Created</div>
+                        <div className="text-gray-700 text-sm">{formatDate(user.created_at)}</div>
+                      </div>
+                      {user.notes ? (
+                        <div>
+                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Notes</div>
+                          <div className="text-gray-700 text-sm whitespace-pre-wrap">{user.notes}</div>
+                        </div>
+                      ) : null}
+                      <div>
+                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">User ID</div>
+                        <button
+                          onClick={() => copyId(user.id)}
+                          className="text-xs font-mono text-gray-500 hover:text-gray-700 break-all text-left"
+                        >
+                          {user.id}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Usage events drawer */}
             {selectedUserId && (
