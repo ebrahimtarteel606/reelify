@@ -16,6 +16,11 @@ create table if not exists users (
   email text not null,
   phone text not null,
   credits_remaining integer not null default 180,  -- total minutes (3 hours default)
+  title text default '',
+  company text default '',
+  notes text default '',
+  priority text default '',
+  source text default '',
   created_at timestamptz not null default now()
 );
 
