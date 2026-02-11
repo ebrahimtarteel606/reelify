@@ -268,7 +268,12 @@ export default function LandingPage() {
           <div className="relative rounded-3xl border border-gray-100 bg-white p-1.5 shadow-[0_4px_40px_rgba(244,63,94,0.12)]">
             <div className="relative aspect-video w-full overflow-hidden rounded-[20px] bg-gray-50">
               <div className="pointer-events-none absolute inset-0 z-10 rounded-[20px] ring-1 ring-inset ring-black/5" />
-              <video src="/demo.mp4" controls className="h-full w-full object-cover" />
+              <iframe
+                src="https://drive.google.com/file/d/1z6FB7xBWjZVjFrxmUtAfAtr_Ff3_ioaR/preview"
+                allow="autoplay"
+                allowFullScreen
+                className="h-full w-full"
+              />
             </div>
             <div className="flex items-center justify-between px-4 py-3 text-xs text-gray-400">
               <span>{t("video.caption")}</span>
