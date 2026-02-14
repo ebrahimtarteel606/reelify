@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAvailableApiKey, markKeyExhausted } from "../../../lib/elevenlabs-keys";
+
+/** Max retries when a key is exhausted mid-request */
+const MAX_KEY_RETRIES = 5;
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,14 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Video URL is required" }, { status: 400 });
     }
 
-    // Use server-side env var (ELEVENLABS_API_KEY) with fallback to NEXT_PUBLIC version
-    const apiKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
-
-    if (!apiKey) {
-      return NextResponse.json({ error: "ElevenLabs API key not configured" }, { status: 500 });
-    }
-
-    // Fetch the video file
+    // Fetch the video file once (reused across retries)
     console.log("Fetching video from:", videoUrl);
     const videoResponse = await fetch(videoUrl);
 
@@ -26,49 +23,78 @@ export async function POST(request: NextRequest) {
     const videoBlob = await videoResponse.blob();
     console.log("Video fetched, size:", videoBlob.size, "bytes");
 
-    // Create FormData for ElevenLabs Speech-to-Text API (Scribe v2)
-    const formData = new FormData();
-    formData.append("file", videoBlob, "video.mp4");
-    formData.append("model_id", "scribe_v2"); // Using Scribe v2 model (underscore not hyphen!)
+    // Retry loop: try different API keys if one is exhausted mid-request
+    let lastError = "";
+    for (let attempt = 0; attempt < MAX_KEY_RETRIES; attempt++) {
+      // Get an API key that hasn't been marked exhausted (rotates across multiple keys)
+      const apiKey = getAvailableApiKey();
 
-    // Call ElevenLabs Speech-to-Text API
-    console.log("Calling ElevenLabs Speech-to-Text API (Scribe v2)...");
+      // Create FormData for ElevenLabs Speech-to-Text API (Scribe v2)
+      const formData = new FormData();
+      formData.append("file", videoBlob, "video.mp4");
+      formData.append("model_id", "scribe_v2");
 
-    const transcriptionResponse = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-      method: "POST",
-      headers: {
-        "xi-api-key": apiKey,
-      },
-      body: formData,
-    });
-
-    if (!transcriptionResponse.ok) {
-      const errorText = await transcriptionResponse.text();
-      console.error("ElevenLabs API error:", transcriptionResponse.status, errorText);
-
-      return NextResponse.json(
-        {
-          error: `ElevenLabs API error: ${transcriptionResponse.status}`,
-          details: errorText,
-        },
-        { status: transcriptionResponse.status }
+      console.log(
+        `Calling ElevenLabs Speech-to-Text API (Scribe v2)…${attempt > 0 ? ` (retry #${attempt})` : ""}`
       );
+
+      const transcriptionResponse = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+        method: "POST",
+        headers: {
+          "xi-api-key": apiKey,
+        },
+        body: formData,
+      });
+
+      if (!transcriptionResponse.ok) {
+        const errorText = await transcriptionResponse.text();
+        console.error("ElevenLabs API error:", transcriptionResponse.status, errorText);
+
+        // If quota/auth error, mark key exhausted and try next key
+        if (
+          transcriptionResponse.status === 401 ||
+          transcriptionResponse.status === 403 ||
+          transcriptionResponse.status === 429
+        ) {
+          markKeyExhausted(apiKey);
+          lastError = `ElevenLabs API error: ${transcriptionResponse.status}`;
+          console.warn(
+            `[Transcribe] Key exhausted (${transcriptionResponse.status}). Trying next key…`
+          );
+          continue; // try next key
+        }
+
+        return NextResponse.json(
+          {
+            error: `ElevenLabs API error: ${transcriptionResponse.status}`,
+            details: errorText,
+          },
+          { status: transcriptionResponse.status }
+        );
+      }
+
+      // Success – parse and return
+      const result = await transcriptionResponse.json();
+      console.log("ElevenLabs transcription received");
+
+      // ElevenLabs returns: { text, language_code, language_probability, words: [...] }
+      const detectedLanguage = result.language_code === "ar" ? "ar" : "en";
+
+      // Convert word-level timestamps to segments (group by sentences)
+      const words = result.words || [];
+      const segments = groupWordsIntoSegments(words, detectedLanguage);
+
+      return NextResponse.json({
+        segments,
+        language: detectedLanguage,
+      });
     }
 
-    const result = await transcriptionResponse.json();
-    console.log("ElevenLabs transcription received");
-
-    // ElevenLabs returns: { text, language_code, language_probability, words: [...] }
-    const detectedLanguage = result.language_code === "ar" ? "ar" : "en";
-
-    // Convert word-level timestamps to segments (group by sentences)
-    const words = result.words || [];
-    const segments = groupWordsIntoSegments(words, detectedLanguage);
-
-    return NextResponse.json({
-      segments,
-      language: detectedLanguage,
-    });
+    // If we exhausted all retries, return the last error
+    return NextResponse.json(
+      { error: lastError || "All ElevenLabs API keys are exhausted" },
+      { status: 503 }
+    );
   } catch (error) {
     console.error("Transcription error:", error);
     return NextResponse.json(
