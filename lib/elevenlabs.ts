@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { getAvailableApiKey, markKeyExhausted } from "./elevenlabs-keys";
 
 export type TranscriptSegment = {
   start: number;
@@ -63,12 +64,16 @@ const buildSegmentsFromWords = (words: ElevenLabsWord[]): TranscriptSegment[] =>
   return segments;
 };
 
+/** Max retries when a key is exhausted mid-request */
+const MAX_KEY_RETRIES = 5;
+
 // Transcribe audio from Buffer (no file system needed)
-export async function transcribeAudioFromBuffer(audioBuffer: Buffer): Promise<TranscriptSegment[]> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing ELEVENLABS_API_KEY");
-  }
+export async function transcribeAudioFromBuffer(
+  audioBuffer: Buffer,
+  _retryCount = 0,
+): Promise<TranscriptSegment[]> {
+  // Get an API key that hasn't been marked exhausted (rotates across multiple keys)
+  const apiKey = getAvailableApiKey();
 
   const fileSizeMB = (audioBuffer.length / 1024 / 1024).toFixed(2);
 
@@ -104,6 +109,21 @@ export async function transcribeAudioFromBuffer(audioBuffer: Buffer): Promise<Tr
 
   if (!response.ok) {
     const details = await response.text();
+
+    // If we hit a quota / auth error, mark the key and retry with the next one
+    if (response.status === 401 || response.status === 403 || response.status === 429) {
+      markKeyExhausted(apiKey);
+
+      if (_retryCount < MAX_KEY_RETRIES) {
+        console.warn(
+          `[ElevenLabs] Key exhausted mid-request (${response.status}). Retrying with next key (attempt ${_retryCount + 1}/${MAX_KEY_RETRIES})…`
+        );
+        return transcribeAudioFromBuffer(audioBuffer, _retryCount + 1);
+      }
+
+      throw new Error("All ElevenLabs API keys are exhausted or unavailable.");
+    }
+
     const error = `ElevenLabs STT failed (${response.status}): ${details}`;
     throw new Error(error);
   }

@@ -3,8 +3,13 @@
  *
  * To use this service, you need to:
  * 1. Get an API key from https://elevenlabs.io
- * 2. Set ELEVENLABS_API_KEY in your environment variables
+ * 2. Set ELEVENLABS_API_KEYS (comma-separated) or ELEVENLABS_API_KEY in your environment variables
+ *
+ * When multiple keys are configured, the service automatically rotates to a
+ * key that has remaining quota before making requests.
  */
+
+import { getAvailableApiKey, markKeyExhausted } from "../elevenlabs-keys";
 
 export interface ElevenLabsTranscriptionSegment {
   text: string;
@@ -22,15 +27,17 @@ export class ElevenLabsService {
   private static readonly API_BASE_URL = "https://api.elevenlabs.io/v1";
 
   /**
-   * Get API key from environment variables
+   * Get API key – on the server, uses the multi-key manager with rotation.
+   * On the client, falls back to the public env var (client-side calls
+   * should go through /api/transcribe instead).
    */
   private static getApiKey(): string {
     if (typeof window !== "undefined") {
-      // Client-side: you might want to use a secure method to store this
-      // For now, we'll use an environment variable that should be set at build time
+      // Client-side: return public key (TTS/voices calls from the browser)
       return process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || "";
     }
-    return process.env.ELEVENLABS_API_KEY || "";
+    // Server-side: use the key manager with rotation
+    return getAvailableApiKey();
   }
 
   /**
@@ -171,6 +178,12 @@ export class ElevenLabsService {
       });
 
       if (!response.ok) {
+        // Mark key as exhausted on quota/auth errors so we rotate next time
+        if (response.status === 401 || response.status === 403 || response.status === 429) {
+          if (typeof window === "undefined") {
+            markKeyExhausted(apiKey);
+          }
+        }
         const error = await response.json().catch(() => ({ message: "Unknown error" }));
         throw new Error(`ElevenLabs TTS error: ${error.message || response.statusText}`);
       }
