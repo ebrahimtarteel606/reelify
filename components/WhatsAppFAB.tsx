@@ -1,11 +1,15 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import { Whatsapp } from "vuesax-icons-react";
 
 export function WhatsAppFAB() {
+  const pathname = usePathname();
   const t = useTranslations("common");
+
+  if (pathname?.includes("/editor")) return null;
 
   const fab = (
     <a
