@@ -140,6 +140,7 @@
     "videoUrlMissing": "Video URL is missing.",
     "audioNotFound": "Audio file not found. Please try again.",
     "analysisError": "An error occurred during analysis.",
+    "transcriptionQuotaExceeded": "Our transcription service has temporarily run out of capacity. Please try again in a few minutes or contact support if this continues.",
     "noClipsFound": "No suitable clips found.",
     "processingError": "An error occurred during processing.",
     "processingFailed": "Processing could not be completed."
