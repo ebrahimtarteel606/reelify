@@ -1106,7 +1106,7 @@ export default function HomePage() {
           </div>
           <Link href={`/${locale}/app`}>
             <Image
-              src="/Transparent white1.png"
+              src="/logo.png"
               alt="Reelify"
               width={200}
               height={100}
