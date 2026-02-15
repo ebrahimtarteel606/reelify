@@ -88,12 +88,17 @@ export default function AdminDashboard() {
   const [demoStatusFilter, setDemoStatusFilter] = useState<string>("all");
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
 
-  // Create user form
+  // Create user modal
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newCredits, setNewCredits] = useState(180);
+  const [newTitle, setNewTitle] = useState("");
+  const [newCompany, setNewCompany] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+  const [newPriority, setNewPriority] = useState("");
+  const [newSource, setNewSource] = useState("");
 
   // Edit inline
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -252,6 +257,11 @@ export default function AdminDashboard() {
         email: newEmail.trim(),
         phone: newPhone.trim(),
         credits_remaining: newCredits,
+        title: newTitle.trim() || undefined,
+        company: newCompany.trim() || undefined,
+        notes: newNotes.trim() || undefined,
+        priority: newPriority.trim() || undefined,
+        source: newSource.trim() || undefined,
       }),
     });
     posthog.capture("admin_user_created", {
@@ -261,8 +271,17 @@ export default function AdminDashboard() {
     setNewEmail("");
     setNewPhone("");
     setNewCredits(180);
+    setNewTitle("");
+    setNewCompany("");
+    setNewNotes("");
+    setNewPriority("");
+    setNewSource("");
     setShowCreate(false);
     await fetchUsers();
+  };
+
+  const closeCreateModal = () => {
+    setShowCreate(false);
   };
 
   // ── Update user ──────────────────────────────────────────────
@@ -441,68 +460,12 @@ export default function AdminDashboard() {
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="font-semibold text-gray-900">Users</h2>
                 <button
-                  onClick={() => setShowCreate(!showCreate)}
+                  onClick={() => setShowCreate(true)}
                   className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium hover:shadow-md transition-all"
                 >
-                  {showCreate ? "Cancel" : "+ New User"}
+                  + New User
                 </button>
               </div>
-
-              {/* Create user form */}
-              {showCreate && (
-                <form
-                  onSubmit={handleCreate}
-                  className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex flex-wrap items-end gap-4"
-                >
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">Name</label>
-                    <input
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="User name"
-                      required
-                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">Email</label>
-                    <input
-                      type="email"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="user@example.com"
-                      required
-                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">Phone</label>
-                    <input
-                      type="tel"
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      placeholder="+1234567890"
-                      required
-                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">Credits (min)</label>
-                    <input
-                      type="number"
-                      value={newCredits}
-                      onChange={(e) => setNewCredits(Number(e.target.value))}
-                      className="px-3 py-2 text-sm border border-gray-200 rounded-lg w-28 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
-                  >
-                    Create
-                  </button>
-                </form>
-              )}
 
               {/* Table */}
               <div className="overflow-x-auto">
@@ -651,6 +614,141 @@ export default function AdminDashboard() {
                 </table>
               </div>
             </div>
+
+            {/* Create user modal */}
+            {showCreate && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+                onClick={closeCreateModal}
+              >
+                <div
+                  className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-md w-full max-h-[90vh] overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 className="font-semibold text-gray-900">New user</h2>
+                    <button
+                      onClick={closeCreateModal}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                      aria-label="Close"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <form onSubmit={handleCreate} className="px-6 py-4 space-y-4">
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Name</label>
+                      <input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="User name"
+                        required
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Title</label>
+                      <input
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="Job title"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="user@example.com"
+                        required
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Phone</label>
+                      <input
+                        type="tel"
+                        value={newPhone}
+                        onChange={(e) => setNewPhone(e.target.value)}
+                        placeholder="+1234567890"
+                        required
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Company</label>
+                      <input
+                        value={newCompany}
+                        onChange={(e) => setNewCompany(e.target.value)}
+                        placeholder="Company name"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Credits (min)</label>
+                      <input
+                        type="number"
+                        value={newCredits}
+                        onChange={(e) => setNewCredits(Number(e.target.value))}
+                        min={0}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Priority</label>
+                      <select
+                        value={newPriority}
+                        onChange={(e) => setNewPriority(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      >
+                        <option value="">—</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Source</label>
+                      <input
+                        value={newSource}
+                        onChange={(e) => setNewSource(e.target.value)}
+                        placeholder="e.g. Ibrahim, Haddad"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">Notes</label>
+                      <textarea
+                        value={newNotes}
+                        onChange={(e) => setNewNotes(e.target.value)}
+                        placeholder="Internal notes"
+                        rows={3}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 resize-y"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors"
+                      >
+                        Create user
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeCreateModal}
+                        className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
 
             {/* User detail card (eye icon modal) */}
             {detailUserId && (() => {

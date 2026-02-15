@@ -85,7 +85,17 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { display_name, email, phone, credits_remaining } = body;
+  const {
+    display_name,
+    email,
+    phone,
+    credits_remaining,
+    title,
+    company,
+    notes,
+    priority,
+    source,
+  } = body;
 
   if (!display_name || typeof display_name !== "string") {
     return NextResponse.json({ error: "display_name is required" }, { status: 400 });
@@ -98,14 +108,21 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = getSupabaseAdmin();
+  const insert: Record<string, unknown> = {
+    display_name,
+    email: email.trim(),
+    phone: phone.trim(),
+    credits_remaining: credits_remaining ?? 180,
+  };
+  if (title !== undefined && typeof title === "string") insert.title = title.trim() || null;
+  if (company !== undefined && typeof company === "string") insert.company = company.trim() || null;
+  if (notes !== undefined && typeof notes === "string") insert.notes = notes.trim() || null;
+  if (priority !== undefined && typeof priority === "string") insert.priority = priority.trim() || null;
+  if (source !== undefined && typeof source === "string") insert.source = source.trim() || null;
+
   const { data, error } = await supabase
     .from("users")
-    .insert({
-      display_name,
-      email: email.trim(),
-      phone: phone.trim(),
-      credits_remaining: credits_remaining ?? 180,
-    })
+    .insert(insert)
     .select()
     .single();
 
@@ -148,6 +165,11 @@ export async function PATCH(request: NextRequest) {
   }
   if (updates.credits_remaining !== undefined)
     allowed.credits_remaining = updates.credits_remaining;
+  if (updates.title !== undefined) allowed.title = updates.title === "" ? null : String(updates.title).trim();
+  if (updates.company !== undefined) allowed.company = updates.company === "" ? null : String(updates.company).trim();
+  if (updates.notes !== undefined) allowed.notes = updates.notes === "" ? null : String(updates.notes).trim();
+  if (updates.priority !== undefined) allowed.priority = updates.priority === "" ? null : String(updates.priority).trim();
+  if (updates.source !== undefined) allowed.source = updates.source === "" ? null : String(updates.source).trim();
 
   if (Object.keys(allowed).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
