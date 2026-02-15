@@ -176,7 +176,24 @@ export async function POST(request: Request) {
       "Missing GEMINI_API_KEY",
       "Missing audio file",
     ];
-    const status = clientErrorMessages.includes(message) ? 400 : 500;
-    return NextResponse.json({ error: message }, { status });
+    if (clientErrorMessages.includes(message)) {
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    // ElevenLabs (or similar) quota exceeded – return 503 with code for client to show a clear message
+    const isQuotaExceeded =
+      typeof message === "string" &&
+      (message.includes("quota_exceeded") || message.toLowerCase().includes("exceeds your api key"));
+    if (isQuotaExceeded) {
+      return NextResponse.json(
+        {
+          error: "Transcription service quota exceeded. Please try again later.",
+          code: "TRANSCRIPTION_QUOTA_EXCEEDED",
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

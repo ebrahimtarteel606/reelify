@@ -97,7 +97,7 @@ export default function LandingPage() {
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <Link href={`/${locale}`} className="group flex items-center gap-2">
           <Image
-            src="/Transparent white1.png"
+            src="/logo.png"
             alt="Reelify"
             width={160}
             height={80}

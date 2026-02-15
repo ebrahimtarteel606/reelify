@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <div className="flex-1" />
           <Link href={`/${locale}`}>
             <Image
-              src="/Transparent white1.png"
+              src="/logo.png"
               alt="Reelify"
               width={160}
               height={80}

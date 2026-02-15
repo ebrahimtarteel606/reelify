@@ -328,7 +328,7 @@ function EditorContent() {
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Link href={`/${locale}/app`}>
               <img
-                src="/Transparent white1.png"
+                src="/logo.png"
                 alt="Reelify logo"
                 className="h-8 w-auto shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
               />

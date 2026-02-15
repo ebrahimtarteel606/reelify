@@ -55,6 +55,7 @@ import {
 } from "vuesax-icons-react";
 import { playSuccessSound } from "@/lib/utils/audioUtils";
 import posthog from "posthog-js";
+import { toast } from "sonner";
 
 type ClipItem = {
   title: string;
@@ -772,7 +773,13 @@ export default function HomePage() {
         const serverError = payload?.error ?? "";
         const isTooLong =
           typeof serverError === "string" && serverError.toLowerCase().includes("video too long");
-        throw new Error(isTooLong ? t("videoTooLong") : serverError || tLoading("analysisError"));
+        const isQuotaExceeded = payload?.code === "TRANSCRIPTION_QUOTA_EXCEEDED";
+        const message = isTooLong
+          ? t("videoTooLong")
+          : isQuotaExceeded
+            ? tLoading("transcriptionQuotaExceeded")
+            : serverError || tLoading("analysisError");
+        throw new Error(message);
       }
 
       const candidates = Array.isArray(payload?.clips) ? payload.clips : [];
@@ -925,7 +932,8 @@ export default function HomePage() {
         platform,
         source_duration_seconds: Math.round(videoDuration),
       });
-      setError(message);
+      toast.error(message);
+      setError("");
       setStatus("");
       setProgress(0);
       setScreen("form");
@@ -1106,7 +1114,7 @@ export default function HomePage() {
           </div>
           <Link href={`/${locale}/app`}>
             <Image
-              src="/Transparent white1.png"
+              src="/logo.png"
               alt="Reelify"
               width={200}
               height={100}
