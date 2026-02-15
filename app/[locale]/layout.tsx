@@ -5,6 +5,7 @@ import { locales, localeDirection, type Locale } from "@/i18n/config";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
+import { WhatsAppFAB } from "@/components/WhatsAppFAB";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -115,7 +116,11 @@ export default async function LocaleLayout({
 
   return (
     <div lang={locale} dir={dir}>
-      <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+      <NextIntlClientProvider messages={messages}>
+        <WhatsAppFAB />
+
+        {children}
+      </NextIntlClientProvider>
       <Analytics />
       <SpeedInsights />
     </div>

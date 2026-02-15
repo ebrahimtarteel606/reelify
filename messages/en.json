@@ -1,6 +1,7 @@
 {
   "common": {
     "closedBeta": "Closed Beta",
+    "contactUs": "Contact us",
     "loading": "Loading...",
     "disabledWhileEditingTranscription": "Finish editing the transcription to enable this.",
     "error": "An error occurred",
