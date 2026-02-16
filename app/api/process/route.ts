@@ -171,14 +171,8 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Processing failed";
 
-    const clientErrorMessages = [
-      "Missing ELEVENLABS_API_KEY",
-      "Missing GEMINI_API_KEY",
-      "Missing audio file",
-    ];
-    if (clientErrorMessages.includes(message)) {
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
+    // Log detailed error internally, but do not expose provider/model names to clients
+    console.error("[API] /api/process failed:", message);
 
     // ElevenLabs (or similar) quota exceeded – return 503 with code for client to show a clear message
     const isQuotaExceeded =
@@ -194,6 +188,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    // For all other failures, return a generic message that hides internal technologies/models
+    return NextResponse.json(
+      { error: "Processing failed. Please try again later." },
+      { status: 500 }
+    );
   }
 }
