@@ -54,6 +54,7 @@ import {
   type Icon,
 } from "vuesax-icons-react";
 import { playSuccessSound } from "@/lib/utils/audioUtils";
+import { parseJsonResponse } from "@/lib/utils/requestUtils";
 import posthog from "posthog-js";
 import { toast } from "sonner";
 
@@ -768,7 +769,27 @@ export default function HomePage() {
       setProgress((prev) => Math.max(prev, 85));
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const payload = await response.json();
+      const parsed = await parseJsonResponse<{
+        clips?: Array<{
+          title: string;
+          start: number;
+          end: number;
+          category?: string;
+          tags?: string[];
+        }>;
+        segments?: TranscriptSegment[];
+        error?: string;
+        code?: string;
+      }>(response);
+      if (!parsed.ok) {
+        // Response body is not valid JSON - show user-friendly error
+        console.error("Invalid JSON response:", parsed.error);
+        const message = tLoading("invalidResponse");
+        toast.error(message);
+        throw new Error(message);
+      }
+
+      const payload = parsed.data;
       if (!response.ok) {
         const serverError = payload?.error ?? "";
         const isTooLong =
@@ -1245,7 +1266,24 @@ export default function HomePage() {
                                     duration_seconds: durationSec,
                                   }),
                                 });
-                                const checkPayload = await checkRes.json();
+                                const parsed = await parseJsonResponse<{
+                                  ok?: boolean;
+                                  error?: string;
+                                }>(checkRes);
+                                if (!parsed.ok) {
+                                  // Invalid JSON response - treat as error
+                                  console.error(
+                                    "Invalid JSON response from credits check:",
+                                    parsed.error
+                                  );
+                                  setFile(null);
+                                  setVideoDuration(0);
+                                  setIsValidatingVideo(false);
+                                  setError(t("insufficientCredits"));
+                                  URL.revokeObjectURL(tempUrl);
+                                  return;
+                                }
+                                const checkPayload = parsed.data;
                                 if (!checkRes.ok || checkPayload?.ok === false) {
                                   setFile(null);
                                   setVideoDuration(0);

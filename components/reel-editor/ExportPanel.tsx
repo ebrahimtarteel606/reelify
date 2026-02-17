@@ -18,6 +18,8 @@ import { ReelExportService } from "@/lib/services/ReelExportService";
 import { Caption, ReelExportResult, ExportFormatOptions } from "@/types";
 import { useAuthStatus, Platform } from "@/lib/hooks/useAuthStatus";
 import { playSuccessSound } from "@/lib/utils/audioUtils";
+import { parseJsonResponse } from "@/lib/utils/requestUtils";
+import { toast } from "sonner";
 import posthog from "posthog-js";
 
 type SelectedPlatform =
@@ -116,6 +118,7 @@ export function ExportPanel({
   onExportProgress,
 }: ExportPanelProps) {
   const t = useTranslations("exportButton");
+  const tLoading = useTranslations("loading");
 
   const { authStatus, authenticate, logout } = useAuthStatus();
 
@@ -369,8 +372,22 @@ export function ExportPanel({
 
       setPublishProgress(80);
 
-      const data = await response.json();
+      const parsed = await parseJsonResponse<{
+        needsReauth?: boolean;
+        error?: string;
+        videoUrl?: string;
+        postUrl?: string;
+      }>(response);
+      if (!parsed.ok) {
+        // Response body is not valid JSON - show user-friendly error
+        console.error("Invalid JSON response from publish:", parsed.error);
+        const message = tLoading("invalidResponse");
+        toast.error(message);
+        onExportError?.(new Error(message));
+        return;
+      }
 
+      const data = parsed.data;
       if (!response.ok) {
         if (data.needsReauth) {
           authenticate(targetPlatform as Platform);
@@ -396,7 +413,7 @@ export function ExportPanel({
       // Clear parent loading state (e.g. preview page "Exporting... 100%")
       onExportSuccess?.(result);
 
-      alert(t("publishSuccess", { platform: platformLabel, url: postUrl }));
+      alert(t("publishSuccess", { platform: platformLabel, url: postUrl || "" }));
 
       if (postUrl) {
         window.open(postUrl, "_blank");
