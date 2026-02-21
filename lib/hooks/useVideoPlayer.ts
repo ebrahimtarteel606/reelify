@@ -137,6 +137,25 @@ export function useVideoPlayer(videoUrl: string | null) {
     };
   }, [trimPoints, setCurrentPlayheadTime, setIsPlaying]);
 
+  // While playing, update playhead every frame so karaoke and animations stay in sync
+  useEffect(() => {
+    if (!isPlaying || !videoRef.current) return;
+
+    const video = videoRef.current;
+    let rafId: number;
+
+    const tick = () => {
+      const currentTime = video.currentTime;
+      if (currentTime >= trimPoints.startTime && currentTime < trimPoints.endTime) {
+        setCurrentPlayheadTime(currentTime);
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [isPlaying, trimPoints.startTime, trimPoints.endTime, setCurrentPlayheadTime]);
+
   // Play/pause control with trim boundary enforcement
   useEffect(() => {
     if (!videoRef.current) return;

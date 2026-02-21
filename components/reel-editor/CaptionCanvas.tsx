@@ -28,6 +28,7 @@ export function CaptionCanvas({
     captions,
     selectedCaptionId,
     setSelectedCaptionId,
+    setSelectedCaptionHeightInVideo,
     updateCaptionPosition,
     updateCaptionStyle,
     currentPlayheadTime,
@@ -48,6 +49,8 @@ export function CaptionCanvas({
   } | null>(null);
   const lastClickTimeRef = useRef<number>(0);
   const isDoubleClickRef = useRef<boolean>(false);
+  /** Caption height in video coordinates (for alignment buttons) */
+  const captionHeightVideoRef = useRef<number>(0);
 
   // Update canvas size to match container
   useEffect(() => {
@@ -723,6 +726,7 @@ export function CaptionCanvas({
         }
         targetRef.current = null;
       }
+      setSelectedCaptionHeightInVideo(null);
       return;
     }
 
@@ -852,6 +856,9 @@ export function CaptionCanvas({
     // Renderer uses: bgHeight = textHeight + padding.top + padding.bottom
     // But if user resized, use customHeight
     const bgHeight = customHeight || textHeight + padding.top + padding.bottom;
+
+    captionHeightVideoRef.current = bgHeight;
+    setSelectedCaptionHeightInVideo(bgHeight);
 
     // Restore context state
     ctx.restore();
@@ -1059,6 +1066,12 @@ export function CaptionCanvas({
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     target.offsetHeight;
 
+    // Safe-area snap guidelines in container coordinates
+    const safeLeft = canvasOffsetX + DEFAULT_SAFE_AREAS.left * scaleX;
+    const safeRight = canvasOffsetX + (videoWidth - DEFAULT_SAFE_AREAS.right) * scaleX;
+    const safeTop = canvasOffsetY + DEFAULT_SAFE_AREAS.top * scaleY;
+    const safeBottom = canvasOffsetY + (videoHeight - DEFAULT_SAFE_AREAS.bottom) * scaleY;
+
     // Initialize Moveable
     let moveable: Moveable | null = null;
     try {
@@ -1066,7 +1079,6 @@ export function CaptionCanvas({
       container.style.position = "relative";
       // CSS will handle pointer-events via :has(.moveableTarget) selector
 
-      // Use container as root for correct coordinate system
       moveable = new Moveable(container, {
         target: target,
         draggable: true,
@@ -1075,28 +1087,21 @@ export function CaptionCanvas({
         scalable: false,
         throttleDrag: 0,
         throttleResize: 0,
-        // Enable resize handles (excluding top-right "ne" to avoid overlap with drag handle)
         renderDirections: ["nw", "n", "w", "e", "sw", "s", "se"],
-        // Exclude top-right resize handle to avoid overlap with drag handle
         edge: ["nw", "n", "w", "e", "sw", "s", "se"],
-        // Ensure Moveable can interact with the target
         checkInput: false,
-        // Use container bounds to constrain movement
         bounds: {
           left: 0,
           top: 0,
           right: containerWidth,
           bottom: containerHeight,
         },
-        // Allow dragging ONLY from the drag handle in top-right corner
         dragTarget: dragHandle,
-        // Allow free resizing in both directions - DO NOT keep aspect ratio
-        keepRatio: false,
-        // Enable snapping for better UX
+        keepRatio: selectedCaption.style.lockAspectRatio === true,
         snappable: true,
         snapThreshold: 5,
-        // CRITICAL: Set origin to prevent position jumping during resize
-        // Using "false" means Moveable won't try to maintain origin, reducing jumps
+        horizontalGuidelines: [safeLeft, safeRight],
+        verticalGuidelines: [safeTop, safeBottom],
         origin: false,
       });
 
@@ -1550,6 +1555,7 @@ export function CaptionCanvas({
     };
   }, [
     selectedCaption?.id,
+    selectedCaption?.style?.lockAspectRatio,
     dimensions,
     videoWidth,
     videoHeight,

@@ -107,26 +107,40 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Group word-level timestamps into sentence segments
+// Word-level timestamp for karaoke
+export type SegmentWord = { text: string; start: number; end: number };
+
+// Group word-level timestamps into sentence segments; include words for karaoke
 function groupWordsIntoSegments(
   words: any[],
   language: "ar" | "en"
-): Array<{ text: string; start: number; end: number; language: "ar" | "en" }> {
+): Array<{
+  text: string;
+  start: number;
+  end: number;
+  language: "ar" | "en";
+  words?: SegmentWord[];
+}> {
   if (!words || words.length === 0) {
     return [];
   }
 
-  const segments: Array<{ text: string; start: number; end: number; language: "ar" | "en" }> = [];
+  const segments: Array<{
+    text: string;
+    start: number;
+    end: number;
+    language: "ar" | "en";
+    words?: SegmentWord[];
+  }> = [];
   let currentSegment: { words: any[]; text: string; start: number } = {
     words: [],
     text: "",
     start: 0,
   };
 
-  // Sentence ending punctuation (English and Arabic)
   const sentenceEnders = /[.!?،؛]/;
-  const maxSegmentDuration = 5; // Maximum 5 seconds per segment
-  const maxWords = 15; // Maximum 15 words per segment
+  const maxSegmentDuration = 5;
+  const maxWords = 15;
 
   words.forEach((word, index) => {
     const wordText = word.text || "";
@@ -145,13 +159,18 @@ function groupWordsIntoSegments(
     const isLastWord = index === words.length - 1;
     const tooManyWords = currentSegment.words.length >= maxWords;
 
-    // Create segment if: ends with punctuation, too long, too many words, or last word
     if (endsWithPunctuation || duration >= maxSegmentDuration || tooManyWords || isLastWord) {
+      const segmentWords: SegmentWord[] = currentSegment.words.map((w: any) => ({
+        text: w.text || "",
+        start: w.start ?? 0,
+        end: w.end ?? w.start + 0.5,
+      }));
       segments.push({
         text: currentSegment.text.trim(),
         start: currentSegment.start,
         end: wordEnd,
         language: language,
+        words: segmentWords,
       });
 
       currentSegment = { words: [], text: "", start: 0 };

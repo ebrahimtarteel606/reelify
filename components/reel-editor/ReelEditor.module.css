@@ -402,6 +402,37 @@
   }
 }
 
+.sidebarTabs {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.sidebarTab {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--muted) / 0.5);
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.sidebarTab:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.sidebarTabActive {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: white;
+}
+
 .sidebarContent {
   flex: 1;
   overflow-y: auto;
@@ -410,4 +441,16 @@
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+}
+
+.sidebarContent[hidden] {
+  display: none;
+}
+
+.sidebarTabEmpty {
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
 }

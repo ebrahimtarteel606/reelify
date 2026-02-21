@@ -10,6 +10,7 @@ export interface ReelClipInput {
       start: number; // Timestamp in seconds (relative to full video)
       end: number; // Timestamp in seconds (relative to full video)
       language: "ar" | "en"; // Arabic or English
+      words?: Array<{ text: string; start: number; end: number }>; // for karaoke
     }>;
   };
   metadata?: {
@@ -77,6 +78,26 @@ export interface CaptionStyle {
     backgroundColor?: string;
     fontWeight?: string;
   }>;
+
+  // Text decoration and spacing
+  textDecoration?: "none" | "underline";
+  letterSpacing?: number; // pixels
+  lineHeight?: number; // multiplier (e.g. 1.2) or pixels if > 10 (legacy)
+  direction?: "ltr" | "rtl"; // override; otherwise derived from caption.language
+
+  // Karaoke (word highlight) mode
+  karaoke?: boolean;
+  karaokeActiveColor?: string;
+  karaokeActiveScale?: number;
+
+  // Layout
+  lockAspectRatio?: boolean;
+}
+
+export interface WordTimestamp {
+  text: string;
+  start: number; // seconds
+  end: number; // seconds
 }
 
 export interface Caption {
@@ -88,6 +109,7 @@ export interface Caption {
   style: CaptionStyle;
   isVisible: boolean; // Whether caption is within trim region
   language?: "ar" | "en";
+  wordTimestamps?: WordTimestamp[]; // for karaoke mode
 }
 
 export interface ReelExportResult {

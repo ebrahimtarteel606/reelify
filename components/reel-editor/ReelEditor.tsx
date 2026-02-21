@@ -12,6 +12,7 @@ import { Timeline } from "./Timeline";
 import { TranscriptionLoader } from "./TranscriptionLoader";
 import { TranscriptionEditor } from "./TranscriptionEditor";
 import { CaptionStyleEditor } from "./CaptionStyleEditor";
+import { CaptionTemplatePicker } from "./CaptionTemplatePicker";
 import { CaptionOnboarding } from "./CaptionOnboarding";
 import { ExportButton } from "./ExportButton";
 import styles from "./ReelEditor.module.css";
@@ -42,6 +43,7 @@ export function ReelEditor({
   const [processedClipData, setProcessedClipData] = useState<typeof clipData | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<"transcription" | "style">("transcription");
 
   // Show onboarding when editor loads (unless user chose "Don't show again")
   useEffect(() => {
@@ -285,8 +287,54 @@ export function ReelEditor({
               </div>
             </div>
 
-            <div className={styles.sidebarContent} data-onboarding="transcription-editor">
-              {selectedCaptionId ? <CaptionStyleEditor /> : <TranscriptionEditor />}
+            <div className={styles.sidebarTabs} role="tablist" aria-label={t("transcription")}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={sidebarTab === "transcription"}
+                aria-controls="sidebar-panel-transcription"
+                id="sidebar-tab-transcription"
+                className={`${styles.sidebarTab} ${sidebarTab === "transcription" ? styles.sidebarTabActive : ""}`}
+                onClick={() => setSidebarTab("transcription")}
+              >
+                {t("tabTranscription")}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={sidebarTab === "style"}
+                aria-controls="sidebar-panel-style"
+                id="sidebar-tab-style"
+                className={`${styles.sidebarTab} ${sidebarTab === "style" ? styles.sidebarTabActive : ""}`}
+                onClick={() => setSidebarTab("style")}
+              >
+                {t("tabStyle")}
+              </button>
+            </div>
+
+            <div
+              id="sidebar-panel-transcription"
+              role="tabpanel"
+              aria-labelledby="sidebar-tab-transcription"
+              hidden={sidebarTab !== "transcription"}
+              className={styles.sidebarContent}
+              data-onboarding="transcription-editor"
+            >
+              {sidebarTab === "transcription" && <TranscriptionEditor />}
+            </div>
+            <div
+              id="sidebar-panel-style"
+              role="tabpanel"
+              aria-labelledby="sidebar-tab-style"
+              hidden={sidebarTab !== "style"}
+              className={styles.sidebarContent}
+            >
+              {sidebarTab === "style" &&
+                (selectedCaptionId ? (
+                  <CaptionStyleEditor />
+                ) : (
+                  <CaptionTemplatePicker />
+                ))}
             </div>
           </div>
         </div>
