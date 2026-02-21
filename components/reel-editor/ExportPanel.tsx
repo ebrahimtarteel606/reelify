@@ -40,8 +40,8 @@ const PLATFORM_CONFIG: Record<
   download: {
     label: "Download",
     icon: <ReceiveSquare size={22} variant="Bold" />,
-    color: "#6366f1",
-    gradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+    color: "#FF6B7A",
+    gradient: "linear-gradient(135deg, #FF6B7A 0%, #E5525F 100%)",
   },
   instagram: {
     label: "Instagram",

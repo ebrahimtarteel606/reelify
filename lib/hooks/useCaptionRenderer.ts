@@ -10,6 +10,7 @@ export function useCaptionRenderer(videoWidth: number = 1080, videoHeight: numbe
   const currentPlayheadTime = useReelEditorStore((state) => state.currentPlayheadTime);
   const trimStart = useReelEditorStore((state) => state.trimPoints.startTime);
   const trimEnd = useReelEditorStore((state) => state.trimPoints.endTime);
+  const includeCaptionsForExport = useReelEditorStore((state) => state.includeCaptionsForExport);
 
   // Only redraw when the caption visible at current time changes, or playhead/trim changes.
   // This avoids full canvas re-render on every keystroke when editing a different caption's style.
@@ -36,6 +37,17 @@ export function useCaptionRenderer(videoWidth: number = 1080, videoHeight: numbe
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // With/Without Captions toggle: hide captions on preview when "Without Captions" is selected
+    if (!includeCaptionsForExport) {
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
     const state = useReelEditorStore.getState();
     const visibleCaptions = state.captions.filter(
       (c) => c.isVisible && c.startTime < state.trimPoints.endTime && c.endTime > state.trimPoints.startTime
@@ -48,7 +60,7 @@ export function useCaptionRenderer(videoWidth: number = 1080, videoHeight: numbe
       videoWidth,
       videoHeight
     );
-  }, [renderKey, trimStart, trimEnd, videoWidth, videoHeight]);
+  }, [renderKey, trimStart, trimEnd, videoWidth, videoHeight, includeCaptionsForExport]);
 
   return canvasRef;
 }

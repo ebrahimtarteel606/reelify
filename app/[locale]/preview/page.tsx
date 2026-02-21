@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReelClipInput, Caption, CaptionStyle } from "@/types";
 import { getVideoBlobUrl } from "@/lib/videoStorage";
 import { ExportPanel } from "@/components/reel-editor/ExportPanel";
+import { ReelCaptionRenderer } from "@/lib/services/ReelCaptionRenderer";
 import posthog from "posthog-js";
 import {
   Backward10Seconds,
@@ -99,6 +100,7 @@ function PreviewContent() {
   const firstReelSegmentRef = useRef<HTMLSpanElement | null>(null);
   const transcriptScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const previewCaptionCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Export panel state
   const [showExportPanel, setShowExportPanel] = useState(false);
@@ -290,6 +292,27 @@ function PreviewContent() {
     return () => clearTimeout(timer);
   }, [fullTranscriptSegments, firstReelSegmentIndex]);
 
+  // Draw or clear captions on preview video based on With/Without Captions toggle (must be before any early return to keep hook count stable)
+  useEffect(() => {
+    const canvas = previewCaptionCanvasRef.current;
+    if (!canvas || captionsForExport.length === 0) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    if (!includeCaptions) {
+      canvas.width = 1080;
+      canvas.height = 1920;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+    ReelCaptionRenderer.renderCaptions(
+      canvas,
+      captionsForExport,
+      currentTime,
+      1080,
+      1920
+    );
+  }, [includeCaptions, captionsForExport, currentTime]);
+
   if (!urlLoadDone) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-warm">
@@ -373,7 +396,7 @@ function PreviewContent() {
     URL.revokeObjectURL(downloadUrl);
   };
 
-  const videoFitClass = "object-cover"; // Default to zoom (fill container)
+  const videoFitClass = exportFormat === "zoom" ? "object-cover" : "object-contain";
   const videoWrapperClass = `aspect-[9/16] relative ${
     isPortrait === false ? "bg-black" : "bg-neutral-900"
   }`;
@@ -728,7 +751,7 @@ function PreviewContent() {
           {/* Video Player */}
           <div className="flex justify-center">
             <Card className="shadow-card border-0 bg-gradient-card overflow-hidden animate-fade-in hover:shadow-card-hover transition-all duration-500 w-full max-w-md rounded-2xl">
-              <div className={videoWrapperClass}>
+              <div className={`${videoWrapperClass} relative`}>
                 <video
                   ref={videoRef}
                   src={url}
@@ -770,6 +793,16 @@ function PreviewContent() {
                   className={`w-full h-full ${videoFitClass} cursor-pointer`}
                   playsInline
                 />
+                {captionsForExport.length > 0 && (
+                  <canvas
+                    ref={previewCaptionCanvasRef}
+                    width={1080}
+                    height={1920}
+                    className={`absolute inset-0 w-full h-full pointer-events-none ${videoFitClass}`}
+                    style={{ objectFit: exportFormat === "zoom" ? "cover" : "contain" }}
+                    aria-hidden
+                  />
+                )}
               </div>
               <div className="flex flex-col gap-2 p-3 bg-neutral-900 rounded-b-2xl border-t border-border">
                 <input
