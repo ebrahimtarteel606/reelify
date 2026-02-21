@@ -27,7 +27,7 @@ export function useCaptionRenderer(videoWidth: number = 1080, videoHeight: numbe
   const renderKey = useMemo(
     () =>
       visibleCaption
-        ? `${visibleCaption.id}-${visibleCaption.text}-${JSON.stringify(visibleCaption.style)}-${currentPlayheadTime.toFixed(3)}`
+        ? `${visibleCaption.id}-${visibleCaption.text}-${JSON.stringify(visibleCaption.style)}-${visibleCaption.position.x}-${visibleCaption.position.y}-${currentPlayheadTime.toFixed(3)}`
         : `none-${currentPlayheadTime.toFixed(3)}`,
     [visibleCaption, currentPlayheadTime]
   );

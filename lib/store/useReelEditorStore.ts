@@ -2,22 +2,14 @@ import { create } from "zustand";
 import { ReelClipInput, Caption, CaptionStyle, TrimPoints, TranscriptionState } from "@/types";
 import { filterVisibleCaptions } from "@/lib/utils/reelEditorUtils";
 
-// Bilingual font stack: Latin (Inter) + Arabic (Noto Sans Arabic) so captions support both ar and en
-const DEFAULT_FONT_STACK =
-  "Inter, \"Noto Sans Arabic\", system-ui, -apple-system, sans-serif";
-
-// Default caption style (polished, readable, works for most reels and both ar/en)
+// Minimal fallback when no style is set (no default style – user picks a template)
 const getDefaultCaptionStyle = (): CaptionStyle => ({
-  fontSize: 50,
-  fontFamily: DEFAULT_FONT_STACK,
-  fontWeight: "600",
+  fontSize: 48,
+  fontFamily: "Inter, \"Noto Sans Arabic\", system-ui, sans-serif",
   color: "#FFFFFF",
-  backgroundColor: "rgba(0, 0, 0, 0.78)",
   textAlign: "center",
-  padding: { top: 14, right: 24, bottom: 14, left: 24 },
-  maxWidth: 820,
-  letterSpacing: 0.5,
-  lineHeight: 1.25,
+  padding: { top: 8, right: 16, bottom: 8, left: 16 },
+  maxWidth: 800,
 });
 
 // Default caption position
@@ -568,11 +560,9 @@ export const useReelEditorStore = create<ReelEditorState>((set, get) => ({
 
   updateCaptionPosition: (id, position) => {
     const { captions } = get();
-    // Apply the same position to ALL captions to ensure consistency
-    const updatedCaptions = captions.map((caption) => ({
-      ...caption,
-      position: { ...position }, // Apply same position to all captions
-    }));
+    const updatedCaptions = captions.map((caption) =>
+      caption.id === id ? { ...caption, position: { ...position } } : caption
+    );
     set({ captions: updatedCaptions });
   },
 
