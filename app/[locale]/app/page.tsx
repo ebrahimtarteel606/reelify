@@ -83,6 +83,13 @@ type IconType = Icon;
 // Max video duration (2 hours) – enforced client and server to protect credits
 const MAX_VIDEO_DURATION_SECONDS = 2 * 60 * 60;
 
+/** Normalized thumbnail key so store and restore always match (avoids float precision mismatch). */
+function thumbnailClipKey(start: number, end: number): string {
+  const s = Math.round(Number(start) * 100) / 100;
+  const e = Math.round(Number(end) * 100) / 100;
+  return `thumb-${s}-${e}`;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const locale = useLocale();
@@ -306,7 +313,7 @@ export default function HomePage() {
             const restoreThumbnails = async () => {
               const clipsWithThumbnails = await Promise.all(
                 parsedClips.map(async (clip: ClipItem, index: number) => {
-                  const clipKey = `thumb-${clip.start}-${clip.end}`;
+                  const clipKey = thumbnailClipKey(clip.start, clip.end);
                   const thumbnailUrl = await getThumbnailBlobUrl(clipKey);
                   if (thumbnailUrl) {
                     return { ...clip, thumbnail: thumbnailUrl };
@@ -402,9 +409,18 @@ export default function HomePage() {
           }
 
           const thumbName = `thumb-${crypto.randomUUID()}.jpg`;
-          const thumbBlob = await extractThumbnail(ffmpeg, inputName, thumbName, clip.start);
+          // Avoid very early timestamps that can hang FFmpeg WASM (0.5s still hangs on some files); use 2s minimum for first 2s of video
+          const seekTime = clip.start < 2 ? 2 : Math.max(0.5, clip.start);
+          const extractWithTimeout = (): Promise<Blob> =>
+            Promise.race([
+              extractThumbnail(ffmpeg, inputName, thumbName, seekTime),
+              new Promise<Blob>((_, rej) =>
+                setTimeout(() => rej(new Error("Thumbnail extraction timeout (20s)")), 20000)
+              ),
+            ]);
+          const thumbBlob = await extractWithTimeout();
 
-          const clipKey = `thumb-${clip.start}-${clip.end}`;
+          const clipKey = thumbnailClipKey(clip.start, clip.end);
           const blobUrl = URL.createObjectURL(thumbBlob);
           thumbnailData.push({ blob: thumbBlob, clipKey });
           blobUrls.push(blobUrl);
@@ -896,7 +912,8 @@ export default function HomePage() {
               return clip;
             });
             if (typeof globalThis.window !== "undefined") {
-              globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(updatedClips));
+              const toPersist = updatedClips.map((c) => ({ ...c, thumbnail: "" }));
+              globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(toPersist));
             }
             return updatedClips;
           });
@@ -919,7 +936,8 @@ export default function HomePage() {
               };
             });
             if (typeof globalThis.window !== "undefined") {
-              globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(updatedClips));
+              const toPersist = updatedClips.map((c) => ({ ...c, thumbnail: "" }));
+              globalThis.sessionStorage.setItem("reelify_clips", JSON.stringify(toPersist));
             }
             return updatedClips;
           });
@@ -2006,7 +2024,7 @@ export default function HomePage() {
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               const loadThumbnail = async () => {
-                                const clipKey = `thumb-${clip.start}-${clip.end}`;
+                                const clipKey = thumbnailClipKey(clip.start, clip.end);
                                 const thumbnailUrl = await getThumbnailBlobUrl(clipKey);
                                 if (thumbnailUrl) {
                                   (e.target as HTMLImageElement).src = thumbnailUrl;
